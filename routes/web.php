@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EducationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
+use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
 // Auth Routes
 // ─────────────────────────────────────────────
-Route::get('/', fn() => redirect()->route('login'));
+Route::get('/', fn () => redirect()->route('login'));
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -19,6 +19,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ─────────────────────────────────────────────
 // Protected Routes (require session role)
 // ─────────────────────────────────────────────
+Route::get('/edukasi', [EducationController::class, 'index'])->name('education.index');
+Route::get('/edukasi/{slug}', [EducationController::class, 'show'])->name('education.show');
+
 Route::middleware('auth.role')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -27,8 +30,15 @@ Route::middleware('auth.role')->group(function () {
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
     Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
 
-    // Education
-    Route::get('/education', [EducationController::class, 'index'])->name('education.index');
+    // Education management
+    Route::prefix('admin/edukasi')->name('education.')->group(function () {
+        Route::get('/', [EducationController::class, 'manage'])->name('manage');
+        Route::get('/create', [EducationController::class, 'create'])->name('create');
+        Route::post('/', [EducationController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [EducationController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EducationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [EducationController::class, 'destroy'])->name('destroy');
+    });
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
