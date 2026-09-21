@@ -35,6 +35,26 @@ class ReportController extends Controller
         return view('reports.index', compact('reports', 'role', 'summary'));
     }
 
+    public function analytics()
+    {
+        abort_unless(session('role') === 'admin', 403);
+
+        $reports = $this->getMockReports();
+        $summary = [
+            'total' => count($reports),
+            'pending' => count(array_filter($reports, fn ($report) => $report['status'] === 'pending')),
+            'in_progress' => count(array_filter($reports, fn ($report) => $report['status'] === 'in_progress')),
+            'resolved' => count(array_filter($reports, fn ($report) => $report['status'] === 'resolved')),
+        ];
+
+        $categories = collect($reports)
+            ->groupBy('category')
+            ->map(fn ($categoryReports) => count($categoryReports))
+            ->sortDesc();
+
+        return view('analytics.index', compact('summary', 'categories', 'reports'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

@@ -86,7 +86,7 @@
 
         {{-- Logo --}}
         <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-            <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+            <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md">
                 <i class="fas fa-clinic-medical text-white text-lg"></i>
             </div>
             <div x-show="sidebarOpen" x-transition.opacity class="overflow-hidden">
@@ -120,12 +120,14 @@
                 </span>
             </a>
 
-            {{-- Edukasi --}}
+            {{-- Edukasi untuk masyarakat dan petugas --}}
+            @if(session('role') !== 'admin')
             <a href="{{ route('education.index') }}" id="nav-education"
-               class="sidebar-link {{ request()->routeIs('education.*') ? 'active' : '' }}">
+               class="sidebar-link {{ request()->routeIs('education.index') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-book-open"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Edukasi Kesehatan</span>
             </a>
+            @endif
 
             {{-- Jadwal --}}
             <a href="{{ route('schedules.index') }}" id="nav-schedules"
@@ -144,11 +146,15 @@
             <div x-show="sidebarOpen" x-transition.opacity class="px-3 pt-4 pb-2">
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Manajemen</p>
             </div>
-            <a href="#" class="sidebar-link">
+            <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-users-cog"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Manajemen Petugas</span>
             </a>
-            <a href="#" class="sidebar-link">
+            <a href="{{ route('education.manage') }}" class="sidebar-link {{ request()->routeIs('education.manage') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span>
+                <span x-show="sidebarOpen" x-transition.opacity>Manajemen Edukasi</span>
+            </a>
+            <a href="{{ route('analytics.index') }}" class="sidebar-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Laporan & Analitik</span>
             </a>
@@ -158,7 +164,7 @@
         {{-- User Info Bottom --}}
         <div x-show="sidebarOpen" class="p-4 border-t border-gray-100">
             <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                <div class="medical-gradient w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div class="medical-gradient w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
                     <span class="text-white text-sm font-bold">
                         {{ strtoupper(substr(session('user_name', 'U'), 0, 1)) }}
                     </span>
@@ -218,9 +224,22 @@
                 <span class="sidebar-icon"><i class="fas fa-file-alt"></i></span>
                 @if(session('role') === 'citizen') Kirim Laporan @elseif(session('role') === 'officer') Data Laporan @else Rekap Laporan @endif
             </a>
+            @if(session('role') !== 'admin')
             <a href="{{ route('education.index') }}" class="sidebar-link {{ request()->routeIs('education.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-book-open"></i></span> Edukasi Kesehatan
             </a>
+            @endif
+            @if(session('role') === 'admin')
+            <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-users-cog"></i></span> Manajemen Petugas
+            </a>
+            <a href="{{ route('education.manage') }}" class="sidebar-link {{ request()->routeIs('education.manage') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span> Manajemen Edukasi
+            </a>
+            <a href="{{ route('analytics.index') }}" class="sidebar-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span> Laporan & Analitik
+            </a>
+            @endif
             <a href="{{ route('schedules.index') }}" class="sidebar-link {{ request()->routeIs('schedules.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-calendar-alt"></i></span>
                 @if(session('role') === 'citizen') Jadwal Kunjungan @elseif(session('role') === 'officer') Jadwal Saya @else Kelola Jadwal @endif
