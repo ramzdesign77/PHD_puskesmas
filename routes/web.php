@@ -31,7 +31,6 @@ Route::middleware('auth.role')->group(function () {
     Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
     Route::get('/analytics', [ReportController::class, 'analytics'])->name('analytics.index');
 
-<<<<<<< HEAD
     // Education management
     Route::prefix('admin/edukasi')->name('education.')->group(function () {
         Route::get('/', [EducationController::class, 'manage'])->name('manage');
@@ -41,14 +40,6 @@ Route::middleware('auth.role')->group(function () {
         Route::put('/{id}', [EducationController::class, 'update'])->name('update');
         Route::delete('/{id}', [EducationController::class, 'destroy'])->name('destroy');
     });
-=======
-    // Education
-    Route::get('/education', [EducationController::class, 'index'])->name('education.index');
-    Route::get('/education/manage', [EducationManagementController::class, 'index'])->name('education.manage');
-
-    // User management
-    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
->>>>>>> 50be3d49032f3e699f0bb9f2350e61942281d41d
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
