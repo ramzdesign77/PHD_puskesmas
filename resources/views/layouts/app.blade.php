@@ -172,16 +172,16 @@
         </nav>
 
         {{-- User Info Bottom --}}
-        <div x-show="sidebarOpen" class="p-4 border-t border-gray-100">
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                <div class="medical-gradient w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
-                    <span class="text-white text-sm font-bold">
+        <div x-show="sidebarOpen" class="mt-auto border-t border-gray-100 p-4">
+            <div class="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+                <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md">
+                    <span class="text-sm font-bold text-white">
                         {{ strtoupper(substr(session('user_name', 'U'), 0, 1)) }}
                     </span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 truncate">{{ session('user_name', 'User') }}</p>
-                    <p class="text-xs text-gray-400 truncate">
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-gray-800">{{ session('user_name', 'User') }}</p>
+                    <p class="truncate text-xs text-gray-400">
                         @if(session('role') === 'citizen') Masyarakat
                         @elseif(session('role') === 'officer') Petugas Kesling
                         @else Kepala Puskesmas

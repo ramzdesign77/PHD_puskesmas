@@ -735,6 +735,7 @@
                     </span>
                     <span class="font-bold">Air Keruh &amp; Berbau</span>
                   </div>
+
                   <div class="grid grid-cols-2 gap-2 text-[11px]">
                     <div
                       class="bg-slate-50 p-2 rounded-lg border border-slate-100"
@@ -746,47 +747,46 @@
                         >4 / 5 (Tinggi)</span
                       >
                     </div>
-<<<<<<< HEAD
+                  </div>
                 </div>
-            </div>
 
-            {{-- Quick Actions --}}
-            <div class="flex flex-wrap gap-3 mt-5">
-                @if(session('role') === 'citizen')
-                <a href="{{ route('reports.index') }}" id="quick-report"
-                   class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
-                    <i class="fas fa-plus-circle"></i> Buat Laporan Baru
-                </a>
-                <a href="{{ route('schedules.index') }}"
-                   class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
-                    <i class="fas fa-calendar-plus"></i> Minta Kunjungan
-                </a>
-                @elseif(session('role') === 'officer')
-                <a href="{{ route('reports.index') }}" id="quick-verify"
-                   class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
-                    <i class="fas fa-tasks"></i> Verifikasi Laporan
-                </a>
-                <a href="{{ route('schedules.index') }}"
-                   class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
-                    <i class="fas fa-map-marker-alt"></i> Jadwal Kunjungan Saya
-                </a>
-                @else
-                <a href="{{ route('reports.index') }}" id="quick-recap"
-                   class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
-                    <i class="fas fa-chart-bar"></i> Rekap Laporan
-                </a>
-                <a href="{{ route('schedules.index') }}"
-                   class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
-                    <i class="fas fa-calendar-check"></i> Kelola Jadwal
-                </a>
-                @endif
-                <a href="{{ route('education.index') }}"
-                   class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
-                    <i class="fas fa-book-open"></i> Edukasi Kesehatan
-                </a>
+                {{-- Quick Actions --}}
+                <div class="flex flex-wrap gap-3 mt-5">
+                    @if(session('role') === 'citizen')
+                    <a href="{{ route('reports.index') }}" id="quick-report"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-plus-circle"></i> Buat Laporan Baru
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-calendar-plus"></i> Minta Kunjungan
+                    </a>
+                    @elseif(session('role') === 'officer')
+                    <a href="{{ route('reports.index') }}" id="quick-verify"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-tasks"></i> Verifikasi Laporan
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-map-marker-alt"></i> Jadwal Kunjungan Saya
+                    </a>
+                    @else
+                    <a href="{{ route('reports.index') }}" id="quick-recap"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-chart-bar"></i> Rekap Laporan
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-calendar-check"></i> Kelola Jadwal
+                    </a>
+                    @endif
+                    <a href="{{ route('education.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-book-open"></i> Edukasi Kesehatan
+                    </a>
+                </div>
+              </div>
             </div>
-        </div>
-    </div>
 
     {{-- ─── Stat Cards ──────────────────────────────────── --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -898,108 +898,44 @@
             </div>
             <div class="space-y-4">
                 @foreach($recent_activities as $activity)
-                <div class="flex items-start gap-4">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ ['red' => 'bg-red-50', 'green' => 'bg-green-50', 'blue' => 'bg-blue-50', 'purple' => 'bg-purple-50'][$activity['color']] ?? 'bg-yellow-50' }}">
-                        <i class="fas {{ ['report' => 'fa-file-circle-exclamation text-red-500', 'check' => 'fa-check-circle text-green-500', 'calendar' => 'fa-calendar-check text-blue-500', 'article' => 'fa-newspaper text-purple-500'][$activity['icon']] ?? 'fa-user-md text-yellow-500' }} text-sm"></i>
+                    <div class="flex items-start gap-4">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ ['red' => 'bg-red-50', 'green' => 'bg-green-50', 'blue' => 'bg-blue-50', 'purple' => 'bg-purple-50'][$activity['color']] ?? 'bg-yellow-50' }}">
+                            <i class="fas {{ ['report' => 'fa-file-circle-exclamation text-red-500', 'check' => 'fa-check-circle text-green-500', 'calendar' => 'fa-calendar-check text-blue-500', 'article' => 'fa-newspaper text-purple-500'][$activity['icon']] ?? 'fa-user-md text-yellow-500' }} text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-700 font-medium leading-snug">{{ $activity['text'] }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $activity['time'] }}</p>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-700 font-medium leading-snug">{{ $activity['text'] }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $activity['time'] }}</p>
-=======
-                    <div
-                      class="bg-slate-50 p-2 rounded-lg border border-slate-100"
-                    >
-                      <span class="text-slate-500 text-[10px] block"
-                        >Bakteri E. Coli</span
-                      >
-                      <span class="font-bold text-red-600 text-[12px]"
-                        >64 CFU / 100ml</span
-                      >
->>>>>>> origin/dashboard
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-0.5">
+                        <span class="material-symbols-outlined text-[13px]">person</span>
+                        <span>Sanitarian: <strong class="text-slate-700">Dimas Prasetyo, S.Tr.Kes</strong></span>
                     </div>
-                  </div>
-                  <div
-                    class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-0.5"
-                  >
-                    <span class="material-symbols-outlined text-[13px]"
-                      >person</span
-                    >
-                    <span
-                      >Sanitarian:
-                      <strong class="text-slate-700"
-                        >Dimas Prasetyo, S.Tr.Kes</strong
-                      ></span
-                    >
-                  </div>
-                </div>
-                <!-- Actions inside Popup -->
-                <div
-                  class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100"
-                >
-                  <button
-                    class="h-8 rounded-lg bg-red-600 text-white hover:bg-red-700 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs"
-                    type="button"
-                  >
-                    <span class="material-symbols-outlined text-[14px]"
-                      >medication</span
-                    >
-                    <span>Klorinasi Cepat</span>
-                  </button>
-                  <button
-                    class="h-8 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1"
-                    type="button"
-                  >
-                    <span class="material-symbols-outlined text-[14px]"
-                      >description</span
-                    >
-                    <span>Detail IKL &amp; Lab</span>
-                  </button>
-                </div>
-              </div>
-              <!-- FLOATING MINIMALIST LEGEND (Bottom Left) -->
+                @endforeach
+            </div>
+
+            <!-- Actions inside Popup -->
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 mt-4">
+              <button
+                class="h-8 rounded-lg bg-red-600 text-white hover:bg-red-700 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[14px]">medication</span>
+                <span>Klorinasi Cepat</span>
+              </button>
+              <button
+                class="h-8 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[14px]">description</span>
+                <span>Detail IKL &amp; Lab</span>
+              </button>
+            </div>
+          </div>
+          <!-- FLOATING MINIMALIST LEGEND (Bottom Left) -->
               <div
                 class="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200 shadow-sm max-w-xs text-[11px]"
-              >
-                <div
-                  class="flex items-center justify-between font-bold text-slate-800 text-[11px] mb-2"
-                >
-                  <span>Legenda Risiko Kualitas Air</span>
-                  <span class="text-[10px] text-slate-400 font-normal font-mono"
-                    >Permenkes 2/2023</span
-                  >
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-red-500 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-red-700"
-                        >Risiko Tinggi / Kritis:</strong
-                      >
-                      &gt;50 CFU / 100ml (TMS)</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-amber-700">Risiko Sedang:</strong> 1
-                      - 50 CFU (Perlu Monitor)</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-blue-600 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-blue-800">Aman / Laik:</strong> 0 CFU
-                      (Sesuai Baku Mutu)</span
-                    >
-                  </div>
-                </div>
-              </div>
+              ></div>
               <!-- FLOATING REAL-TIME COORDINATES STRIP (Bottom Right) -->
               <div
                 class="absolute bottom-4 right-4 z-10 hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-[10px] font-mono text-slate-600 shadow-xs"
