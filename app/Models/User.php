@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['nama_lengkap', 'nip_nik', 'username', 'email', 'password', 'no_telepon', 'role', 'wilayah_kerja', 'alamat', 'foto', 'is_active'])]
 #[Hidden(['password'])]
@@ -22,7 +21,7 @@ class User extends Authenticatable
     public $timestamps = false;
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
