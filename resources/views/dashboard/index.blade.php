@@ -10,7 +10,7 @@
       <main class="p-5 flex flex-col gap-4 flex-1">
         <!-- TOOLBAR & FILTER STRIP -->
         <section
-          class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3"
+          class="card p-3 flex flex-wrap items-center justify-between gap-3"
         >
           <!-- Filter Dropdowns -->
           <div class="flex flex-wrap items-center gap-2.5">
@@ -121,7 +121,7 @@
           <div class="lg:col-span-8 flex flex-col gap-3">
             <!-- MAP CONTAINER -->
             <div
-              class="relative w-full h-[740px] rounded-xl overflow-hidden border border-slate-200 bg-[#f1f5f9] shadow-sm select-none"
+              class="relative w-full h-[740px] card bg-[#f1f5f9] overflow-hidden select-none"
             >
               <!-- SVG Map Vector Canvas -->
               <div class="absolute inset-0 z-0 bg-[#eaf2f8] overflow-hidden">
@@ -685,7 +685,7 @@
               </div>
               <!-- FLOATING ACTIVE PIN DETAIL POPUP MODAL (Compact & Anchored Gracefully) -->
               <div
-                class="absolute z-20 top-20 left-1/4 sm:left-[28%] w-80 max-w-[90%] bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200 p-4 transition-all"
+                class="absolute z-20 top-20 left-1/4 sm:left-[28%] w-80 max-w-[90%] card bg-white/95 backdrop-blur-md shadow-lg p-4 transition-all"
                 id="gis-popup-modal"
               >
                 <div
@@ -791,7 +791,7 @@
     {{-- ─── Stat Cards ──────────────────────────────────── --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {{-- Total Laporan --}}
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Laporan</p>
@@ -807,7 +807,7 @@
         </div>
 
         {{-- Pending --}}
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Menunggu</p>
@@ -823,7 +823,7 @@
         </div>
 
         {{-- Resolved --}}
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Selesai</p>
@@ -840,7 +840,7 @@
 
         {{-- Dynamic 4th card by role --}}
         @if(session('role') === 'citizen')
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Artikel Edukasi</p>
@@ -855,7 +855,7 @@
             </div>
         </div>
         @elseif(session('role') === 'officer')
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Jadwal Saya</p>
@@ -870,7 +870,7 @@
             </div>
         </div>
         @else
-        <div class="stat-card">
+        <div class="card p-5">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Petugas Aktif</p>
@@ -934,7 +934,7 @@
           </div>
           <!-- FLOATING MINIMALIST LEGEND (Bottom Left) -->
               <div
-                class="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200 shadow-sm max-w-xs text-[11px]"
+                class="absolute bottom-4 left-4 z-10 card bg-white/95 backdrop-blur-md p-3 max-w-xs text-[11px]"
               ></div>
               <!-- FLOATING REAL-TIME COORDINATES STRIP (Bottom Right) -->
               <div
@@ -966,7 +966,7 @@
             </div>
             <!-- MAP TIMELINE BAR & QUICK METRICS -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-2.5 shadow-xs flex flex-wrap items-center justify-between gap-2 text-[12px]"
+              class="card p-2.5 flex flex-wrap items-center justify-between gap-2 text-[12px]"
             >
               <div class="flex items-center gap-2">
                 <span class="font-bold text-primary flex items-center gap-1">
@@ -1015,7 +1015,7 @@
             <div class="grid grid-cols-2 gap-3">
               <!-- Total Titik -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -1041,7 +1041,7 @@
               </div>
               <!-- Titik Risiko Tinggi -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-red-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 border-red-200 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -1067,7 +1067,7 @@
               </div>
               <!-- Titik Risiko Sedang -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 border-amber-200 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -1093,7 +1093,7 @@
               </div>
               <!-- Titik Aman -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -1120,7 +1120,7 @@
             </div>
             <!-- VILLAGE RISK RANKING CARD -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col gap-3"
+              class="card p-4 flex flex-col gap-3"
             >
               <div class="flex items-center justify-between">
                 <div>
@@ -1261,7 +1261,7 @@
             </div>
             <!-- URGENT ACTION RECOMMENDATION CARD -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs border-l-4 border-l-primary flex flex-col gap-2.5"
+              class="card p-4 border-l-4 border-l-primary flex flex-col gap-2.5"
             >
               <div class="flex items-start gap-2.5">
                 <div
@@ -1316,7 +1316,7 @@
             </div>
             <!-- RECENT SPATIAL ALERTS FEED -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col gap-2.5"
+              class="card p-4 flex flex-col gap-2.5"
             >
               <div class="flex items-center justify-between">
                 <h4

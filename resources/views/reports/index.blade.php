@@ -236,31 +236,30 @@
                         </td>
                         <td>
                             @if($status === 'pending')
-                                <span class="badge badge-pending"><i class="fas fa-circle text-yellow-400 text-xs"></i> Menunggu</span>
+                                <span class="badge badge-pending">Menunggu</span>
                             @elseif($status === 'approved')
-                                <span class="badge bg-emerald-50 text-emerald-700"><i class="fas fa-circle text-emerald-400 text-xs"></i> Disetujui</span>
+                                <span class="badge badge-resolved">Disetujui</span>
                             @elseif($status === 'rejected')
-                                <span class="badge bg-red-50 text-red-700"><i class="fas fa-circle text-red-400 text-xs"></i> Ditolak</span>
+                                <span class="badge badge-rejected">Ditolak</span>
                             @elseif($status === 'in_progress')
-                                <span class="badge badge-progress"><i class="fas fa-circle text-blue-400 text-xs"></i> Proses</span>
+                                <span class="badge badge-progress">Proses</span>
                             @else
-                                <span class="badge badge-resolved"><i class="fas fa-circle text-green-400 text-xs"></i> Selesai</span>
+                                <span class="badge badge-resolved">Selesai</span>
                             @endif
                         </td>
                         <td><span class="text-xs text-gray-400">{{ $report['date'] }}</span></td>
                         <td>
                             <div class="flex flex-wrap items-center gap-2">
-                                <button type="button" onclick="openDetailModal(@js($report))" class="text-xs btn-secondary btn-sm">
-                                    <i class="fas fa-eye mr-1"></i> Detail
+                                <button type="button" onclick="openDetailModal(@js($report))" class="btn-secondary btn-sm" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
                                 </button>
                                 <button type="button"
                                         onclick="openScheduleModal(@js($report['id']), @js($scheduleValue), @js($report['schedule_note'] ?? ''))"
-                                        class="text-xs btn-secondary btn-sm">
-                                    <i class="fas {{ $hasSchedule ? 'fa-edit' : 'fa-calendar-plus' }} mr-1"></i>
-                                    {{ $hasSchedule ? 'Ubah Jadwal' : 'Buat Jadwal' }}
+                                        class="btn-secondary btn-sm text-blue-600" title="{{ $hasSchedule ? 'Ubah Jadwal' : 'Buat Jadwal' }}">
+                                    <i class="fas {{ $hasSchedule ? 'fa-calendar-check' : 'fa-calendar-plus' }}"></i>
                                 </button>
-                                <button @click="open = !open" class="text-xs btn-secondary btn-sm">
-                                    <i class="fas fa-edit mr-1"></i> Update
+                                <button @click="open = !open" class="btn-secondary btn-sm text-green-600" title="Update Status">
+                                    <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
                             {{-- Inline status update --}}
@@ -353,7 +352,7 @@
                     <tr>
                         <td><span class="font-mono text-xs font-bold text-gray-500">#{{ $report['id'] }}</span></td>
                         <td><span class="text-sm text-gray-700 font-medium">{{ $report['citizen'] }}</span></td>
-                        <td><span class="badge bg-gray-100 text-gray-600">{{ $report['category'] }}</span></td>
+                        <td><span class="badge badge-pending">{{ $report['category'] }}</span></td>
                         <td class="hidden md:table-cell"><p class="text-xs text-gray-500 max-w-xs truncate">{{ $report['location'] }}</p></td>
 
                         {{-- Pilihan Status: Menunggu / Disetujui / Ditolak / Proses / Selesai --}}
@@ -395,17 +394,17 @@
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button"
                                     onclick="openDetailModal(@js($report))"
-                                    class="px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition inline-flex items-center gap-1">
-                                    <i class="fas fa-eye text-gray-500"></i> Detail
+                                    class="btn-secondary btn-sm" title="Lihat Detail">
+                                    <i class="fas fa-eye text-gray-500"></i>
                                 </button>
 
                                 <button type="button"
                                     onclick="openScheduleModal(@js($report['id']), @js($scheduleValue), @js($report['schedule_note'] ?? ''))"
-                                    class="px-2.5 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-lg transition inline-flex items-center gap-1">
+                                    class="btn-secondary btn-sm text-indigo-600" title="{{ $hasSchedule ? 'Ubah Jadwal' : 'Buat Jadwal' }}">
                                     @if($hasSchedule)
-                                        <i class="fas fa-edit"></i> Ubah Jadwal
+                                        <i class="fas fa-calendar-check"></i>
                                     @else
-                                        <i class="fas fa-plus-circle"></i> Buat Jadwal
+                                        <i class="fas fa-calendar-plus"></i>
                                     @endif
                                 </button>
                             </div>

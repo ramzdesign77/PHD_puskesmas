@@ -368,30 +368,12 @@
 
         {{-- Page header --}}
         <div class="overflow-hidden rounded-2xl border border-blue-100 bg-linear-to-r from-blue-600 via-blue-500 to-indigo-500 p-5 shadow-sm sm:p-6">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20">
-                        <i class="fas fa-calendar-check text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">Manajemen Kunjungan</p>
-                        <h2 class="mt-1 text-xl font-bold text-white">Kelola Jadwal Kunjungan</h2>
-                        <p class="mt-1 max-w-2xl text-sm text-blue-100">Atur petugas dan waktu kunjungan warga dari satu halaman dengan informasi yang lebih mudah dibaca.</p>
-                    </div>
-                </div>
 
-                @if(Route::has('schedules.create'))
-                    <a href="{{ route('schedules.create') }}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-blue-600 shadow-sm transition hover:bg-blue-50 lg:w-auto">
-                        <i class="fas fa-plus text-xs"></i>
-                        Tambah Permintaan
-                    </a>
-                @endif
-            </div>
         </div>
 
         {{-- Stats --}}
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div class="relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+            <div class="card relative overflow-hidden border-blue-100 p-5">
                 <div class="absolute inset-x-0 top-0 h-1 bg-blue-500"></div>
                 <div class="flex items-center justify-between gap-4">
                     <div>
@@ -405,7 +387,7 @@
                 </div>
             </div>
 
-            <div class="relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
+            <div class="card relative overflow-hidden border-orange-100 p-5">
                 <div class="absolute inset-x-0 top-0 h-1 bg-orange-400"></div>
                 <div class="flex items-center justify-between gap-4">
                     <div>
@@ -419,7 +401,7 @@
                 </div>
             </div>
 
-            <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+            <div class="card relative overflow-hidden border-emerald-100 p-5">
                 <div class="absolute inset-x-0 top-0 h-1 bg-emerald-500"></div>
                 <div class="flex items-center justify-between gap-4">
                     <div>
@@ -435,7 +417,7 @@
         </div>
 
         {{-- Request list --}}
-        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div class="card overflow-hidden">
             <div class="border-b border-gray-100 p-5 sm:p-6">
                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div class="flex items-start gap-3">
@@ -513,7 +495,7 @@
                         <div
                             x-show="matches(@js($scheduleItem))"
                             x-cloak
-                            class="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                            class="group card overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                         >
                             <div class="grid gap-4 p-4 sm:p-5 lg:grid-cols-[200px_minmax(300px,1.55fr)_180px_minmax(210px,1.1fr)_120px] lg:items-center lg:gap-5">
 
@@ -575,15 +557,9 @@
 
                                     <div class="mt-2.5">
                                         @if($schedule['status'] === 'assigned')
-                                            <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-600 ring-1 ring-emerald-100">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                                Ditugaskan
-                                            </span>
+                                            <span class="badge badge-assigned">Ditugaskan</span>
                                         @else
-                                            <span class="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 px-2.5 py-1.5 text-[11px] font-bold text-orange-600 ring-1 ring-orange-100">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-orange-500"></span>
-                                                Menunggu
-                                            </span>
+                                            <span class="badge badge-pending">Menunggu</span>
                                         @endif
                                     </div>
                                     </div>
@@ -654,16 +630,10 @@
                             <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Status</p>
                             <div class="mt-2">
                                 <template x-if="selected?.status === 'assigned'">
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-600 ring-1 ring-emerald-100">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        Ditugaskan
-                                    </span>
+                                    <span class="badge badge-assigned">Ditugaskan</span>
                                 </template>
                                 <template x-if="selected?.status !== 'assigned'">
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 px-2.5 py-1.5 text-xs font-bold text-orange-600 ring-1 ring-orange-100">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-orange-500"></span>
-                                        Menunggu
-                                    </span>
+                                    <span class="badge badge-pending">Menunggu</span>
                                 </template>
                             </div>
                         </div>
