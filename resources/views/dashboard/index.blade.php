@@ -196,21 +196,8 @@
             <div class="space-y-4">
                 @foreach($recent_activities as $activity)
                 <div class="flex items-start gap-4">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
-                        @if($activity['color'] === 'red') bg-red-50
-                        @elseif($activity['color'] === 'green') bg-green-50
-                        @elseif($activity['color'] === 'blue') bg-blue-50
-                        @elseif($activity['color'] === 'purple') bg-purple-50
-                        @else bg-yellow-50
-                        @endif">
-                        <i class="fas
-                            @if($activity['icon'] === 'report') fa-file-circle-exclamation text-red-500
-                            @elseif($activity['icon'] === 'check') fa-check-circle text-green-500
-                            @elseif($activity['icon'] === 'calendar') fa-calendar-check text-blue-500
-                            @elseif($activity['icon'] === 'article') fa-newspaper text-purple-500
-                            @else fa-user-md text-yellow-500
-                            @endif
-                            text-sm"></i>
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ ['red' => 'bg-red-50', 'green' => 'bg-green-50', 'blue' => 'bg-blue-50', 'purple' => 'bg-purple-50'][$activity['color']] ?? 'bg-yellow-50' }}">
+                        <i class="fas {{ ['report' => 'fa-file-circle-exclamation text-red-500', 'check' => 'fa-check-circle text-green-500', 'calendar' => 'fa-calendar-check text-blue-500', 'article' => 'fa-newspaper text-purple-500'][$activity['icon']] ?? 'fa-user-md text-yellow-500' }} text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm text-gray-700 font-medium leading-snug">{{ $activity['text'] }}</p>
