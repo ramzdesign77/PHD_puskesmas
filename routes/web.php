@@ -8,6 +8,7 @@ use App\Http\Controllers\EducationController;
 use App\Http\Controllers\EducationManagementController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\Admin\LaporanAdminController;
 
 // ─────────────────────────────────────────────
 // Auth Routes
@@ -23,6 +24,15 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ─────────────────────────────────────────────
 Route::middleware('auth.role')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/laporan', [LaporanAdminController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/{id_laporan}', [LaporanAdminController::class, 'show'])->name('laporan.show');
+        Route::post('/laporan/{id_laporan}/tolak', [LaporanAdminController::class, 'tolak'])->name('laporan.tolak');
+        Route::post('/laporan/{id_laporan}/terima', [LaporanAdminController::class, 'terima'])->name('laporan.terima');
+    });
+
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

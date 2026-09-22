@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LaporanWarga;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -55,12 +56,26 @@ class ReportController extends Controller
         return view('analytics.index', compact('summary', 'categories', 'reports'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
+
+    public function store(Request $request){
+
+        $validated = $request->validate([
             'category'    => 'required|string',
             'description' => 'required|string|min:10',
             'location'    => 'required|string',
+            'id_desa'     => 'required|exists:desa,id_desa',
+        ]);
+
+        LaporanWarga::create([
+            'kode_tiket'       => 'TCK-' . strtoupper(uniqid()),
+            'nama_pelapor'     => session('user_name', 'Anonim'),
+            'nik_pelapor'      => null,
+            'no_wa'            => null,
+            'id_desa'          => $validated['id_desa'],
+            'kategori_laporan' => $validated['category'],
+            'deskripsi'        => $validated['description'] . ' | Lokasi: ' . $validated['location'],
+            'foto_bukti'       => $request->hasFile('photo') ? $request->file('photo')->store('bukti_laporan', 'public') : null,
+            'status_laporan'   => 'menunggu',
         ]);
 
         return redirect()->route('reports.index')
