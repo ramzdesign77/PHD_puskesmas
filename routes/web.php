@@ -1,13 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EducationController;
-use App\Http\Controllers\EducationManagementController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserManagementController;
+use Illuminate\Support\Facades\Route;
 
 // ─────────────────────────────────────────────
 // Auth Routes
@@ -21,6 +20,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ─────────────────────────────────────────────
 // Protected Routes (require session role)
 // ─────────────────────────────────────────────
+Route::get('/edukasi', [EducationController::class, 'index'])->name('education.index');
+Route::get('/edukasi/{slug}', [EducationController::class, 'show'])->name('education.show');
+
 Route::middleware('auth.role')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -30,9 +32,15 @@ Route::middleware('auth.role')->group(function () {
     Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
     Route::get('/analytics', [ReportController::class, 'analytics'])->name('analytics.index');
 
-    // Education
-    Route::get('/education', [EducationController::class, 'index'])->name('education.index');
-    Route::get('/education/manage', [EducationManagementController::class, 'index'])->name('education.manage');
+    // Education management
+    Route::prefix('admin/edukasi')->name('education.')->group(function () {
+        Route::get('/', [EducationController::class, 'manage'])->name('manage');
+        Route::get('/create', [EducationController::class, 'create'])->name('create');
+        Route::post('/', [EducationController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [EducationController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EducationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [EducationController::class, 'destroy'])->name('destroy');
+    });
 
     // User management
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
