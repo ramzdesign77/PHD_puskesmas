@@ -26,6 +26,7 @@ Route::get('/edukasi/{slug}', [EducationController::class, 'show'])->name('educa
 Route::middleware('auth.role')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
