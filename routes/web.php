@@ -44,6 +44,14 @@ Route::middleware('auth.role')->group(function () {
 
     // User management
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/export', [UserManagementController::class, 'export'])->name('users.export');
+    Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
+    Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+    Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
