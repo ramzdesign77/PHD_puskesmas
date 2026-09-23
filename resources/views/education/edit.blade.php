@@ -6,16 +6,87 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto fade-in">
-    <div class="mb-6"><a href="{{ route('education.manage') }}" class="text-sm font-semibold text-medical-red"><i class="fas fa-arrow-left mr-2"></i>Kembali ke daftar</a></div>
-    <form method="POST" action="{{ route('education.update', $article->id) }}" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
-        @csrf @method('PUT')
-        <div><h1 class="text-xl font-bold text-gray-800">Perbarui Artikel</h1><p class="text-sm text-gray-500 mt-1">Perubahan akan langsung terlihat pada halaman publik.</p></div>
-        @if($errors->any())<div class="rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700"><ul class="list-disc list-inside">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-        <div><label for="title" class="block text-sm font-semibold text-gray-700 mb-2">Judul</label><input id="title" name="title" value="{{ old('title', $article->title) }}" required maxlength="255" class="w-full rounded-xl border-gray-200 focus:border-medical-red focus:ring-medical-red"></div>
-        <div><label for="category" class="block text-sm font-semibold text-gray-700 mb-2">Kategori</label><select id="category" name="category" required class="w-full rounded-xl border-gray-200 focus:border-medical-red focus:ring-medical-red"><option value="">Pilih kategori</option>@foreach(['Air Bersih', 'Sanitasi', 'DBD & Nyamuk', 'Persampahan', 'Limbah', 'PHBS'] as $category)<option value="{{ $category }}" @selected(old('category', $article->category) === $category)>{{ $category }}</option>@endforeach</select></div>
-        <div><label for="image" class="block text-sm font-semibold text-gray-700 mb-2">Gambar Baru <span class="font-normal text-gray-400">(opsional, JPG/PNG/WebP maks. 2 MB)</span></label>@if($article->image)<p class="text-xs text-gray-500 mb-2">Gambar saat ini: {{ basename($article->image) }}</p>@endif<input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" class="block w-full rounded-xl border border-gray-200 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-red-50 file:px-4 file:py-3 file:font-semibold file:text-medical-red"></div>
-        <div><label for="content" class="block text-sm font-semibold text-gray-700 mb-2">Konten</label><textarea id="content" name="content" rows="14" required class="w-full rounded-xl border-gray-200 focus:border-medical-red focus:ring-medical-red">{{ old('content', $article->content) }}</textarea></div>
-        <div class="flex justify-end gap-3 border-t border-gray-100 pt-6"><a href="{{ route('education.manage') }}" class="rounded-xl px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50">Batal</a><button type="submit" class="btn-medical rounded-xl px-5 py-3 text-sm font-semibold"><i class="fas fa-save mr-2"></i>Perbarui Artikel</button></div>
+    
+    <!-- Tombol Kembali -->
+    <div class="mb-6">
+        <a href="{{ route('education.manage') }}" class="text-sm font-semibold text-medical-red hover:underline">
+            <i class="fas fa-arrow-left mr-2"></i>Kembali ke daftar
+        </a>
+    </div>
+
+    <!-- Form Edit Artikel -->
+    <form method="POST" action="{{ route('education.update', $article->id) }}" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-sm p-6 md:p-8 space-y-6">
+        @csrf
+        @method('PUT')
+
+        <!-- Judul Bagian Utama -->
+        <div class="border-b border-gray-100 pb-4">
+            <h1 class="text-xl font-bold text-gray-800">Perbarui Artikel</h1>
+            <p class="text-sm text-gray-500 mt-1">Perubahan akan langsung terlihat pada halaman publik.</p>
+        </div>
+
+        <!-- Kotak Peringatan Error Validasi -->
+        @if($errors->any())
+            <div class="rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-red-700">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Container: Judul Artikel -->
+        <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
+            <label for="title" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Judul Artikel</label>
+            <input id="title" name="title" value="{{ old('title', $article->title) }}" required maxlength="255" 
+                   class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium shadow-none" 
+                   placeholder="Contoh: Menjaga Air Bersih di Rumah">
+        </div>
+
+        <!-- Container: Kategori Artikel -->
+        <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
+            <label for="category" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Kategori</label>
+            <select id="category" name="category" required 
+                    class="w-full bg-transparent border-0 p-0 text-gray-800 focus:outline-none focus:ring-0 text-sm font-medium cursor-pointer shadow-none">
+                <option value="" class="text-gray-400">Pilih kategori artikel...</option>
+                @foreach(['Air & Sanitasi', 'Pengelolaan Sampah & Vektor', 'PHBS'] as $category)
+                    <option value="{{ $category }}" @selected(old('category', $article->category) === $category)>
+                        {{ $category }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Container: Unggah Gambar Baru -->
+        <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
+            <label for="image" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Gambar Banner <span class="font-normal text-gray-400 lowercase">(opsional, maks. 2 MB)</span>
+            </label>
+            @if($article->image)
+                <p class="text-xs text-gray-500 mb-2">Gambar saat ini: <span class="font-medium text-gray-700">{{ basename($article->image) }}</span></p>
+            @endif
+            <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" 
+                   class="block w-full bg-transparent border-0 p-0 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-red-50 file:rounded-xl file:px-4 file:py-2 file:font-semibold file:text-medical-red cursor-pointer focus:outline-none focus:ring-0">
+        </div>
+
+        <!-- Container: Konten Artikel -->
+        <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
+            <label for="content" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Isi Konten</label>
+            <textarea id="content" name="content" rows="10" required 
+                      class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium resize-y shadow-none" 
+                      placeholder="Tulis isi artikel secara lengkap di sini...">{{ old('content', $article->content) }}</textarea>
+        </div>
+
+        <!-- Tombol Aksi (Batal & Simpan Perubahan) -->
+        <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
+            <a href="{{ route('education.manage') }}" class="rounded-xl px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition">
+                Batal
+            </a>
+            <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white px-7 py-3.5 text-sm font-bold shadow-lg shadow-red-600/30 transition-all transform hover:-translate-y-0.5">
+                <i class="fas fa-save text-xs"></i> Simpan Perubahan
+            </button>
+        </div>
     </form>
 </div>
 @endsection

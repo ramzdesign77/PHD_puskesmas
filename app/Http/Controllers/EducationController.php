@@ -41,13 +41,12 @@ class EducationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->ensureManagementAccess();
-        $validated = $this->validateArticle($request);
+        $validated = $this->validateArticle($request, null); 
         $validated['title'] = trim($validated['title']);
         $validated['category'] = trim($validated['category']);
         $validated['content'] = trim($validated['content']);
         $validated['excerpt'] = Str::limit(strip_tags($validated['content']), 240);
 
-        // Simpan gambar ke storage/app/public/educations agar dapat diakses melalui Storage::url().
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('educations', 'public');
         }
@@ -56,6 +55,10 @@ class EducationController extends Controller
 
         return redirect()->route('education.manage')->with('success', 'Artikel berhasil ditambahkan.');
     }
+
+    // ==========================================
+    // LETAKKAN FUNGSI EDIT, UPDATE, & DESTROY DI SINI:
+    // ==========================================
 
     public function edit(int $id): View
     {
@@ -68,13 +71,14 @@ class EducationController extends Controller
     {
         $this->ensureManagementAccess();
         $article = Education::findOrFail($id);
-        $validated = $this->validateArticle($request);
+        
+        $validated = $this->validateArticle($request, $id); 
+        
         $validated['title'] = trim($validated['title']);
         $validated['category'] = trim($validated['category']);
         $validated['content'] = trim($validated['content']);
         $validated['excerpt'] = Str::limit(strip_tags($validated['content']), 240);
 
-        // File baru disimpan lebih dulu; gambar lama dihapus setelah data berhasil diperbarui.
         if ($request->hasFile('image')) {
             $newImage = $request->file('image')->store('educations', 'public');
             $validated['image'] = $newImage;
@@ -104,17 +108,29 @@ class EducationController extends Controller
         return redirect()->route('education.manage')->with('success', 'Artikel berhasil dihapus.');
     }
 
-    private function validateArticle(Request $request): array
+    // ==========================================
+    // BATAS AKHIR SISIPAN (DI BAWAH INI SUDAH ADA)
+    // ==========================================
+
+    private function validateArticle(Request $request, ?int $id = null): array
     {
         return $request->validate([
-            'title' => ['required', 'string', 'min:5', 'max:255', 'regex:/^[\pL\pN\s\-_.,()\/]+$/u'],
-            'category' => ['required', 'string', 'max:100', 'in:Air Bersih,Sanitasi,DBD & Nyamuk,Persampahan,Limbah,PHBS'],
+            'title' => [
+                'required', 
+                'string', 
+                'min:5', 
+                'max:255', 
+                'regex:/^[\pL\pN\s\-_.,()\/]+$/u',
+                \Illuminate\Validation\Rule::unique('educations', 'title')->ignore($id),
+            ],
+            'category' => ['required', 'string', 'max:100', 'in:Air & Sanitasi,Pengelolaan Sampah & Vektor,PHBS'],
             'content' => ['required', 'string', 'min:50'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'title.required' => 'Judul artikel wajib diisi.',
             'title.min' => 'Judul artikel minimal 5 karakter.',
             'title.regex' => 'Judul artikel tidak valid. Gunakan huruf, angka, spasi, atau tanda baca sederhana seperti -, _, ., (, ), /.',
+            'title.unique' => 'Judul artikel ini sudah ada. Silakan gunakan judul yang berbeda.',
             'category.required' => 'Kategori artikel wajib dipilih.',
             'category.in' => 'Kategori yang dipilih tidak valid.',
             'content.required' => 'Isi artikel wajib diisi.',
