@@ -74,7 +74,7 @@
         @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
     </style>
 </head>
-<body class="auth-bg flex items-center justify-center p-4 relative overflow-hidden">
+<body class="auth-bg flex items-start justify-center p-4 py-8 relative overflow-x-hidden overflow-y-auto sm:items-center sm:py-4">
 
     {{-- Decorative floating shapes --}}
     <div class="floating-shape bg-red-500 w-96 h-96 -top-20 -left-20"></div>

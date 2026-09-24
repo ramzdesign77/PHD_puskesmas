@@ -1,0 +1,12 @@
+Tambahkan baris ini di dalam group middleware admin/officer di web.php
+(letakkan di dalam Route::middleware('auth.role')->group(function () { ... });
+di bagian dekat komentar "// Reports" atau buat grup baru untuk admin):
+
+use App\Http\Controllers\Admin\LaporanAdminController;
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/laporan', [LaporanAdminController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/{id_laporan}', [LaporanAdminController::class, 'show'])->name('laporan.show');
+    Route::post('/laporan/{id_laporan}/tolak', [LaporanAdminController::class, 'tolak'])->name('laporan.tolak');
+    Route::post('/laporan/{id_laporan}/terima', [LaporanAdminController::class, 'terima'])->name('laporan.terima');
+});

@@ -10,7 +10,7 @@
       <main class="p-5 flex flex-col gap-4 flex-1">
         <!-- TOOLBAR & FILTER STRIP -->
         <section
-          class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3"
+          class="card p-3 flex flex-wrap items-center justify-between gap-3"
         >
           <!-- Filter Dropdowns -->
           <div class="flex flex-wrap items-center gap-2.5">
@@ -121,7 +121,7 @@
           <div class="lg:col-span-8 flex flex-col gap-3">
             <!-- MAP CONTAINER -->
             <div
-              class="relative w-full h-[740px] rounded-xl overflow-hidden border border-slate-200 bg-[#f1f5f9] shadow-sm select-none"
+              class="relative w-full h-[740px] card bg-[#f1f5f9] overflow-hidden select-none"
             >
               <!-- SVG Map Vector Canvas -->
               <div class="absolute inset-0 z-0 bg-[#eaf2f8] overflow-hidden">
@@ -685,7 +685,7 @@
               </div>
               <!-- FLOATING ACTIVE PIN DETAIL POPUP MODAL (Compact & Anchored Gracefully) -->
               <div
-                class="absolute z-20 top-20 left-1/4 sm:left-[28%] w-80 max-w-[90%] bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200 p-4 transition-all"
+                class="absolute z-20 top-20 left-1/4 sm:left-[28%] w-80 max-w-[90%] card bg-white/95 backdrop-blur-md shadow-lg p-4 transition-all"
                 id="gis-popup-modal"
               >
                 <div
@@ -735,6 +735,7 @@
                     </span>
                     <span class="font-bold">Air Keruh &amp; Berbau</span>
                   </div>
+
                   <div class="grid grid-cols-2 gap-2 text-[11px]">
                     <div
                       class="bg-slate-50 p-2 rounded-lg border border-slate-100"
@@ -746,99 +747,195 @@
                         >4 / 5 (Tinggi)</span
                       >
                     </div>
-                    <div
-                      class="bg-slate-50 p-2 rounded-lg border border-slate-100"
-                    >
-                      <span class="text-slate-500 text-[10px] block"
-                        >Bakteri E. Coli</span
-                      >
-                      <span class="font-bold text-red-600 text-[12px]"
-                        >64 CFU / 100ml</span
-                      >
+                  </div>
+                </div>
+
+                {{-- Quick Actions --}}
+                <div class="flex flex-wrap gap-3 mt-5">
+                    @if(session('role') === 'citizen')
+                    <a href="{{ route('reports.index') }}" id="quick-report"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-plus-circle"></i> Buat Laporan Baru
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-calendar-plus"></i> Minta Kunjungan
+                    </a>
+                    @elseif(session('role') === 'officer')
+                    <a href="{{ route('reports.index') }}" id="quick-verify"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-tasks"></i> Verifikasi Laporan
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-map-marker-alt"></i> Jadwal Kunjungan Saya
+                    </a>
+                    @else
+                    <a href="{{ route('reports.index') }}" id="quick-recap"
+                       class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all backdrop-blur">
+                        <i class="fas fa-chart-bar"></i> Rekap Laporan
+                    </a>
+                    <a href="{{ route('schedules.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-calendar-check"></i> Kelola Jadwal
+                    </a>
+                    @endif
+                    <a href="{{ route('education.index') }}"
+                       class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                        <i class="fas fa-book-open"></i> Edukasi Kesehatan
+                    </a>
+                </div>
+              </div>
+            </div>
+
+    {{-- ─── Stat Cards ──────────────────────────────────── --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {{-- Total Laporan --}}
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Laporan</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ $stats['total_reports'] }}</p>
+                    <p class="text-xs text-green-500 font-medium mt-1">
+                        <i class="fas fa-arrow-up"></i> +12 bulan ini
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-file-alt text-medical-red text-lg"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- Pending --}}
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Menunggu</p>
+                    <p class="text-3xl font-bold text-yellow-500">{{ $stats['pending'] }}</p>
+                    <p class="text-xs text-gray-400 font-medium mt-1">
+                        <i class="fas fa-clock"></i> Perlu tindakan
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-hourglass-half text-yellow-500 text-lg"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- Resolved --}}
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Selesai</p>
+                    <p class="text-3xl font-bold text-green-500">{{ $stats['resolved'] }}</p>
+                    <p class="text-xs text-green-500 font-medium mt-1">
+                        <i class="fas fa-check-double"></i> Tertangani
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-500 text-lg"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- Dynamic 4th card by role --}}
+        @if(session('role') === 'citizen')
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Artikel Edukasi</p>
+                    <p class="text-3xl font-bold text-blue-500">{{ $stats['articles'] }}</p>
+                    <p class="text-xs text-blue-400 font-medium mt-1">
+                        <i class="fas fa-book"></i> Tersedia
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-book-open text-blue-500 text-lg"></i>
+                </div>
+            </div>
+        </div>
+        @elseif(session('role') === 'officer')
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Jadwal Saya</p>
+                    <p class="text-3xl font-bold text-purple-500">{{ $stats['schedules'] }}</p>
+                    <p class="text-xs text-purple-400 font-medium mt-1">
+                        <i class="fas fa-calendar"></i> Kunjungan aktif
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-calendar-check text-purple-500 text-lg"></i>
+                </div>
+            </div>
+        </div>
+        @else
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Petugas Aktif</p>
+                    <p class="text-3xl font-bold text-indigo-500">{{ $stats['active_officers'] }}</p>
+                    <p class="text-xs text-indigo-400 font-medium mt-1">
+                        <i class="fas fa-users"></i> Di lapangan
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-indigo-500 text-lg"></i>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    {{-- ─── Bottom Grid: Activity + Progress ──────── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {{-- Recent Activity --}}
+        <div class="lg:col-span-2 card p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-bold text-gray-800">Aktivitas Terbaru</h3>
+                <span class="text-xs text-gray-400">{{ \Carbon\Carbon::now()->format('d M Y') }}</span>
+            </div>
+            <div class="space-y-4">
+                @foreach($recent_activities as $activity)
+                    <div class="flex items-start gap-4">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ ['red' => 'bg-red-50', 'green' => 'bg-green-50', 'blue' => 'bg-blue-50', 'purple' => 'bg-purple-50'][$activity['color']] ?? 'bg-yellow-50' }}">
+                            <i class="fas {{ ['report' => 'fa-file-circle-exclamation text-red-500', 'check' => 'fa-check-circle text-green-500', 'calendar' => 'fa-calendar-check text-blue-500', 'article' => 'fa-newspaper text-purple-500'][$activity['icon']] ?? 'fa-user-md text-yellow-500' }} text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-700 font-medium leading-snug">{{ $activity['text'] }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $activity['time'] }}</p>
+                        </div>
                     </div>
-                  </div>
-                  <div
-                    class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-0.5"
-                  >
-                    <span class="material-symbols-outlined text-[13px]"
-                      >person</span
-                    >
-                    <span
-                      >Sanitarian:
-                      <strong class="text-slate-700"
-                        >Dimas Prasetyo, S.Tr.Kes</strong
-                      ></span
-                    >
-                  </div>
-                </div>
-                <!-- Actions inside Popup -->
-                <div
-                  class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100"
-                >
-                  <button
-                    class="h-8 rounded-lg bg-red-600 text-white hover:bg-red-700 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs"
-                    type="button"
-                  >
-                    <span class="material-symbols-outlined text-[14px]"
-                      >medication</span
-                    >
-                    <span>Klorinasi Cepat</span>
-                  </button>
-                  <button
-                    class="h-8 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1"
-                    type="button"
-                  >
-                    <span class="material-symbols-outlined text-[14px]"
-                      >description</span
-                    >
-                    <span>Detail IKL &amp; Lab</span>
-                  </button>
-                </div>
-              </div>
-              <!-- FLOATING MINIMALIST LEGEND (Bottom Left) -->
-              <div
-                class="absolute bottom-4 left-4 z-10 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-200 shadow-sm max-w-xs text-[11px]"
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 pt-0.5">
+                        <span class="material-symbols-outlined text-[13px]">person</span>
+                        <span>Sanitarian: <strong class="text-slate-700">Dimas Prasetyo, S.Tr.Kes</strong></span>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Actions inside Popup -->
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 mt-4">
+              <button
+                class="h-8 rounded-lg bg-red-600 text-white hover:bg-red-700 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs"
+                type="button"
               >
-                <div
-                  class="flex items-center justify-between font-bold text-slate-800 text-[11px] mb-2"
-                >
-                  <span>Legenda Risiko Kualitas Air</span>
-                  <span class="text-[10px] text-slate-400 font-normal font-mono"
-                    >Permenkes 2/2023</span
-                  >
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-red-500 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-red-700"
-                        >Risiko Tinggi / Kritis:</strong
-                      >
-                      &gt;50 CFU / 100ml (TMS)</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-amber-700">Risiko Sedang:</strong> 1
-                      - 50 CFU (Perlu Monitor)</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-blue-600 flex-shrink-0"
-                    ></span>
-                    <span class="text-slate-700"
-                      ><strong class="text-blue-800">Aman / Laik:</strong> 0 CFU
-                      (Sesuai Baku Mutu)</span
-                    >
-                  </div>
-                </div>
-              </div>
+                <span class="material-symbols-outlined text-[14px]">medication</span>
+                <span>Klorinasi Cepat</span>
+              </button>
+              <button
+                class="h-8 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[14px]">description</span>
+                <span>Detail IKL &amp; Lab</span>
+              </button>
+            </div>
+          </div>
+          <!-- FLOATING MINIMALIST LEGEND (Bottom Left) -->
+              <div
+                class="absolute bottom-4 left-4 z-10 card bg-white/95 backdrop-blur-md p-3 max-w-xs text-[11px]"
+              ></div>
               <!-- FLOATING REAL-TIME COORDINATES STRIP (Bottom Right) -->
               <div
                 class="absolute bottom-4 right-4 z-10 hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md border border-slate-200 text-[10px] font-mono text-slate-600 shadow-xs"
@@ -869,7 +966,7 @@
             </div>
             <!-- MAP TIMELINE BAR & QUICK METRICS -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-2.5 shadow-xs flex flex-wrap items-center justify-between gap-2 text-[12px]"
+              class="card p-2.5 flex flex-wrap items-center justify-between gap-2 text-[12px]"
             >
               <div class="flex items-center gap-2">
                 <span class="font-bold text-primary flex items-center gap-1">
@@ -918,7 +1015,7 @@
             <div class="grid grid-cols-2 gap-3">
               <!-- Total Titik -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -944,7 +1041,7 @@
               </div>
               <!-- Titik Risiko Tinggi -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-red-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 border-red-200 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -970,7 +1067,7 @@
               </div>
               <!-- Titik Risiko Sedang -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-amber-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 border-amber-200 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -996,7 +1093,7 @@
               </div>
               <!-- Titik Aman -->
               <div
-                class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between"
+                class="card p-3.5 flex flex-col justify-between"
               >
                 <div class="flex items-center justify-between">
                   <span
@@ -1023,7 +1120,7 @@
             </div>
             <!-- VILLAGE RISK RANKING CARD -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col gap-3"
+              class="card p-4 flex flex-col gap-3"
             >
               <div class="flex items-center justify-between">
                 <div>
@@ -1164,7 +1261,7 @@
             </div>
             <!-- URGENT ACTION RECOMMENDATION CARD -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs border-l-4 border-l-primary flex flex-col gap-2.5"
+              class="card p-4 border-l-4 border-l-primary flex flex-col gap-2.5"
             >
               <div class="flex items-start gap-2.5">
                 <div
@@ -1219,7 +1316,7 @@
             </div>
             <!-- RECENT SPATIAL ALERTS FEED -->
             <div
-              class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col gap-2.5"
+              class="card p-4 flex flex-col gap-2.5"
             >
               <div class="flex items-center justify-between">
                 <h4

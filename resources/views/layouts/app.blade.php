@@ -62,13 +62,60 @@
             border-bottom: 1px solid rgba(229,231,235,0.8);
         }
         .medical-gradient { background: linear-gradient(135deg, #E63946 0%, #C1121F 100%); }
-        .btn-medical {
+        
+        /* Buttons */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 8px;
             background: linear-gradient(135deg, #E63946 0%, #C1121F 100%);
             color: white; border: none; cursor: pointer;
-            transition: all 0.2s ease;
+            padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 14px;
+            transition: all 0.2s ease; text-decoration: none; box-shadow: 0 2px 4px rgba(230,57,70,0.2);
         }
-        .btn-medical:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,57,70,0.35); }
-        .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(230,57,70,0.35); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0;
+            cursor: pointer; padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 14px;
+            transition: all 0.2s ease; text-decoration: none;
+        }
+        .btn-secondary:hover { background: #F1F5F9; color: #1E293B; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+        /* Cards */
+        .card { 
+            background: white; 
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid #F3F4F6; /* gray-100 */
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
+        }
+
+        /* Data Tables */
+        .data-table { width: 100%; text-align: left; border-collapse: collapse; }
+        .data-table th { 
+            padding: 16px 24px; font-size: 12px; font-weight: 600; 
+            color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; 
+            border-bottom: 1px solid #F1F5F9; background: #F8FAFC;
+            text-align: left;
+        }
+        .data-table td { 
+            padding: 16px 24px; font-size: 14px; color: #334155; 
+            border-bottom: 1px solid #F1F5F9; vertical-align: middle;
+        }
+        .data-table tbody tr { transition: background-color 0.2s ease; }
+        .data-table tbody tr:hover { background-color: #F8FAFC; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex; items-center; gap: 4px;
+            padding: 4px 12px; font-size: 12px; font-weight: 600;
+            border-radius: 9999px; /* rounded-full */
+            border: 1px solid transparent;
+        }
+        .badge-pending { background: #FEF3C7; color: #B45309; border-color: #FDE68A; } /* yellow */
+        .badge-assigned, .badge-progress { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; } /* blue */
+        .badge-resolved { background: #ECFCCB; color: #4D7C0F; border-color: #D9F99D; } /* green */
+        .badge-rejected { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; } /* red */
+
         .fade-in { animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .sidebar-enter { transition: transform 0.3s ease, opacity 0.3s ease; }
@@ -180,16 +227,16 @@
         </nav>
 
         {{-- User Info Bottom --}}
-        <div x-show="sidebarOpen" class="p-4 border-t border-gray-100">
-            <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                <div class="medical-gradient w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
-                    <span class="text-white text-sm font-bold">
+        <div x-show="sidebarOpen" class="mt-auto border-t border-gray-100 p-4">
+            <div class="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+                <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md">
+                    <span class="text-sm font-bold text-white">
                         {{ strtoupper(substr(session('user_name', 'U'), 0, 1)) }}
                     </span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-800 truncate">{{ session('user_name', 'User') }}</p>
-                    <p class="text-xs text-gray-400 truncate">
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold text-gray-800">{{ session('user_name', 'User') }}</p>
+                    <p class="truncate text-xs text-gray-400">
                         @if(session('role') === 'citizen') Masyarakat
                         @elseif(session('role') === 'officer') Petugas Kesling
                         @else Kepala Puskesmas
