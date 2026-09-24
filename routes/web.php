@@ -41,4 +41,26 @@ Route::middleware('auth.role')->group(function () {
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::post('/schedules/{id}/assign', [ScheduleController::class, 'assign'])->name('schedules.assign');
+
+    // ── Admin: Kelola Laporan Warga ──────────────────────────────────────────
+    Route::prefix('admin/laporan')->name('admin.laporan.')->group(function () {
+        Route::get('/', [LaporanAdminController::class, 'index'])->name('index');
+        Route::get('/{id_laporan}', [LaporanAdminController::class, 'show'])->name('show');
+        Route::post('/{id_laporan}/terima', [LaporanAdminController::class, 'terima'])->name('terima');
+        Route::post('/{id_laporan}/tolak', [LaporanAdminController::class, 'tolak'])->name('tolak');
+    });
+
+    // ── Admin: Hasil Inspeksi IKL Air ────────────────────────────────────────
+    Route::prefix('admin/inspeksi-ikl')->name('admin.inspeksi-ikl.')->group(function () {
+        Route::get('/', [InspeksiIklController::class, 'index'])->name('index');
+        Route::get('/{id_jadwal}/input', [InspeksiIklController::class, 'create'])->name('create');
+        Route::post('/', [InspeksiIklController::class, 'store'])->name('store');
+        Route::get('/{id_jadwal}', [InspeksiIklController::class, 'show'])->name('show');
+    });
+});
+
+// ── API Routes untuk Flutter ─────────────────────────────────────────────────
+Route::prefix('api')->name('api.')->group(function () {
+    Route::post('/laporan', [LaporanApiController::class, 'store'])->name('laporan.store');
+    Route::get('/laporan/{kode_tiket}/status', [LaporanApiController::class, 'cekStatus'])->name('laporan.status');
 });
