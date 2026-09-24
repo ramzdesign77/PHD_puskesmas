@@ -187,8 +187,8 @@
                 <!-- Utilities row -->
                 <div class="flex items-center justify-between pt-1 text-sm">
                   <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-                    <input class="w-4 h-4 rounded text-[#991b1b] accent-[#991b1b] cursor-pointer border-stone-300" id="rememberMe" name="remember" type="checkbox" />
-                    <span class="text-stone-600 font-medium text-xs sm:text-sm">Ingat Saya</span>
+                    {{-- <input class="w-4 h-4 rounded text-[#991b1b] accent-[#991b1b] cursor-pointer border-stone-300" id="rememberMe" name="remember" type="checkbox" /> --}}
+                    {{-- <span class="text-stone-600 font-medium text-xs sm:text-sm">Ingat Saya</span> --}}
                   </label>
 
                   @if (Route::has('password.request'))
@@ -196,9 +196,9 @@
                     Lupa Kata Sandi?
                   </a>
                   @else
-                  <a class="text-[#991b1b] hover:text-[#7f1d1d] font-semibold text-xs sm:text-sm hover:underline transition" href="javascript:void(0)" onclick="handleForgotPassword()">
+                  {{-- <a class="text-[#991b1b] hover:text-[#7f1d1d] font-semibold text-xs sm:text-sm hover:underline transition" href="javascript:void(0)" onclick="handleForgotPassword()">
                     Lupa Kata Sandi?
-                  </a>
+                  </a> --}}
                   @endif
                 </div>
 
@@ -222,9 +222,9 @@
             <div class="w-full pt-4 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between text-stone-500 text-xs gap-3">
               <span>© 2026 E-Klinik Sanitasi Puskesmas. Terintegrasi SISDMK &amp; PKAM.</span>
               <div class="flex items-center gap-3">
-                <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Panduan SOP IKL</a>
+                {{-- <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Panduan SOP IKL</a>
                 <span>|</span>
-                <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Helpdesk Dinkes Jember</a>
+                <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Helpdesk Dinkes Jember</a> --}}
               </div>
             </div>
           </section>
