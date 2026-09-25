@@ -88,6 +88,26 @@
 
                 </div>
 
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="sm:col-span-3">
+                        <label class="form-label"><i class="fas fa-house text-blue-400 mr-1.5"></i>Desa/Kelurahan <span class="text-red-500">*</span></label>
+                        <select name="id_desa" class="form-input" required>
+                            <option value="">Pilih desa/kelurahan</option>
+                            @foreach($villages as $village)
+                                <option value="{{ $village->id_desa }}">{{ $village->nama_desa }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">RT <span class="text-red-500">*</span></label>
+                        <input type="text" name="rt" class="form-input" maxlength="5" placeholder="03" required>
+                    </div>
+                    <div>
+                        <label class="form-label">RW <span class="text-red-500">*</span></label>
+                        <input type="text" name="rw" class="form-input" maxlength="5" placeholder="02" required>
+                    </div>
+                </div>
+
                 <div>
 
                     <label class="form-label"><i class="fas fa-calendar text-blue-400 mr-1.5"></i>Preferensi Waktu Kunjungan <span class="text-red-500">*</span></label>
@@ -485,6 +505,7 @@
                                 'location' => $schedule['location'],
                                 'preferred' => $schedule['preferred'],
                                 'officer' => $schedule['officer'] ?? '',
+                                'officer_id' => $schedule['officer_id'] ?? '',
                                 'status' => $schedule['status'],
                                 'assigned_date' => $schedule['assigned_date'] ?? '',
                                 'assigned_time' => $schedule['assigned_time'] ?? '',
@@ -704,10 +725,10 @@
 
                         <div>
                             <label class="form-label">Petugas Kesling</label>
-                            <select name="officer" class="form-input" required x-model="selected.officer">
+                            <select name="officer_id" class="form-input" required x-model="selected.officer_id">
                                 <option value="" disabled>— Pilih Petugas —</option>
                                 @foreach($officers as $itemOfficer)
-                                    <option value="{{ $itemOfficer['name'] }}">{{ $itemOfficer['name'] }} ({{ $itemOfficer['area'] }})</option>
+                                    <option value="{{ $itemOfficer['id'] }}">{{ $itemOfficer['name'] }} ({{ $itemOfficer['area'] }})</option>
                                 @endforeach
                             </select>
                         </div>

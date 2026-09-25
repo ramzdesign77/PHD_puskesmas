@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('users')) {
+            if (DB::table('users')->exists()) {
+                throw new RuntimeException('Tabel users sudah berisi data dengan schema lama. Migrasi users dibatalkan agar data tidak terhapus.');
+            }
+
+            Schema::drop('users');
+        }
+
         Schema::create('users', function (Blueprint $table) {
             $table->integer('id_user', true);
             $table->string('nama_lengkap', 150);

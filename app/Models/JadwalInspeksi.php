@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class JadwalInspeksi extends Model
 {
     protected $table = 'jadwal_inspeksi';
+
     protected $primaryKey = 'id_jadwal';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -15,8 +17,10 @@ class JadwalInspeksi extends Model
         'id_operator', // dipakai sebagai referensi ke petugas.id_petugas
         'id_paket',
         'tanggal_kunjungan',
+        'waktu_kunjungan',
         'jenis_kunjungan',
         'status_kunjungan',
+        'catatan',
     ];
 
     public function laporan()

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
@@ -19,7 +20,7 @@ class UserManagementController extends Controller
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder->where('nama_lengkap', 'like', "%{$search}%")
-                    ->orWhere('nip_nik', 'like', "%{$search}%")
+                    ->orWhere('id_petugas', 'like', "%{$search}%")
                     ->orWhere('username', 'like', "%{$search}%");
             });
         }
@@ -55,11 +56,11 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'nip_nik' => ['nullable', 'string', 'max:30'],
+            'id_petugas' => ['nullable', 'string', 'max:30', 'unique:users,id_petugas'],
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
-            'email' => ['nullable', 'email', 'max:150'],
+            'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'no_telepon' => ['nullable', 'string', 'max:20', 'unique:users,no_telepon'],
             'role' => ['required', 'in:sanitarian'],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
@@ -90,11 +91,11 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'nip_nik' => ['nullable', 'string', 'max:30'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username,' . $user->id_user . ',id_user'],
-            'email' => ['nullable', 'email', 'max:150'],
+            'id_petugas' => ['nullable', 'string', 'max:30', Rule::unique('users', 'id_petugas')->ignore($user->id_user, 'id_user')],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username,'.$user->id_user.',id_user'],
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
-            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'no_telepon' => ['nullable', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
             'role' => ['required', 'in:sanitarian'],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
@@ -152,13 +153,13 @@ class UserManagementController extends Controller
         abort_unless(session('role') === 'admin', 403);
 
         $users = User::query()->where('role', 'sanitarian')->orderBy('nama_lengkap')->get();
-        $filename = 'daftar-petugas-' . now()->format('Y-m-d') . '.csv';
+        $filename = 'daftar-petugas-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Nama Lengkap', 'ID Petugas', 'Username', 'Email', 'No. HP', 'Peran', 'Wilayah Kerja', 'Status']);
             foreach ($users as $user) {
-                fputcsv($handle, [$user->nama_lengkap, $user->nip_nik, $user->username, $user->email, $user->no_telepon, 'Petugas', $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
+                fputcsv($handle, [$user->nama_lengkap, $user->id_petugas, $user->username, $user->email, $user->no_telepon, 'Petugas', $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);

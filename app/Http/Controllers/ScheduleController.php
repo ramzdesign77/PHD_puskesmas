@@ -2,115 +2,152 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Desa;
+use App\Models\JadwalInspeksi;
+use App\Models\LaporanWarga;
+use App\Models\Petugas;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class ScheduleController extends Controller
 {
-    private function getMockSchedules(): array
+    public function index(): View
     {
-        return [
-            [
-                'id'         => 'SCH-001',
-                'citizen'    => 'Ahmad Fauzi',
-                'report_ref' => 'REP-001',
-                'complaint'  => 'Sumur tercemar limbah industri',
-                'location'   => 'Jl. Mawar No.5, RT 03/02',
-                'preferred'  => '2026-09-20 09:00',
-                'officer'    => 'Petugas Andi Susilo',
-                'assigned_date' => '2026-09-20',
-                'assigned_time' => '09:00',
-                'status'     => 'assigned',
-                'notes'      => 'Bawa alat uji kualitas air',
-            ],
-            [
-                'id'         => 'SCH-002',
-                'citizen'    => 'Dewi Lestari',
-                'report_ref' => 'REP-004',
-                'complaint'  => 'Genangan air sarang nyamuk',
-                'location'   => 'Gang Cempaka No.3, RT 04/01',
-                'preferred'  => '2026-09-21 10:00',
-                'officer'    => null,
-                'assigned_date' => null,
-                'assigned_time' => null,
-                'status'     => 'pending',
-                'notes'      => '',
-            ],
-            [
-                'id'         => 'SCH-003',
-                'citizen'    => 'Hendra Wijaya',
-                'report_ref' => 'REP-007',
-                'complaint'  => 'Limbah pabrik ke sungai',
-                'location'   => 'Jl. Industri No.45, RT 02/06',
-                'preferred'  => '2026-09-22 08:00',
-                'officer'    => null,
-                'assigned_date' => null,
-                'assigned_time' => null,
-                'status'     => 'pending',
-                'notes'      => '',
-            ],
-            [
-                'id'         => 'SCH-004',
-                'citizen'    => 'Rizki Hidayat',
-                'report_ref' => 'REP-005',
-                'complaint'  => 'Air PDAM berwarna dan berbau',
-                'location'   => 'Jl. Kenanga No.20, RT 05/04',
-                'preferred'  => '2026-09-23 14:00',
-                'officer'    => 'Petugas Sari Dewi',
-                'assigned_date' => '2026-09-23',
-                'assigned_time' => '14:00',
-                'status'     => 'assigned',
-                'notes'      => 'Koordinasi dengan PDAM',
-            ],
-        ];
-    }
+        $role = session('role');
+        $scheduleQuery = JadwalInspeksi::with(['laporan.desa', 'petugas'])
+            ->whereHas('laporan')
+            ->latest('id_jadwal');
 
-    private function getMockOfficers(): array
-    {
-        return [
-            ['id' => 1, 'name' => 'Petugas Andi Susilo',   'area' => 'Wilayah Utara'],
-            ['id' => 2, 'name' => 'Petugas Sari Dewi',     'area' => 'Wilayah Selatan'],
-            ['id' => 3, 'name' => 'Petugas Budi Rahman',   'area' => 'Wilayah Timur'],
-            ['id' => 4, 'name' => 'Petugas Nurul Hidayah', 'area' => 'Wilayah Barat'],
-        ];
-    }
-
-    public function index()
-    {
-        $schedules = $this->getMockSchedules();
-        $officers  = $this->getMockOfficers();
-        $role      = session('role');
-
-        // Filter for officer: only show their assigned schedules
         if ($role === 'officer') {
-            $officerName = session('user_name');
-            $schedules   = array_filter($schedules, fn($s) => $s['officer'] === $officerName);
+            $scheduleQuery->whereHas('petugas', function ($query): void {
+                $query->where('nama_petugas', session('user_name'));
+            });
         }
 
-        return view('schedules.index', compact('schedules', 'officers', 'role'));
+        $schedules = $scheduleQuery->get()
+            ->map(fn (JadwalInspeksi $schedule): array => $this->scheduleData($schedule))
+            ->all();
+
+        $officers = Petugas::query()
+            ->where('is_active', true)
+            ->orderBy('nama_petugas')
+            ->get()
+            ->map(fn (Petugas $officer): array => [
+                'id' => $officer->getKey(),
+                'name' => $officer->nama_petugas,
+                'area' => $officer->jabatan ?? 'Petugas Kesling',
+            ])
+            ->all();
+
+        $villages = Desa::query()->orderBy('nama_desa')->get();
+
+        return view('schedules.index', compact('schedules', 'officers', 'villages', 'role'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'report_ref'  => 'required|string',
-            'complaint'   => 'required|string|min:5',
-            'location'    => 'required|string',
-            'preferred'   => 'required|string',
+        abort_unless(session('role') === 'citizen', 403);
+
+        $validated = $request->validate([
+            'report_ref' => ['nullable', 'string', 'max:20'],
+            'complaint' => ['required', 'string', 'min:5'],
+            'location' => ['required', 'string', 'max:255'],
+            'id_desa' => ['required', 'integer', 'exists:desa,id_desa'],
+            'rt' => ['required', 'string', 'max:5'],
+            'rw' => ['required', 'string', 'max:5'],
+            'preferred' => ['required', 'date', 'after_or_equal:now'],
+            'notes' => ['nullable', 'string'],
         ]);
+
+        DB::transaction(function () use ($validated): void {
+            $preferred = now()->parse($validated['preferred']);
+            $report = LaporanWarga::create([
+                'kode_tiket' => $validated['report_ref'] ?: 'TCK-'.strtoupper(Str::random(12)),
+                'nama_pelapor' => session('user_name', 'Anonim'),
+                'nik_pelapor' => null,
+                'no_wa' => null,
+                'id_desa' => $validated['id_desa'],
+                'rt' => $validated['rt'],
+                'rw' => $validated['rw'],
+                'kategori_laporan' => 'sanitasi_lingkungan',
+                'deskripsi' => $validated['complaint'].' | Alamat: '.$validated['location'],
+                'status_laporan' => 'menunggu',
+            ]);
+
+            JadwalInspeksi::create([
+                'id_laporan' => $report->getKey(),
+                'id_operator' => null,
+                'tanggal_kunjungan' => $preferred->toDateString(),
+                'waktu_kunjungan' => $preferred->format('H:i:s'),
+                'jenis_kunjungan' => 'ikl_laporan_warga',
+                'status_kunjungan' => 'terjadwal',
+                'catatan' => $validated['notes'] ?? null,
+            ]);
+        });
 
         return redirect()->route('schedules.index')
             ->with('success', 'Permintaan kunjungan berhasil dikirim! Admin akan menentukan petugas dan waktu kunjungan.');
     }
 
-    public function assign(Request $request, $id)
+    public function assign(Request $request, int $id): RedirectResponse
     {
-        $request->validate([
-            'officer'       => 'required|string',
-            'assigned_date' => 'required|date',
-            'assigned_time' => 'required|string',
+        abort_unless(session('role') === 'admin', 403);
+
+        $validated = $request->validate([
+            'officer_id' => ['required', 'integer', 'exists:petugas,id_petugas'],
+            'assigned_date' => ['required', 'date'],
+            'assigned_time' => ['required', 'date_format:H:i'],
         ]);
 
+        $schedule = JadwalInspeksi::with('laporan')->findOrFail($id);
+
+        DB::transaction(function () use ($schedule, $validated): void {
+            $schedule->update([
+                'id_operator' => $validated['officer_id'],
+                'tanggal_kunjungan' => $validated['assigned_date'],
+                'waktu_kunjungan' => $validated['assigned_time'],
+                'status_kunjungan' => 'terjadwal',
+            ]);
+
+            $schedule->laporan?->update(['status_laporan' => 'dijadwalkan']);
+        });
+
         return redirect()->route('schedules.index')
-            ->with('success', "Jadwal {$id} berhasil ditetapkan ke {$request->officer} pada {$request->assigned_date} pukul {$request->assigned_time}.");
+            ->with('success', "Jadwal {$id} berhasil ditetapkan.");
+    }
+
+    /**
+     * Keep the view contract independent from the database column names.
+     *
+     * @return array<string, mixed>
+     */
+    private function scheduleData(JadwalInspeksi $schedule): array
+    {
+        $report = $schedule->laporan;
+        $location = collect([
+            $report?->desa?->nama_desa,
+            $report?->rt ? 'RT '.$report->rt : null,
+            $report?->rw ? 'RW '.$report->rw : null,
+        ])->filter()->implode(', ');
+
+        return [
+            'id' => 'SCH-'.str_pad((string) $schedule->getKey(), 3, '0', STR_PAD_LEFT),
+            'schedule_id' => $schedule->getKey(),
+            'citizen' => $report?->nama_pelapor ?? 'Tanpa nama',
+            'report_ref' => $report?->kode_tiket,
+            'complaint' => $report?->deskripsi ?? '-',
+            'location' => $location ?: 'Alamat belum tersedia',
+            'preferred' => $schedule->tanggal_kunjungan.' '.$schedule->waktu_kunjungan,
+            'officer' => $schedule->petugas?->nama_petugas,
+            'officer_id' => $schedule->id_operator,
+            'assigned_date' => $schedule->id_operator ? $schedule->tanggal_kunjungan : null,
+            'assigned_time' => $schedule->id_operator ? substr((string) $schedule->waktu_kunjungan, 0, 5) : null,
+            'status' => $schedule->id_operator ? 'assigned' : 'pending',
+            'notes' => $schedule->catatan,
+            'assign_url' => route('schedules.assign', $schedule->getKey()),
+        ];
     }
 }
