@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationController;
+use App\Http\Controllers\InspeksiIklController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserManagementController;
@@ -18,22 +19,36 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ─────────────────────────────────────────────
-// Protected Routes (require session role)
+// Public Education Routes
 // ─────────────────────────────────────────────
 Route::get('/edukasi', [EducationController::class, 'index'])->name('education.index');
 Route::get('/edukasi/{slug}', [EducationController::class, 'show'])->name('education.show');
 
+// ─────────────────────────────────────────────
+// Protected Routes (require session role)
+// ─────────────────────────────────────────────
 Route::middleware('auth.role')->group(function () {
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-
-    // Reports
+    // ── Reports (Tab 1: Laporan Masuk, Tab 2: Rekap IKL Air) ──────────────
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
-    Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');                         // legacy compat
+    Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('reports.status');     // legacy compat
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     Route::get('/analytics', [ReportController::class, 'analytics'])->name('analytics.index');
 
-    // Education management
+    // Verifikasi & Penjadwalan laporan (Tab 1 actions)
+    Route::post('/reports/{id_laporan}/jadwalkan', [ReportController::class, 'jadwalkan'])->name('reports.jadwalkan');
+    Route::post('/reports/{id_laporan}/tolak', [ReportController::class, 'tolak'])->name('reports.tolak');
+    Route::post('/reports/{id_jadwal}/reschedule', [ReportController::class, 'reschedule'])->name('reports.reschedule');
+
+    // ── Inspeksi IKL Air (Form oleh Petugas Sanitarian) ───────────────────
+    Route::get('/inspeksi/{id_jadwal}/form', [InspeksiIklController::class, 'form'])->name('inspeksi.form');
+    Route::post('/inspeksi/{id_jadwal}/submit', [InspeksiIklController::class, 'submit'])->name('inspeksi.submit');
+    Route::get('/inspeksi/{id_inspeksi}', [InspeksiIklController::class, 'show'])->name('inspeksi.show');
+
+    // ── Education Management ───────────────────────────────────────────────
     Route::prefix('admin/edukasi')->name('education.')->group(function () {
         Route::get('/', [EducationController::class, 'manage'])->name('manage');
         Route::get('/create', [EducationController::class, 'create'])->name('create');
@@ -43,7 +58,7 @@ Route::middleware('auth.role')->group(function () {
         Route::delete('/{id}', [EducationController::class, 'destroy'])->name('destroy');
     });
 
-    // User management
+    // ── User Management ───────────────────────────────────────────────────
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::get('/users/export', [UserManagementController::class, 'export'])->name('users.export');
     Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create');
@@ -54,8 +69,9 @@ Route::middleware('auth.role')->group(function () {
     Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 
-    // Schedules
+    // ── Schedules (Kelola Jadwal – halaman terpisah) ──────────────────────
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::post('/schedules/{id}/assign', [ScheduleController::class, 'assign'])->name('schedules.assign');
+    Route::post('/schedules/{id}/batal', [ScheduleController::class, 'batal'])->name('schedules.batal');
 });
