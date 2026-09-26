@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\InspeksiIklController;
+use App\Http\Controllers\Admin\LaporanAdminController;
+use App\Http\Controllers\Api\LaporanApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EducationController;
@@ -25,7 +28,6 @@ Route::get('/edukasi/{slug}', [EducationController::class, 'show'])->name('educa
 
 Route::middleware('auth.role')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

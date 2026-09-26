@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class JadwalInspeksi extends Model
 {
     protected $table = 'jadwal_inspeksi';
+
     protected $primaryKey = 'id_jadwal';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -32,5 +35,10 @@ class JadwalInspeksi extends Model
     public function paketAlat()
     {
         return $this->belongsTo(PaketAlat::class, 'id_paket', 'id_paket');
+    }
+
+    public function inspeksiIkl(): HasOne
+    {
+        return $this->hasOne(InspeksiIkl::class, 'id_jadwal', 'id_jadwal');
     }
 }
