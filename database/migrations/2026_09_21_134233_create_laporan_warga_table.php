@@ -15,8 +15,8 @@ return new class extends Migration
             $table->integer('id_laporan', true);
             $table->string('kode_tiket', 20)->unique('kode_tiket');
             $table->string('nama_pelapor', 150);
-            $table->char('nik_pelapor', 16);
-            $table->string('no_wa', 20);
+            $table->string('nik_pelapor', 255)->nullable();
+            $table->string('no_wa', 255)->nullable();
             $table->integer('id_desa')->index('id_desa');
             $table->string('rt', 5);
             $table->string('rw', 5);
