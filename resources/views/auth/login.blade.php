@@ -121,7 +121,7 @@
               </div>
 
               <!-- FORM LARAVEL MULAI DI SINI -->
-              <form id="loginForm" method="POST" action="{{ route('login') }}" class="space-y-5" onsubmit="event.preventDefault(); handleLoginSubmit();">
+              <form id="loginForm" method="POST" action="{{ route('login.post') }}" class="space-y-5" onsubmit="event.preventDefault(); handleLoginSubmit();">
                 @csrf
 
                 <!-- Pesan Error Global (jika ada error validasi dari Laravel) -->
@@ -146,7 +146,7 @@
                 <!-- NIP / Username Field -->
                 <div class="space-y-1.5 text-left">
                   <label class="block text-xs font-semibold text-stone-700 uppercase tracking-wider" for="usernameInput">
-                    NIP / Username Kedinasan
+                    Username atau Email
                   </label>
                   <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
@@ -155,12 +155,12 @@
                     <input class="block w-full pl-11 pr-4 py-3.5 bg-white text-stone-900 placeholder:text-stone-400 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991b1b]/20 border border-stone-200 focus:border-[#991b1b] shadow-xs transition"
                            id="usernameInput"
                            name="username"
-                           placeholder="Contoh: 19890412 201402 1 003"
+                           placeholder="Masukkan username atau email"
                            required
                            type="text"
                            value="{{ old('username') }}" />
                   </div>
-                  <p class="text-xs text-stone-400">Demo lokal: <strong>admin</strong>, <strong>petugas</strong>, atau <strong>masyarakat</strong> dengan kata sandi <strong>password</strong>.</p>
+                  <p class="text-xs text-stone-400">Akun seed: admin / admin123 atau petugas1 / petugas123.</p>
                 </div>
 
                 <!-- Password Field -->

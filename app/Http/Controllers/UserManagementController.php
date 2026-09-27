@@ -14,7 +14,7 @@ class UserManagementController extends Controller
     {
         abort_unless(session('role') === 'admin', 403);
 
-        $query = User::query()->whereIn('role', ['sanitarian', 'admin']);
+        $query = User::query()->whereIn('role', ['sanitarian', 'petugas', 'admin']);
         $search = trim((string) $request->query('q'));
 
         if ($search !== '') {
@@ -38,7 +38,7 @@ class UserManagementController extends Controller
         $perPage = in_array((int) $request->query('per_page'), [10, 25, 50], true)
             ? (int) $request->query('per_page') : 10;
         $users = $query->orderBy('nama_lengkap')->paginate($perPage)->withQueryString();
-        $roles = collect(['sanitarian', 'admin']);
+        $roles = collect(['sanitarian', 'petugas', 'admin']);
 
         return view('users.index', compact('users', 'roles'));
     }
@@ -61,7 +61,7 @@ class UserManagementController extends Controller
             'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'no_telepon' => ['nullable', 'string', 'max:20', 'unique:users,no_telepon'],
-            'role' => ['required', Rule::in(['sanitarian', 'admin'])],
+            'role' => ['required', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
@@ -83,7 +83,7 @@ class UserManagementController extends Controller
     public function edit(User $user)
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless($user->role === 'sanitarian', 404);
+        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
         return view('users.edit', compact('user'));
     }
@@ -91,7 +91,7 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless($user->role === 'sanitarian', 404);
+        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -100,7 +100,7 @@ class UserManagementController extends Controller
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
             'no_telepon' => ['nullable', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
-            'role' => ['required', 'in:sanitarian'],
+            'role' => ['required', 'in:sanitarian,petugas'],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
@@ -126,7 +126,7 @@ class UserManagementController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless($user->role === 'sanitarian', 404);
+        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
         $user->update(['is_active' => false]);
         $user->delete();
@@ -137,7 +137,7 @@ class UserManagementController extends Controller
     public function show(User $user)
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless(in_array($user->role, ['sanitarian', 'admin'], true), 404);
+        abort_unless(in_array($user->role, ['sanitarian', 'petugas', 'admin'], true), 404);
 
         return view('users.show', compact('user'));
     }
@@ -156,7 +156,7 @@ class UserManagementController extends Controller
     {
         abort_unless(session('role') === 'admin', 403);
 
-        $users = User::query()->whereIn('role', ['sanitarian', 'admin'])->orderBy('nama_lengkap')->get();
+        $users = User::query()->whereIn('role', ['sanitarian', 'petugas', 'admin'])->orderBy('nama_lengkap')->get();
         $filename = 'daftar-petugas-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($users) {

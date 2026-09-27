@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             DesaSeeder::class,
             PaketAlatSeeder::class,
             PetugasSeeder::class,
+            AdminAndPetugasSeeder::class,
         ]);
     }
 }

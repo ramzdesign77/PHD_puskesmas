@@ -54,7 +54,7 @@ class ReportController extends Controller
 
         // ── Daftar sanitarian aktif untuk dropdown modal jadwal ───────────
         $sanitarians = User::where('is_active', true)
-            ->whereIn('role', ['sanitarian', 'staf_backup_kluster4'])
+            ->whereIn('role', ['petugas', 'sanitarian', 'staf_backup_kluster4'])
             ->orderBy('nama_lengkap')
             ->get(['id_user', 'nama_lengkap', 'wilayah_kerja']);
 

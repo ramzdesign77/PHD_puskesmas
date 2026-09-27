@@ -14,13 +14,13 @@ class DashboardController extends Controller
 
         // Mengambil data sesungguhnya dari database
         $stats = [
-            'total_reports'   => LaporanWarga::count(),
-            'pending'         => LaporanWarga::whereIn('status_laporan', ['menunggu', 'dibaca'])->count(),
-            'in_progress'     => LaporanWarga::where('status_laporan', 'dijadwalkan')->count(),
-            'resolved'        => LaporanWarga::where('status_laporan', 'selesai')->count(),
-            'active_officers' => User::where('is_active', true)->whereIn('role', ['sanitarian', 'staf_backup_kluster4'])->count(),
-            'articles'        => 0, // Belum ada tabel Edukasi untuk saat ini
-            'schedules'       => JadwalInspeksi::where('status_kunjungan', 'terjadwal')->count(),
+            'total_reports' => LaporanWarga::count(),
+            'pending' => LaporanWarga::whereIn('status_laporan', ['menunggu', 'dibaca'])->count(),
+            'in_progress' => LaporanWarga::where('status_laporan', 'dijadwalkan')->count(),
+            'resolved' => LaporanWarga::where('status_laporan', 'selesai')->count(),
+            'active_officers' => User::where('is_active', true)->whereIn('role', ['petugas', 'sanitarian', 'staf_backup_kluster4'])->count(),
+            'articles' => 0, // Belum ada tabel Edukasi untuk saat ini
+            'schedules' => JadwalInspeksi::where('status_kunjungan', 'terjadwal')->count(),
         ];
 
         // Ambil 5 aktivitas laporan terbaru dari database
@@ -29,27 +29,27 @@ class DashboardController extends Controller
 
         foreach ($latestReports as $report) {
             $color = match ($report->status_laporan) {
-                'menunggu'    => 'yellow',
+                'menunggu' => 'yellow',
                 'dijadwalkan' => 'blue',
-                'selesai'     => 'green',
-                'ditolak'     => 'red',
-                default       => 'gray',
+                'selesai' => 'green',
+                'ditolak' => 'red',
+                default => 'gray',
             };
 
             $icon = match ($report->status_laporan) {
-                'menunggu'    => 'report',
+                'menunggu' => 'report',
                 'dijadwalkan' => 'calendar',
-                'selesai'     => 'check',
-                'ditolak'     => 'close',
-                default       => 'info',
+                'selesai' => 'check',
+                'ditolak' => 'close',
+                default => 'info',
             };
 
             $statusLabel = ucfirst($report->status_laporan);
 
             $recent_activities[] = [
-                'icon'  => $icon,
-                'text'  => "Laporan #{$report->kode_tiket} - {$statusLabel}",
-                'time'  => $report->created_at ? $report->created_at->diffForHumans() : '-',
+                'icon' => $icon,
+                'text' => "Laporan #{$report->kode_tiket} - {$statusLabel}",
+                'time' => $report->created_at ? $report->created_at->diffForHumans() : '-',
                 'color' => $color,
             ];
         }

@@ -2,82 +2,84 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLoginForm(): View|RedirectResponse
     {
-        if (session()->has('role')) {
-            return redirect()->route('dashboard');
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            return redirect()->route($user->isAdmin() ? 'dashboard.admin' : 'dashboard.petugas');
         }
+
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string|min:4',
+        $validated = $request->validate([
+            'username' => ['required', 'string', 'max:150'],
+            'password' => ['required', 'string', 'min:4'],
         ]);
 
-        $user = DB::table('users')
-            ->where('username', $request->string('username')->toString())
-            ->where(function ($query) {
-                $query->where('is_active', true)->orWhereNull('is_active');
-            })
-            ->first();
-
-        $demoUsers = [
-            'admin' => ['password' => 'password', 'name' => 'dr. Kepala Puskesmas', 'role' => 'admin'],
-            'petugas' => ['password' => 'password', 'name' => 'Petugas Sari Dewi', 'role' => 'officer'],
-            'masyarakat' => ['password' => 'password', 'name' => 'Budi Santoso', 'role' => 'citizen'],
+        $identifier = trim($validated['username']);
+        $identityField = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $identityField => $identifier,
+            'password' => $validated['password'],
         ];
 
-        $username = $request->string('username')->toString();
-        $password = $request->string('password')->toString();
-        $authenticated = $user && Hash::check($password, $user->password);
-
-        if (!$user && isset($demoUsers[$username])) {
-            $demoUser = $demoUsers[$username];
-            $authenticated = Hash::check($password, Hash::make($demoUser['password']));
-            $user = (object) [
-                'nama_lengkap' => $demoUser['name'],
-                'role' => $demoUser['role'],
-                'username' => $username,
-            ];
-        }
-
-        if (!$authenticated) {
+        if (! Auth::attempt($credentials)) {
             return back()
                 ->withInput($request->only('username'))
                 ->withErrors(['username' => 'Username atau kata sandi tidak sesuai.']);
         }
 
-        session([
-            'role'       => $this->mapRole($user->role),
-            'user_name'  => $user->nama_lengkap,
-            'username'   => $user->username,
-        ]);
         $request->session()->regenerate();
+        $user = Auth::user();
 
-        return redirect()->route('dashboard');
+        if ($user->is_active === false) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withInput($request->only('username'))
+                ->withErrors(['username' => 'Akun ini sedang dinonaktifkan.']);
+        }
+
+        $request->session()->put([
+            'role' => $this->mapRole($user->role),
+            'user_id' => $user->getAuthIdentifier(),
+            'user_name' => $user->nama_lengkap,
+            'username' => $user->username,
+        ]);
+
+        $dashboardRoute = $user->isAdmin() ? 'dashboard.admin' : 'dashboard.petugas';
+
+        return redirect()->intended(route($dashboardRoute));
     }
 
     private function mapRole(string $role): string
     {
         return match ($role) {
             'admin', 'kepala_puskesmas' => 'admin',
-            'sanitarian', 'staf_backup_kluster4' => 'officer',
+            'petugas', 'sanitarian', 'staf_backup_kluster4' => 'officer',
             default => 'citizen',
         };
     }
 
-    public function logout()
+    public function logout(Request $request): RedirectResponse
     {
-        session()->flush();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('login')->with('success', 'Anda telah berhasil logout.');
     }
 }

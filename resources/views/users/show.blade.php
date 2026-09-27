@@ -28,7 +28,7 @@
     </dl>
     <div class="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-5">
         <a href="{{ route('users.index') }}" class="btn-secondary">Kembali</a>
-        @if($user->role === 'sanitarian')
+        @if(in_array($user->role, ['sanitarian', 'petugas'], true))
             <a href="{{ route('users.edit', $user) }}" class="btn-primary"><i class="fas fa-pen"></i> Ubah</a>
         @endif
     </div>

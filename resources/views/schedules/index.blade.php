@@ -4,7 +4,7 @@
 
 @php
     $role = session('role');
-    $isSanitarian = in_array($role, ['sanitarian', 'staf_backup_kluster4']);
+    $isSanitarian = in_array($role, ['officer', 'petugas', 'sanitarian', 'staf_backup_kluster4'], true);
     $isAdmin      = in_array($role, ['admin', 'kepala_puskesmas']);
 @endphp
 

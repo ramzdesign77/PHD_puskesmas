@@ -70,7 +70,7 @@ class User extends Authenticatable
     /** Apakah user berperan sebagai sanitarian / petugas lapangan. */
     public function isSanitarian(): bool
     {
-        return in_array($this->role, ['sanitarian', 'staf_backup_kluster4']);
+        return in_array($this->role, ['petugas', 'sanitarian', 'staf_backup_kluster4'], true);
     }
 
     /** Apakah user berperan sebagai admin atau kepala puskesmas. */
