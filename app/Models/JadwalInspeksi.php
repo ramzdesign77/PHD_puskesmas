@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class JadwalInspeksi extends Model
@@ -17,6 +18,7 @@ class JadwalInspeksi extends Model
         'id_operator',
         'id_paket',
         'tanggal_kunjungan',
+        'jam_mulai',
         'jenis_kunjungan',
         'status_kunjungan',
     ];
@@ -76,5 +78,22 @@ class JadwalInspeksi extends Model
     public function scopeSelesai($query)
     {
         return $query->where('status_kunjungan', 'selesai');
+    }
+
+    public function scopeForOperatorOnDate(
+        Builder $query,
+        int|string $idOperator,
+        string $tanggalKunjungan,
+        ?int $exceptId = null
+    ): Builder {
+        $query->where('id_operator', $idOperator)
+            ->whereDate('tanggal_kunjungan', $tanggalKunjungan)
+            ->where('status_kunjungan', 'terjadwal');
+
+        if ($exceptId !== null) {
+            $query->where('id_jadwal', '!=', $exceptId);
+        }
+
+        return $query;
     }
 }

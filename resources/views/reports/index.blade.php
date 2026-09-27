@@ -151,6 +151,9 @@
                                         <div class="text-xs">
                                             <p class="font-semibold text-blue-600">
                                                 {{ $laporan->jadwal->tanggal_kunjungan?->format('d M Y') }}
+                                                @if($laporan->jadwal->jam_mulai)
+                                                    <br><span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">{{ \Carbon\Carbon::parse($laporan->jadwal->jam_mulai)->format('H:i') }}</span>
+                                                @endif
                                             </p>
                                             <p class="text-gray-400">{{ $laporan->jadwal->operator?->nama_lengkap ?? '-' }}</p>
                                         </div>
@@ -426,9 +429,15 @@
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Kunjungan <span class="text-red-500">*</span></label>
-                <input type="date" name="tanggal_kunjungan" required
-                    min="{{ date('Y-m-d') }}"
-                    class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                @include('schedules._date-picker')
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Jam Mulai <span class="text-red-500">*</span></label>
+                <input type="time" name="jam_mulai" required
+                    class="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 @error('jam_mulai') border border-red-500 @else border border-gray-200 @enderror">
+                @error('jam_mulai')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Kunjungan</label>
@@ -554,7 +563,9 @@ function hideModal(id) {
 // ── Modal Jadwalkan ───────────────────────────────────────────────
 function openJadwalModal(idLaporan, kodeTiket) {
     document.getElementById('jadwal_kode_tiket').textContent = kodeTiket;
-    document.getElementById('jadwalForm').action = `/reports/${idLaporan}/jadwalkan`;
+    const jadwalForm = document.getElementById('jadwalForm');
+    jadwalForm.reset();
+    jadwalForm.action = `/reports/${idLaporan}/jadwalkan`;
     showModal('jadwalModal');
 }
 function closeJadwalModal() { hideModal('jadwalModal'); }
@@ -609,6 +620,9 @@ function closeDetailModal() { hideModal('detailModal'); }
         if (e.target === this) hideModal(id);
     });
 });
+
+window.setupScheduleCalendars();
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') ['jadwalModal', 'tolakModal', 'detailModal'].forEach(hideModal);
 });

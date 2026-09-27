@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ReportController extends Controller
 {
+    private const SCHEDULE_CONFLICT_MESSAGE = 'Petugas ini sudah memiliki jadwal pada tanggal tersebut. Silakan pilih tanggal lain atau petugas lain.';
+
     // ─────────────────────────────────────────────────────────────────────────
     // READ: Halaman utama (Tab 1 + Tab 2)
     // ─────────────────────────────────────────────────────────────────────────
@@ -74,8 +76,15 @@ class ReportController extends Controller
         $validated = $request->validate([
             'id_operator' => 'required|exists:users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
         ]);
+
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'])) {
+            return back()->withErrors([
+                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+            ])->withInput();
+        }
 
         $laporan = LaporanWarga::findOrFail($idLaporan);
 
@@ -92,6 +101,7 @@ class ReportController extends Controller
                 'id_laporan' => $laporan->id_laporan,
                 'id_operator' => $validated['id_operator'],
                 'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
+                'jam_mulai' => $validated['jam_mulai'],
                 'jenis_kunjungan' => $validated['jenis_kunjungan'],
                 'status_kunjungan' => 'terjadwal',
             ]);
@@ -129,7 +139,14 @@ class ReportController extends Controller
         $validated = $request->validate([
             'id_operator' => 'required|exists:users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
         ]);
+
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'], $idJadwal)) {
+            return back()->withErrors([
+                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+            ])->withInput();
+        }
 
         $jadwal = JadwalInspeksi::where('status_kunjungan', 'terjadwal')
             ->findOrFail($idJadwal);
@@ -137,9 +154,15 @@ class ReportController extends Controller
         $jadwal->update([
             'id_operator' => $validated['id_operator'],
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
+            'jam_mulai' => $validated['jam_mulai'],
         ]);
 
         return back()->with('success', 'Jadwal berhasil diperbarui.');
+    }
+
+    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, ?int $exceptId = null): bool
+    {
+        return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $exceptId)->exists();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

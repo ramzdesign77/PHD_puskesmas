@@ -54,7 +54,7 @@
     @if($isAdmin)
     <div class="card p-5"
         x-data="{ open: false }">
-        <button type="button" @click="open = !open"
+        <button type="button" @click="open = !open; if (open) $refs.scheduleForm.reset()"
             class="flex items-center justify-between w-full text-left">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
@@ -69,7 +69,8 @@
         </button>
 
         <div x-show="open" x-transition class="mt-4 pt-4 border-t border-gray-100">
-            <form method="POST" action="{{ route('schedules.store') }}" class="flex flex-wrap gap-3 items-end">
+            <form x-ref="scheduleForm" method="POST" action="{{ route('schedules.store') }}"
+                class="flex flex-wrap gap-3 items-end">
                 @csrf
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Petugas Sanitarian <span class="text-red-500">*</span></label>
@@ -84,8 +85,13 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Kunjungan <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_kunjungan" required min="{{ date('Y-m-d') }}"
-                        class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    @include('schedules._date-picker')
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Jam Mulai <span class="text-red-500">*</span></label>
+                    <input type="time" name="jam_mulai" required
+                        class="text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-300 w-24 @error('jam_mulai') border border-red-500 @else border border-gray-200 @enderror">
+                    @error('jam_mulai') <p class="text-red-500 text-xs mt-1 max-w-xs">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis</label>
@@ -156,8 +162,11 @@
                             <p class="font-semibold text-gray-800 text-sm">
                                 {{ $jadwal->tanggal_kunjungan?->format('d M Y') ?? '-' }}
                             </p>
-                            <p class="text-xs text-gray-400">
+                            <p class="text-xs text-gray-400 font-medium mt-0.5">
                                 {{ $jadwal->tanggal_kunjungan?->locale('id')->isoFormat('dddd') }}
+                                @if($jadwal->jam_mulai)
+                                    &bull; <span class="text-blue-500">{{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }}</span>
+                                @endif
                             </p>
                         </td>
 
@@ -254,7 +263,7 @@
                                     {{-- Re-assign (jika terjadwal) --}}
                                     @if($jadwal->status_kunjungan === 'terjadwal')
                                     <button type="button"
-                                        onclick="openAssignModal({{ $jadwal->id_jadwal }}, {{ $jadwal->id_operator }}, '{{ $jadwal->tanggal_kunjungan?->format('Y-m-d') }}')"
+                                        onclick="openAssignModal({{ $jadwal->id_jadwal }}, {{ $jadwal->id_operator }}, '{{ $jadwal->tanggal_kunjungan?->format('Y-m-d') }}', '{{ $jadwal->jam_mulai ? \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') : '' }}')"
                                         class="btn-secondary btn-sm text-blue-600" title="Re-assign Petugas">
                                         <i class="fas fa-user-edit"></i>
                                     </button>
@@ -329,9 +338,13 @@
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Kunjungan <span class="text-red-500">*</span></label>
-                <input type="date" id="assign_tanggal" name="tanggal_kunjungan" required
-                    min="{{ date('Y-m-d') }}"
-                    class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                @include('schedules._date-picker', ['exceptId' => ''])
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Jam Mulai <span class="text-red-500">*</span></label>
+                <input type="time" id="assign_jam_mulai" name="jam_mulai" required
+                    class="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 @error('jam_mulai') border border-red-500 @else border border-gray-200 @enderror">
+                @error('jam_mulai') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeAssignModal()" class="btn-secondary btn-sm">Batal</button>
@@ -360,11 +373,15 @@ function hideModal(id) {
 }
 
 @if($isAdmin)
-function openAssignModal(idJadwal, currentOperatorId, currentTanggal) {
-    document.getElementById('assignForm').action = `/schedules/${idJadwal}/assign`;
+function openAssignModal(idJadwal, currentOperatorId, currentTanggal, currentJamMulai) {
+    const assignForm = document.getElementById('assignForm');
+    assignForm.reset();
+    assignForm.action = `/schedules/${idJadwal}/assign`;
     const operatorSelect = document.getElementById('assign_operator');
     operatorSelect.value = currentOperatorId || '';
-    document.getElementById('assign_tanggal').value = currentTanggal || '';
+    assignForm.querySelector('[data-schedule-calendar]').dataset.exceptId = idJadwal;
+    assignForm.scheduleCalendar.setDate(currentTanggal || '');
+    document.getElementById('assign_jam_mulai').value = currentJamMulai || '';
     showModal('assignModal');
 }
 function closeAssignModal() { hideModal('assignModal'); }
@@ -373,6 +390,8 @@ document.getElementById('assignModal')?.addEventListener('click', function(e) {
     if (e.target === this) hideModal('assignModal');
 });
 @endif
+
+window.setupScheduleCalendars();
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {

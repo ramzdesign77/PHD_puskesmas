@@ -71,6 +71,7 @@ Route::middleware('auth.role')->group(function () {
 
     // ── Schedules (Kelola Jadwal – halaman terpisah) ──────────────────────
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/schedules/unavailable-dates', [ScheduleController::class, 'unavailableDates'])->name('schedules.unavailable-dates');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::post('/schedules/{id}/assign', [ScheduleController::class, 'assign'])->name('schedules.assign');
     Route::post('/schedules/{id}/batal', [ScheduleController::class, 'batal'])->name('schedules.batal');

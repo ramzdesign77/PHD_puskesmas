@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\JadwalInspeksi;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -17,6 +19,8 @@ use Illuminate\Http\Request;
  */
 class ScheduleController extends Controller
 {
+    private const SCHEDULE_CONFLICT_MESSAGE = 'Petugas ini sudah memiliki jadwal pada tanggal tersebut. Silakan pilih tanggal lain atau petugas lain.';
+
     public function index(Request $request)
     {
         $role = session('role');
@@ -65,13 +69,21 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'id_operator' => 'required|exists:users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
         ]);
+
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'])) {
+            return back()->withErrors([
+                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+            ])->withInput();
+        }
 
         JadwalInspeksi::create([
             'id_laporan' => null, // IKL Rutin tidak terkait laporan warga
             'id_operator' => $validated['id_operator'],
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
+            'jam_mulai' => $validated['jam_mulai'],
             'jenis_kunjungan' => $validated['jenis_kunjungan'],
             'status_kunjungan' => 'terjadwal',
         ]);
@@ -90,7 +102,14 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'id_operator' => 'required|exists:users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
         ]);
+
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'], $id)) {
+            return back()->withErrors([
+                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+            ])->withInput();
+        }
 
         $jadwal = JadwalInspeksi::where('status_kunjungan', 'terjadwal')
             ->findOrFail($id);
@@ -98,10 +117,41 @@ class ScheduleController extends Controller
         $jadwal->update([
             'id_operator' => $validated['id_operator'],
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
+            'jam_mulai' => $validated['jam_mulai'],
         ]);
 
         return redirect()->route('schedules.index')
             ->with('success', 'Jadwal berhasil diperbarui.');
+    }
+
+    public function unavailableDates(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'id_operator' => 'required|exists:users,id_user',
+            'month' => ['required', 'date_format:Y-m'],
+            'except_id' => 'nullable|integer|exists:jadwal_inspeksi,id_jadwal',
+        ]);
+
+        $monthStart = Carbon::createFromFormat('Y-m', $validated['month'])->startOfMonth();
+        $query = JadwalInspeksi::query()
+            ->where('id_operator', $validated['id_operator'])
+            ->where('status_kunjungan', 'terjadwal')
+            ->whereBetween('tanggal_kunjungan', [
+                $monthStart->toDateString(),
+                $monthStart->copy()->endOfMonth()->toDateString(),
+            ]);
+
+        if (isset($validated['except_id'])) {
+            $query->where('id_jadwal', '!=', $validated['except_id']);
+        }
+
+        return response()->json([
+            'dates' => $query->distinct()
+                ->orderBy('tanggal_kunjungan')
+                ->pluck('tanggal_kunjungan')
+                ->map(static fn ($date): string => Carbon::parse($date)->toDateString())
+                ->values(),
+        ]);
     }
 
     /**
@@ -125,5 +175,10 @@ class ScheduleController extends Controller
 
         return redirect()->route('schedules.index')
             ->with('success', 'Jadwal kunjungan dibatalkan. Laporan dikembalikan ke antrean.');
+    }
+
+    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, ?int $exceptId = null): bool
+    {
+        return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $exceptId)->exists();
     }
 }
