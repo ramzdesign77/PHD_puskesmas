@@ -85,6 +85,17 @@
 
                 {{-- Location --}}
                 <div>
+
+                    <div>
+                        <label class="form-label"><i class="fas fa-map-marker-alt mr-1.5"></i>Desa <span class="text-red-600">*</span></label>
+                        <select name="id_desa" class="form-input" required>
+                            <option value="" disabled selected>-- Pilih Desa --</option>
+                            @foreach(\App\Models\Desa::all() as $desa)
+                                <option value="{{ $desa->id_desa }}">{{ $desa->nama_desa }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <label class="form-label"><i class="fas fa-map-marker-alt text-red-400 mr-1.5"></i>Lokasi Kejadian <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <input id="report-location" type="text" name="location" class="form-input pl-10"
@@ -160,7 +171,7 @@
         ] as $s)
         <div class="card p-4 text-center">
             <div class="w-10 h-10 bg-{{ $s['color'] }}-50 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <i class="fas {{ $s['icon'] }} text-{{ $s['color'] }}-{{ $s['color'] === 'gray' ? '500' : '500' }}"></i>
+                <i class="fas {{ $s['icon'] }} text-{{ $s['color'] }}-500"></i>
             </div>
             <p class="text-2xl font-bold text-gray-800">{{ $s['value'] }}</p>
             <p class="text-xs text-gray-400 font-medium">{{ $s['label'] }}</p>
@@ -191,10 +202,17 @@
                 </thead>
                 <tbody>
                     @foreach($reports as $report)
+                    @php
+                        $status = $report['status'] ?? 'pending';
+                        $hasSchedule = !empty($report['scheduled_at']);
+                        $scheduleValue = $hasSchedule
+                            ? \Carbon\Carbon::parse($report['scheduled_at'])->format('Y-m-d\TH:i')
+                            : '';
+                    @endphp
                     <tr x-data="{ open: false }">
                         <td>
                             <span class="font-mono text-xs font-bold text-gray-500">{{ $report['id'] }}</span>
-                            @if($report['image'])
+                            @if(!empty($report['image']))
                             <span class="ml-1 text-blue-400 text-xs" title="Ada foto">
                                 <i class="fas fa-image"></i>
                             </span>
@@ -217,19 +235,31 @@
                             <p class="text-xs text-gray-500 max-w-xs truncate">{{ $report['location'] }}</p>
                         </td>
                         <td>
-                            @if($report['status'] === 'pending')
-                                <span class="badge badge-pending"><i class="fas fa-circle text-yellow-400 text-xs"></i> Menunggu</span>
-                            @elseif($report['status'] === 'in_progress')
-                                <span class="badge badge-progress"><i class="fas fa-circle text-blue-400 text-xs"></i> Proses</span>
+                            @if($status === 'pending')
+                                <span class="badge badge-pending">Menunggu</span>
+                            @elseif($status === 'approved')
+                                <span class="badge badge-resolved">Disetujui</span>
+                            @elseif($status === 'rejected')
+                                <span class="badge badge-rejected">Ditolak</span>
+                            @elseif($status === 'in_progress')
+                                <span class="badge badge-progress">Proses</span>
                             @else
-                                <span class="badge badge-resolved"><i class="fas fa-circle text-green-400 text-xs"></i> Selesai</span>
+                                <span class="badge badge-resolved">Selesai</span>
                             @endif
                         </td>
                         <td><span class="text-xs text-gray-400">{{ $report['date'] }}</span></td>
                         <td>
-                            <div class="flex items-center gap-2">
-                                <button @click="open = !open" class="text-xs btn-secondary btn-sm">
-                                    <i class="fas fa-edit mr-1"></i> Update
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" onclick="openDetailModal(@js($report))" class="btn-secondary btn-sm" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button"
+                                        onclick="openScheduleModal(@js($report['id']), @js($scheduleValue), @js($report['schedule_note'] ?? ''))"
+                                        class="btn-secondary btn-sm text-blue-600" title="{{ $hasSchedule ? 'Ubah Jadwal' : 'Buat Jadwal' }}">
+                                    <i class="fas {{ $hasSchedule ? 'fa-calendar-check' : 'fa-calendar-plus' }}"></i>
+                                </button>
+                                <button @click="open = !open" class="btn-secondary btn-sm text-green-600" title="Update Status">
+                                    <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
                             {{-- Inline status update --}}
@@ -237,9 +267,11 @@
                                 <form method="POST" action="{{ route('reports.status', $report['id']) }}" class="flex gap-2 items-center">
                                     @csrf
                                     <select name="status" class="form-input text-xs py-1.5 w-36">
-                                        <option value="pending" {{ $report['status'] === 'pending' ? 'selected' : '' }}>Menunggu</option>
-                                        <option value="in_progress" {{ $report['status'] === 'in_progress' ? 'selected' : '' }}>Dalam Proses</option>
-                                        <option value="resolved" {{ $report['status'] === 'resolved' ? 'selected' : '' }}>Selesai</option>
+                                        <option value="pending"     {{ $status === 'pending' ? 'selected' : '' }}>Menunggu</option>
+                                        <option value="approved"    {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
+                                        <option value="rejected"    {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                                        <option value="in_progress" {{ $status === 'in_progress' ? 'selected' : '' }}>Dalam Proses</option>
+                                        <option value="resolved"    {{ $status === 'resolved' ? 'selected' : '' }}>Selesai</option>
                                     </select>
                                     <button type="submit" class="btn-primary btn-sm">
                                         <i class="fas fa-save"></i>
@@ -255,7 +287,7 @@
     </div>
 
     {{-- ════════════════════════════════════════════ --}}
-    {{-- ADMIN: SUMMARY + READ-ONLY TABLE             --}}
+    {{-- ADMIN: SUMMARY + MANAGEMENT TABLE            --}}
     {{-- ════════════════════════════════════════════ --}}
     @else
     {{-- Summary Cards --}}
@@ -284,18 +316,18 @@
     <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-3">
         <i class="fas fa-info-circle text-blue-400 text-xl flex-shrink-0"></i>
         <p class="text-sm text-blue-700">
-            <span class="font-semibold">Tampilan Kepala Puskesmas:</span>
-            Data berikut adalah rekap read-only. Untuk mengubah status laporan, silakan hubungi Petugas Kesling terkait.
+            <span class="font-semibold">Kelola Laporan:</span>
+            Anda dapat mengubah status laporan (Menunggu, Disetujui, Ditolak, Proses, Selesai), membuat penjadwalan penanganan, dan melihat detail lengkap laporan warga di bawah ini.
         </p>
     </div>
 
-    {{-- Read-only Table --}}
+    {{-- Interactive Management Table --}}
     <div class="card overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h3 class="font-bold text-gray-800">Rekap Semua Laporan</h3>
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800">Rekap & Tindakan Laporan</h3>
         </div>
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table w-full text-left">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -303,28 +335,86 @@
                         <th>Kategori</th>
                         <th class="hidden md:table-cell">Lokasi</th>
                         <th>Status</th>
-                        <th>Tanggal</th>
+                        <th>Jadwal</th>
+                        <th>Tanggal Lapor</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($reports as $report)
+                    @forelse($reports as $report)
+                    @php
+                        $status = $report['status'] ?? 'pending';
+                        $hasSchedule = !empty($report['scheduled_at']);
+                        $scheduleValue = $hasSchedule
+                            ? \Carbon\Carbon::parse($report['scheduled_at'])->format('Y-m-d\TH:i')
+                            : '';
+                    @endphp
                     <tr>
-                        <td><span class="font-mono text-xs font-bold text-gray-500">{{ $report['id'] }}</span></td>
-                        <td><span class="text-sm text-gray-700">{{ $report['citizen'] }}</span></td>
-                        <td><span class="badge bg-gray-100 text-gray-600">{{ $report['category'] }}</span></td>
+                        <td><span class="font-mono text-xs font-bold text-gray-500">#{{ $report['id'] }}</span></td>
+                        <td><span class="text-sm text-gray-700 font-medium">{{ $report['citizen'] }}</span></td>
+                        <td><span class="badge badge-pending">{{ $report['category'] }}</span></td>
                         <td class="hidden md:table-cell"><p class="text-xs text-gray-500 max-w-xs truncate">{{ $report['location'] }}</p></td>
+
+                        {{-- Pilihan Status: Menunggu / Disetujui / Ditolak / Proses / Selesai --}}
                         <td>
-                            @if($report['status'] === 'pending')
-                                <span class="badge badge-pending">Menunggu</span>
-                            @elseif($report['status'] === 'in_progress')
-                                <span class="badge badge-progress">Proses</span>
+                            <form action="{{ route('reports.status', $report['id']) }}" method="POST" class="inline-block">
+                                @csrf
+                                <select name="status" onchange="this.form.submit()"
+                                    class="text-xs font-semibold rounded-lg px-2.5 py-1 border focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer
+                                    @if($status === 'pending') bg-yellow-50 text-yellow-700 border-yellow-200
+                                    @elseif($status === 'approved') bg-emerald-50 text-emerald-700 border-emerald-200
+                                    @elseif($status === 'rejected') bg-red-50 text-red-700 border-red-200
+                                    @elseif($status === 'in_progress') bg-blue-50 text-blue-700 border-blue-200
+                                    @else bg-green-50 text-green-700 border-green-200 @endif">
+                                    <option value="pending"     {{ $status === 'pending' ? 'selected' : '' }}>⏳ Menunggu</option>
+                                    <option value="approved"    {{ $status === 'approved' ? 'selected' : '' }}>✅ Disetujui</option>
+                                    <option value="rejected"    {{ $status === 'rejected' ? 'selected' : '' }}>❌ Ditolak</option>
+                                    <option value="in_progress" {{ $status === 'in_progress' ? 'selected' : '' }}>🔄 Proses</option>
+                                    <option value="resolved"    {{ $status === 'resolved' ? 'selected' : '' }}>🎉 Selesai</option>
+                                </select>
+                            </form>
+                        </td>
+
+                        {{-- Kolom Jadwal (info saja) --}}
+                        <td>
+                            @if($hasSchedule)
+                                <div class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 inline-flex items-center gap-1">
+                                    <i class="far fa-calendar-alt"></i>
+                                    {{ \Carbon\Carbon::parse($report['scheduled_at'])->format('d M Y - H:i') }}
+                                </div>
                             @else
-                                <span class="badge badge-resolved">Selesai</span>
+                                <span class="text-xs text-gray-400 italic">Belum dijadwalkan</span>
                             @endif
                         </td>
+
                         <td><span class="text-xs text-gray-400">{{ $report['date'] }}</span></td>
+
+                        {{-- Aksi: Detail & Buat/Ubah Jadwal --}}
+                        <td class="text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button type="button"
+                                    onclick="openDetailModal(@js($report))"
+                                    class="btn-secondary btn-sm" title="Lihat Detail">
+                                    <i class="fas fa-eye text-gray-500"></i>
+                                </button>
+
+                                <button type="button"
+                                    onclick="openScheduleModal(@js($report['id']), @js($scheduleValue), @js($report['schedule_note'] ?? ''))"
+                                    class="btn-secondary btn-sm text-indigo-600" title="{{ $hasSchedule ? 'Ubah Jadwal' : 'Buat Jadwal' }}">
+                                    @if($hasSchedule)
+                                        <i class="fas fa-calendar-check"></i>
+                                    @else
+                                        <i class="fas fa-calendar-plus"></i>
+                                    @endif
+                                </button>
+                            </div>
+                        </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-sm text-gray-400 py-10">Belum ada laporan.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -332,10 +422,178 @@
     @endif
 
 </div>
+
+{{-- MODAL 1: BUAT / UBAH JADWAL --}}
+<div id="scheduleModal" class="fixed inset-0 z-50 hidden bg-gray-900/50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-blue-600"></i> Atur Jadwal Penanganan
+            </h3>
+            <button type="button" onclick="closeScheduleModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+        </div>
+
+        <form id="scheduleForm" action="" method="POST" class="mt-4 space-y-4">
+            @csrf
+
+            <p class="text-xs text-gray-500">Laporan: <span id="schedule_report_label" class="font-mono font-bold text-gray-700"></span></p>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal & Waktu Penanganan</label>
+                <input type="datetime-local" id="modal_scheduled_at" name="scheduled_at" required
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Catatan / Petugas Lapangan (Opsional)</label>
+                <textarea id="modal_schedule_note" name="schedule_note" rows="2"
+                    placeholder="Contoh: Tim Kesling akan melakukan inspeksi lapangan."
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">Batal</button>
+                <button type="submit" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm">Simpan Jadwal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- MODAL 2: DETAIL LAPORAN --}}
+<div id="detailModal" class="fixed inset-0 z-50 hidden bg-gray-900/50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-file-alt text-blue-600"></i> Detail Laporan <span id="detail_id" class="text-blue-600 font-mono"></span>
+            </h3>
+            <button type="button" onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+        </div>
+
+        <div class="mt-4 space-y-3 text-sm">
+            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div>
+                    <p class="text-xs text-gray-400 font-medium">Pelapor</p>
+                    <p id="detail_citizen" class="font-semibold text-gray-700">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium">Kategori</p>
+                    <p id="detail_category" class="font-semibold text-gray-700">-</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <p class="text-xs text-gray-400 font-medium mb-1">Status</p>
+                    <span id="detail_status" class="inline-block text-xs font-semibold px-2.5 py-1 rounded-lg border">-</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium">Tanggal Lapor</p>
+                    <p id="detail_date" class="text-gray-700">-</p>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-400 font-medium">Lokasi</p>
+                <p id="detail_location" class="text-gray-700 font-medium">-</p>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-400 font-medium">Jadwal Penanganan</p>
+                <p id="detail_schedule" class="text-gray-700">-</p>
+                <p id="detail_schedule_note" class="text-xs text-gray-500 mt-0.5"></p>
+            </div>
+
+            <div id="detail_description_container">
+                <p class="text-xs text-gray-400 font-medium mb-1">Deskripsi Laporan</p>
+                <div id="detail_description" class="p-3 bg-gray-50 rounded-xl text-gray-600 text-xs leading-relaxed border border-gray-100">
+                    -
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button type="button" onclick="closeDetailModal()" class="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">Tutup</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
 function reportForm() { return {}; }
+
+const REPORTS_BASE_URL = "{{ url('reports') }}";
+
+const STATUS_MAP = {
+    pending:     { label: '⏳ Menunggu',  cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    approved:    { label: '✅ Disetujui', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    rejected:    { label: '❌ Ditolak',   cls: 'bg-red-50 text-red-700 border-red-200' },
+    in_progress: { label: '🔄 Proses',    cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+    resolved:    { label: '🎉 Selesai',   cls: 'bg-green-50 text-green-700 border-green-200' },
+};
+
+// Helper buka/tutup modal (hidden <-> flex)
+function showModal(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('hidden');
+    el.classList.add('flex');
+}
+function hideModal(id) {
+    const el = document.getElementById(id);
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+}
+
+// ── Modal Buat / Ubah Jadwal ──
+function openScheduleModal(reportId, existingDate = '', existingNote = '') {
+    document.getElementById('schedule_report_label').innerText = '#' + reportId;
+    document.getElementById('modal_scheduled_at').value = existingDate || '';
+    document.getElementById('modal_schedule_note').value = existingNote || '';
+    // Route: POST /reports/{id}/schedule  (name: reports.schedule)
+    document.getElementById('scheduleForm').action = `${REPORTS_BASE_URL}/${reportId}/schedule`;
+    showModal('scheduleModal');
+}
+function closeScheduleModal() {
+    hideModal('scheduleModal');
+}
+
+// ── Modal Detail Laporan ──
+function openDetailModal(report) {
+    const status = STATUS_MAP[report.status] || STATUS_MAP.pending;
+
+    document.getElementById('detail_id').innerText = '#' + (report.id || '-');
+    document.getElementById('detail_citizen').innerText = report.citizen || '-';
+    document.getElementById('detail_category').innerText = report.category || '-';
+    document.getElementById('detail_location').innerText = report.location || '-';
+    document.getElementById('detail_date').innerText = report.date || '-';
+    document.getElementById('detail_description').innerText = report.description || 'Tidak ada deskripsi rinci.';
+
+    const statusEl = document.getElementById('detail_status');
+    statusEl.innerText = status.label;
+    statusEl.className = 'inline-block text-xs font-semibold px-2.5 py-1 rounded-lg border ' + status.cls;
+
+    document.getElementById('detail_schedule').innerText = report.scheduled_at
+        ? new Date(report.scheduled_at.replace(' ', 'T')).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })
+        : 'Belum dijadwalkan';
+    document.getElementById('detail_schedule_note').innerText = report.schedule_note || '';
+
+    showModal('detailModal');
+}
+function closeDetailModal() {
+    hideModal('detailModal');
+}
+
+// Tutup modal dengan klik area gelap atau tombol Escape
+['scheduleModal', 'detailModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) hideModal(id);
+    });
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        hideModal('scheduleModal');
+        hideModal('detailModal');
+    }
+});
 </script>
 @endsection

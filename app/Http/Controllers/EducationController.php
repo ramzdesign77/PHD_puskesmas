@@ -2,81 +2,147 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Education;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
 class EducationController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        $articles = [
-            [
-                'id'       => 1,
-                'title'    => 'Cara Menjaga Kualitas Air Bersih di Rumah',
-                'category' => 'Air Bersih',
-                'excerpt'  => 'Air bersih adalah kebutuhan dasar manusia. Pelajari cara menjaga kualitas sumber air di lingkungan Anda agar terhindar dari penyakit berbahaya.',
-                'author'   => 'Tim Kesling Puskesmas',
-                'date'     => '10 September 2026',
-                'read_time'=> '4 menit',
-                'color'    => 'blue',
-                'icon'     => 'water',
-            ],
-            [
-                'id'       => 2,
-                'title'    => 'Pentingnya Sanitasi Dasar untuk Kesehatan Keluarga',
-                'category' => 'Sanitasi',
-                'excerpt'  => 'Sanitasi yang baik mencegah penyebaran penyakit menular. Temukan tips praktis untuk meningkatkan sanitasi di lingkungan sekitar Anda.',
-                'author'   => 'dr. Kepala Puskesmas',
-                'date'     => '8 September 2026',
-                'read_time'=> '5 menit',
-                'color'    => 'green',
-                'icon'     => 'home',
-            ],
-            [
-                'id'       => 3,
-                'title'    => 'Pengendalian Jentik Nyamuk: Gerakan 3M Plus',
-                'category' => 'DBD & Nyamuk',
-                'excerpt'  => 'Demam berdarah masih menjadi ancaman. Ketahui cara melakukan gerakan 3M Plus untuk memberantas sarang nyamuk di sekitar rumah.',
-                'author'   => 'Petugas Kesling',
-                'date'     => '5 September 2026',
-                'read_time'=> '3 menit',
-                'color'    => 'red',
-                'icon'     => 'bug',
-            ],
-            [
-                'id'       => 4,
-                'title'    => 'Pengelolaan Sampah Rumah Tangga yang Benar',
-                'category' => 'Persampahan',
-                'excerpt'  => 'Sampah yang tidak dikelola dengan baik menimbulkan masalah kesehatan serius. Pelajari cara memilah dan mengelola sampah dengan tepat.',
-                'author'   => 'Tim Kesling Puskesmas',
-                'date'     => '2 September 2026',
-                'read_time'=> '6 menit',
-                'color'    => 'yellow',
-                'icon'     => 'trash',
-            ],
-            [
-                'id'       => 5,
-                'title'    => 'Bahaya Limbah Industri bagi Lingkungan Sekitar',
-                'category' => 'Limbah',
-                'excerpt'  => 'Pencemaran akibat limbah industri sering diabaikan namun berdampak jangka panjang. Kenali tanda-tanda pencemaran dan cara melaporkannya.',
-                'author'   => 'dr. Kepala Puskesmas',
-                'date'     => '30 Agustus 2026',
-                'read_time'=> '7 menit',
-                'color'    => 'purple',
-                'icon'     => 'factory',
-            ],
-            [
-                'id'       => 6,
-                'title'    => 'PHBS: Perilaku Hidup Bersih dan Sehat di Tatanan Rumah Tangga',
-                'category' => 'PHBS',
-                'excerpt'  => 'PHBS adalah fondasi dari kesehatan masyarakat. Terapkan 10 indikator PHBS di rumah tangga untuk hidup yang lebih sehat dan berkualitas.',
-                'author'   => 'Tim Kesling Puskesmas',
-                'date'     => '25 Agustus 2026',
-                'read_time'=> '5 menit',
-                'color'    => 'teal',
-                'icon'     => 'heart',
-            ],
-        ];
-
-        $categories = ['Semua', 'Air Bersih', 'Sanitasi', 'DBD & Nyamuk', 'Persampahan', 'Limbah', 'PHBS'];
+        $articles = Education::query()->latest()->paginate(9);
+        $categories = Education::query()->select('category')->distinct()->orderBy('category')->pluck('category');
 
         return view('education.index', compact('articles', 'categories'));
+    }
+
+    public function show(string $slug): View
+    {
+        return view('education.show', ['article' => Education::where('slug', $slug)->firstOrFail()]);
+    }
+
+    public function manage(): View
+    {
+        $this->ensureManagementAccess();
+
+        return view('education.manage', ['articles' => Education::latest()->paginate(10)]);
+    }
+
+    public function create(): View
+    {
+        $this->ensureManagementAccess();
+
+        return view('education.create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $this->ensureManagementAccess();
+        $validated = $this->validateArticle($request, null); 
+        $validated['title'] = trim($validated['title']);
+        $validated['category'] = trim($validated['category']);
+        $validated['content'] = trim($validated['content']);
+        $validated['excerpt'] = Str::limit(strip_tags($validated['content']), 240);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('educations', 'public');
+        }
+
+        Education::create($validated);
+
+        return redirect()->route('education.manage')->with('success', 'Artikel berhasil ditambahkan.');
+    }
+
+    // ==========================================
+    // LETAKKAN FUNGSI EDIT, UPDATE, & DESTROY DI SINI:
+    // ==========================================
+
+    public function edit(int $id): View
+    {
+        $this->ensureManagementAccess();
+
+        return view('education.edit', ['article' => Education::findOrFail($id)]);
+    }
+
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        $this->ensureManagementAccess();
+        $article = Education::findOrFail($id);
+        
+        $validated = $this->validateArticle($request, $id); 
+        
+        $validated['title'] = trim($validated['title']);
+        $validated['category'] = trim($validated['category']);
+        $validated['content'] = trim($validated['content']);
+        $validated['excerpt'] = Str::limit(strip_tags($validated['content']), 240);
+
+        if ($request->hasFile('image')) {
+            $newImage = $request->file('image')->store('educations', 'public');
+            $validated['image'] = $newImage;
+        }
+
+        $oldImage = $article->image;
+        $article->update($validated);
+
+        if (isset($newImage) && $oldImage) {
+            Storage::disk('public')->delete($oldImage);
+        }
+
+        return redirect()->route('education.manage')->with('success', 'Artikel berhasil diperbarui.');
+    }
+
+    public function destroy(int $id): RedirectResponse
+    {
+        $this->ensureManagementAccess();
+        $article = Education::findOrFail($id);
+
+        if ($article->image) {
+            Storage::disk('public')->delete($article->image);
+        }
+
+        $article->delete();
+
+        return redirect()->route('education.manage')->with('success', 'Artikel berhasil dihapus.');
+    }
+
+    // ==========================================
+    // BATAS AKHIR SISIPAN (DI BAWAH INI SUDAH ADA)
+    // ==========================================
+
+    private function validateArticle(Request $request, ?int $id = null): array
+    {
+        return $request->validate([
+            'title' => [
+                'required', 
+                'string', 
+                'min:5', 
+                'max:255', 
+                'regex:/^[\pL\pN\s\-_.,()\/]+$/u',
+                \Illuminate\Validation\Rule::unique('educations', 'title')->ignore($id),
+            ],
+            'category' => ['required', 'string', 'max:100', 'in:Air & Sanitasi,Pengelolaan Sampah & Vektor,PHBS'],
+            'content' => ['required', 'string', 'min:50'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Judul artikel wajib diisi.',
+            'title.min' => 'Judul artikel minimal 5 karakter.',
+            'title.regex' => 'Judul artikel tidak valid. Gunakan huruf, angka, spasi, atau tanda baca sederhana seperti -, _, ., (, ), /.',
+            'title.unique' => 'Judul artikel ini sudah ada. Silakan gunakan judul yang berbeda.',
+            'category.required' => 'Kategori artikel wajib dipilih.',
+            'category.in' => 'Kategori yang dipilih tidak valid.',
+            'content.required' => 'Isi artikel wajib diisi.',
+            'content.min' => 'Konten artikel minimal 50 karakter.',
+            'image.image' => 'File yang diunggah harus berupa gambar.',
+            'image.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WebP.',
+            'image.max' => 'Ukuran gambar maksimal 2 MB.',
+        ]);
+    }
+
+    private function ensureManagementAccess(): void
+    {
+        abort_unless(in_array(session('role'), ['admin', 'officer'], true), 403);
     }
 }
