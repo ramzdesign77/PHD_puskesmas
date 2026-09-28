@@ -34,50 +34,87 @@ class LaporanWargaApiController extends Controller
                 'rw' => 'required|string|max:5',
                 'kategori_laporan' => 'required|in:air_masalah,sanitasi_lingkungan',
                 'deskripsi' => 'required|string|min:10|max:2000',
-                'foto_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:5120',
-            ]);
+              
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'foto_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
 
-            $fotoBuktiPath = null;
-            if ($request->hasFile('foto_bukti')) {
-                $fotoBuktiPath = $request->file('foto_bukti')
-                    ->store('laporan/foto_bukti', 'public');
-            }
+        $latitude = (float) $request->input('latitude');
+        $longitude = (float) $request->input('longitude');
+        $distance = $this->calculateDistanceInKilometers(
+            -8.1741,
+            113.7208,
+            $latitude,
+            $longitude,
+        );
 
-            $laporan = LaporanWarga::create([
-                'kode_tiket' => LaporanWarga::generateKodeTiket(),
-                'nama_pelapor' => $validated['nama_pelapor'],
-                'nik_pelapor' => $validated['nik_pelapor'] ?? null,
-                'no_wa' => $validated['no_wa'] ?? null,
-                'id_desa' => $validated['id_desa'],
-                'rt' => $validated['rt'],
-                'rw' => $validated['rw'],
-                'kategori_laporan' => $validated['kategori_laporan'],
-                'deskripsi' => $validated['deskripsi'],
-                'foto_bukti' => $fotoBuktiPath,
-                'status_laporan' => 'menunggu',
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Laporan berhasil dikirim. Tim Kesling akan segera menindaklanjuti.',
-                'kode_tiket' => $laporan->kode_tiket,
-                'id_laporan' => $laporan->id_laporan,
-            ], 201);
-
-        } catch (ValidationException $e) {
+        if ($distance > 5) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data tidak valid.',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Throwable $e) {
-            Log::error('LaporanWargaApi@store error: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan server. Coba lagi nanti.',
-            ], 500);
+                'message' => 'Gagal mengirim laporan. Lokasi Anda saat ini berada di luar cakupan wilayah Sumbersari, Jember.',
+            ], 403);
         }
+
+        $fotoBuktiPath = null;
+        if ($request->hasFile('foto_bukti')) {
+            $fotoBuktiPath = $request->file('foto_bukti')
+                ->store('laporan/foto_bukti', 'public');
+        }
+
+        $laporan = LaporanWarga::create([
+            'kode_tiket' => LaporanWarga::generateKodeTiket(),
+            'nama_pelapor' => $validated['nama_pelapor'],
+            'nik_pelapor' => $validated['nik_pelapor'] ?? null,
+            'no_wa' => $validated['no_wa'] ?? null,
+            'id_desa' => $validated['id_desa'],
+            'rt' => $validated['rt'],
+            'rw' => $validated['rw'],
+            'kategori_laporan' => $validated['kategori_laporan'],
+            'deskripsi' => $validated['deskripsi'],
+            'foto_bukti' => $fotoBuktiPath,
+            'status_laporan' => 'menunggu',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan berhasil dikirim. Tim Kesling akan segera menindaklanjuti.',
+            'kode_tiket' => $laporan->kode_tiket,
+            'id_laporan' => $laporan->id_laporan,
+        ], 201);
+
+    } catch (ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Data tidak valid.',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Throwable $e) {
+        Log::error('LaporanWargaApi@store error: '.$e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan server. Coba lagi nanti.',
+        ], 500);
+    }
+}
+
+ private function calculateDistanceInKilometers(
+        float $latitudeFrom,
+        float $longitudeFrom,
+        float $latitudeTo,
+        float $longitudeTo,
+    ): float {
+        $earthRadiusInKilometers = 6371;
+        $latitudeDifference = deg2rad($latitudeTo - $latitudeFrom);
+        $longitudeDifference = deg2rad($longitudeTo - $longitudeFrom);
+
+        $haversine = sin($latitudeDifference / 2) ** 2
+            + cos(deg2rad($latitudeFrom))
+            * cos(deg2rad($latitudeTo))
+            * sin($longitudeDifference / 2) ** 2;
+
+        return $earthRadiusInKilometers * 2 * atan2(sqrt($haversine), sqrt(1 - $haversine));
     }
 
     /**
@@ -117,19 +154,3 @@ class LaporanWargaApiController extends Controller
             ],
         ]);
     }
-
-    /**
-     * GET /api/desa
-     *
-     * Daftar desa untuk dropdown di Flutter app.
-     */
-    public function listDesa(): JsonResponse
-    {
-        $desa = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
-
-        return response()->json([
-            'success' => true,
-            'data' => $desa,
-        ]);
-    }
-}

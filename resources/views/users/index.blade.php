@@ -43,11 +43,24 @@
         <div class="border-b border-gray-100 px-5 py-4"><h3 class="font-bold text-gray-800">Daftar Akun</h3></div>
         <div class="overflow-x-auto px-4 pb-3">
             <table class="data-table mx-auto w-full min-w-[1100px]">
-                    <thead><tr><th class="min-w-[250px] px-6 py-4">Akun</th><th class="px-6 py-4">Kontak</th><th class="px-6 py-4">Wilayah Kerja</th><th class="px-6 py-4">Peran</th><th class="px-6 py-4">Status</th><th class="min-w-[250px] px-6 py-4 text-right">Aksi</th></tr></thead>
+                <thead><tr><th class="min-w-[250px] px-6 py-4">Akun</th><th class="px-6 py-4">Kontak</th><th class="px-6 py-4">Wilayah Kerja</th><th class="px-6 py-4">Peran</th><th class="px-6 py-4">Status</th><th class="min-w-[250px] px-6 py-4 text-right">Aksi</th></tr></thead>
                 <tbody>
                     @foreach($users as $user)
                     <tr>
-                        <td class="px-6 py-5"><div class="flex items-center gap-4">@if($user->foto)<img src="{{ asset('storage/' . $user->foto) }}" alt="Foto {{ $user->nama_lengkap }}" class="h-10 w-10 shrink-0 rounded-xl object-cover">@else<div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">{{ strtoupper(substr($user->nama_lengkap, 0, 1)) }}</div>@endif<div class="min-w-0"><p class="font-semibold leading-6 text-gray-800">{{ $user->nama_lengkap }}</p><p class="text-xs leading-5 text-gray-400">{{ $user->role === 'admin' ? 'Akun administrator' : 'ID Petugas: ' . ($user->id_petugas ?: 'Belum diisi') }}</p><p class="text-xs leading-5 text-gray-400">{{ $user->username }}</p></div></div></td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-4">
+                                @if($user->foto)
+                                    <img src="{{ asset('storage/' . $user->foto) }}" alt="Foto {{ $user->nama_lengkap }}" class="h-10 w-10 shrink-0 rounded-xl object-cover">
+                                @else
+                                    <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">{{ strtoupper(substr($user->nama_lengkap, 0, 1)) }}</div>
+                                @endif
+                                <div class="min-w-0">
+                                    <p class="font-semibold leading-6 text-gray-800">{{ $user->nama_lengkap }}</p>
+                                    <p class="text-xs leading-5 text-gray-400">{{ $user->role === 'admin' ? 'Akun administrator' : 'ID Petugas: ' . ($user->id_petugas ?: 'Belum diisi') }}</p>
+                                    <p class="text-xs leading-5 text-gray-400">{{ $user->username }}</p>
+                                </div>
+                            </div>
+                        </td>
                         <td class="px-6 py-5"><p>{{ $user->no_telepon ?: 'No. HP belum diisi' }}</p><p class="text-xs text-gray-400">{{ $user->email ?: 'Email belum diisi' }}</p></td>
                         <td class="px-6 py-5">{{ $user->wilayah_kerja ?: 'Belum ditempatkan' }}</td>
                         <td class="whitespace-nowrap px-6 py-5"><span class="badge {{ $user->role === 'admin' ? 'badge-rejected' : 'badge-assigned' }}">{{ $user->role === 'admin' ? 'Admin' : 'Petugas' }}</span></td>

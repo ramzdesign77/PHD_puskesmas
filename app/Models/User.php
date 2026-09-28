@@ -76,6 +76,6 @@ class User extends Authenticatable
     /** Apakah user berperan sebagai admin atau kepala puskesmas. */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'kepala_puskesmas']);
+        return in_array($this->role, ['admin', 'kepala_puskesmas'], true);
     }
 }
