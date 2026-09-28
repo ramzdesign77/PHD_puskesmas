@@ -10,6 +10,10 @@ return new class extends Migration
     // ini tetap aman dijalankan (akan mengubahnya jadi enum dengan pilihan lengkap).
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE laporan_warga MODIFY status_laporan
             ENUM('menunggu','dibaca','diterima','ditolak','dijadwalkan','selesai')
             NOT NULL DEFAULT 'menunggu'");
@@ -17,6 +21,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE laporan_warga MODIFY status_laporan
             ENUM('menunggu','dijadwalkan','selesai','ditolak')
             NOT NULL DEFAULT 'menunggu'");

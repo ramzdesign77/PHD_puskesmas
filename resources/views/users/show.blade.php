@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Petugas')
-@section('page-title', 'Detail Petugas')
-@section('page-subtitle', 'Informasi lengkap dan penempatan petugas')
+@section('title', $user->role === 'admin' ? 'Detail Admin' : 'Detail Petugas')
+@section('page-title', $user->role === 'admin' ? 'Detail Admin' : 'Detail Petugas')
+@section('page-subtitle', 'Informasi akun dan penempatan pengguna')
 
 @section('content')
 <div class="card max-w-3xl p-6 fade-in">
@@ -14,13 +14,13 @@
         @endif
         <div>
             <h2 class="text-xl font-bold text-gray-800">{{ $user->nama_lengkap }}</h2>
-            <p class="text-sm text-gray-400">ID Petugas: {{ $user->id_petugas ?: 'Belum diisi' }}</p>
+            <p class="text-sm text-gray-400">{{ $user->role === 'admin' ? 'Akun administrator' : 'ID Petugas: ' . ($user->id_petugas ?: 'Belum diisi') }}</p>
         </div>
         <span class="badge ml-auto {{ $user->is_active ? 'badge-resolved' : 'bg-gray-100 text-gray-500' }}">{{ $user->is_active ? 'Aktif' : 'Nonaktif' }}</span>
     </div>
     <dl class="grid gap-5 sm:grid-cols-2">
         <div><dt class="text-xs font-semibold uppercase text-gray-400">Username</dt><dd class="mt-1 text-sm text-gray-700">{{ $user->username }}</dd></div>
-        <div><dt class="text-xs font-semibold uppercase text-gray-400">Jenis akun</dt><dd class="mt-1 text-sm text-gray-700">Petugas</dd></div>
+        <div><dt class="text-xs font-semibold uppercase text-gray-400">Jenis akun</dt><dd class="mt-1 text-sm text-gray-700">{{ $user->role === 'admin' ? 'Admin' : 'Petugas' }}</dd></div>
         <div><dt class="text-xs font-semibold uppercase text-gray-400">No. HP</dt><dd class="mt-1 text-sm text-gray-700">{{ $user->no_telepon ?: 'Belum diisi' }}</dd></div>
         <div><dt class="text-xs font-semibold uppercase text-gray-400">Email</dt><dd class="mt-1 text-sm text-gray-700">{{ $user->email ?: 'Belum diisi' }}</dd></div>
         <div><dt class="text-xs font-semibold uppercase text-gray-400">Wilayah Kerja / Penempatan</dt><dd class="mt-1 text-sm text-gray-700">{{ $user->wilayah_kerja ?: 'Belum ditempatkan' }}</dd></div>
@@ -28,7 +28,9 @@
     </dl>
     <div class="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-5">
         <a href="{{ route('users.index') }}" class="btn-secondary">Kembali</a>
-        <a href="{{ route('users.edit', $user) }}" class="btn-primary"><i class="fas fa-pen"></i> Ubah</a>
+        @if(in_array($user->role, ['sanitarian', 'petugas'], true))
+            <a href="{{ route('users.edit', $user) }}" class="btn-primary"><i class="fas fa-pen"></i> Ubah</a>
+        @endif
     </div>
 </div>
 @endsection

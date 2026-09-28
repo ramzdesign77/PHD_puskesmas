@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Petugas')
-@section('page-title', 'Tambah Petugas Sanitasi')
-@section('page-subtitle', 'Buat akun baru untuk petugas kesehatan lingkungan')
+@section('title', 'Tambah Akun')
+@section('page-title', 'Tambah Akun')
+@section('page-subtitle', 'Buat akun baru untuk petugas atau admin')
 
 @section('content')
 <div class="card max-w-3xl p-6 fade-in">

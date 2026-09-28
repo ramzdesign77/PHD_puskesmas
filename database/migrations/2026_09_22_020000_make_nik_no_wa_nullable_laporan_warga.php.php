@@ -7,13 +7,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE laporan_warga MODIFY nik_pelapor VARCHAR(255) NULL");
-        DB::statement("ALTER TABLE laporan_warga MODIFY no_wa VARCHAR(255) NULL");
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
+        DB::statement('ALTER TABLE laporan_warga MODIFY nik_pelapor VARCHAR(255) NULL');
+        DB::statement('ALTER TABLE laporan_warga MODIFY no_wa VARCHAR(255) NULL');
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE laporan_warga MODIFY nik_pelapor VARCHAR(255) NOT NULL");
-        DB::statement("ALTER TABLE laporan_warga MODIFY no_wa VARCHAR(255) NOT NULL");
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
+        DB::statement('ALTER TABLE laporan_warga MODIFY nik_pelapor VARCHAR(255) NOT NULL');
+        DB::statement('ALTER TABLE laporan_warga MODIFY no_wa VARCHAR(255) NOT NULL');
     }
 };

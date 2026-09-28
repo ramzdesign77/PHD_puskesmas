@@ -62,7 +62,7 @@
             border-bottom: 1px solid rgba(229,231,235,0.8);
         }
         .medical-gradient { background: linear-gradient(135deg, #E63946 0%, #C1121F 100%); }
-        
+
         /* Buttons */
         .btn-primary {
             display: inline-flex; align-items: center; gap: 8px;
@@ -82,8 +82,8 @@
         .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
 
         /* Cards */
-        .card { 
-            background: white; 
+        .card {
+            background: white;
             border-radius: 0.75rem; /* rounded-xl */
             border: 1px solid #F3F4F6; /* gray-100 */
             box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
@@ -91,14 +91,14 @@
 
         /* Data Tables */
         .data-table { width: 100%; text-align: left; border-collapse: collapse; }
-        .data-table th { 
-            padding: 16px 24px; font-size: 12px; font-weight: 600; 
-            color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; 
+        .data-table th {
+            padding: 16px 24px; font-size: 12px; font-weight: 600;
+            color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;
             border-bottom: 1px solid #F1F5F9; background: #F8FAFC;
             text-align: left;
         }
-        .data-table td { 
-            padding: 16px 24px; font-size: 14px; color: #334155; 
+        .data-table td {
+            padding: 16px 24px; font-size: 14px; color: #334155;
             border-bottom: 1px solid #F1F5F9; vertical-align: middle;
         }
         .data-table tbody tr { transition: background-color 0.2s ease; }
@@ -393,6 +393,230 @@
     </div>
 </div>
 
+<script>
+window.setupScheduleCalendars = function () {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const dateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const parseDateKey = value => {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
+    document.querySelectorAll('[data-schedule-calendar]').forEach(calendar => {
+        const form = calendar.closest('form');
+        const operatorField = form.elements.namedItem('id_operator');
+        const dateField = form.elements.namedItem('tanggal_kunjungan');
+        const toggle = calendar.querySelector('[data-calendar-toggle]');
+        const popup = calendar.querySelector('[data-calendar-popup]');
+        const monthLabel = calendar.querySelector('[data-calendar-month]');
+        const dayGrid = calendar.querySelector('[data-calendar-grid]');
+        const message = calendar.querySelector('[data-calendar-message]');
+        const selectedLabel = calendar.querySelector('[data-calendar-selected]');
+        const previousButton = calendar.querySelector('[data-calendar-prev]');
+        const nextButton = calendar.querySelector('[data-calendar-next]');
+        let visibleMonth = new Date(currentMonth);
+        let unavailableDates = new Set();
+        let requestId = 0;
+        let loading = false;
+        let loadFailed = false;
+
+        const setMessage = (text, color = 'text-gray-500') => {
+            message.textContent = text;
+            message.className = `mt-1 text-xs ${color}`;
+        };
+
+        const render = () => {
+            monthLabel.textContent = new Intl.DateTimeFormat('id-ID', {
+                month: 'long',
+                year: 'numeric',
+            }).format(visibleMonth);
+
+            previousButton.disabled = visibleMonth <= currentMonth;
+            previousButton.classList.toggle('opacity-40', previousButton.disabled);
+            toggle.disabled = !operatorField.value;
+            toggle.classList.toggle('cursor-not-allowed', toggle.disabled);
+
+            if (!operatorField.value) {
+                selectedLabel.textContent = 'Pilih petugas terlebih dahulu';
+            } else if (dateField.value) {
+                selectedLabel.textContent = new Intl.DateTimeFormat('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                }).format(parseDateKey(dateField.value));
+            } else {
+                selectedLabel.textContent = 'Pilih tanggal kunjungan';
+            }
+
+            dayGrid.replaceChildren();
+            const firstWeekday = (visibleMonth.getDay() + 6) % 7;
+            for (let index = 0; index < firstWeekday; index++) {
+                const blank = document.createElement('span');
+                blank.setAttribute('aria-hidden', 'true');
+                dayGrid.append(blank);
+            }
+
+            const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day);
+                const value = dateKey(date);
+                const isBooked = unavailableDates.has(value);
+                const isPast = date < today;
+                const isSelected = dateField.value === value;
+                const dayButton = document.createElement('button');
+
+                dayButton.type = 'button';
+                dayButton.textContent = day;
+                dayButton.setAttribute('aria-pressed', String(isSelected));
+                dayButton.disabled = !operatorField.value || loading || isPast || isBooked;
+                dayButton.className = 'flex h-8 w-8 items-center justify-center rounded-full text-xs transition-colors';
+
+                if (isSelected) {
+                    dayButton.classList.add('bg-blue-600', 'font-semibold', 'text-white');
+                } else if (isBooked) {
+                    dayButton.classList.add('cursor-not-allowed', 'bg-red-50', 'text-red-400');
+                    dayButton.title = 'Petugas sudah memiliki jadwal pada tanggal ini';
+                } else if (isPast || !operatorField.value || loading) {
+                    dayButton.classList.add('cursor-not-allowed', 'text-gray-300');
+                } else {
+                    dayButton.classList.add('text-gray-700', 'hover:bg-blue-50', 'hover:text-blue-700');
+                }
+
+                dayButton.addEventListener('click', () => {
+                    dateField.value = value;
+                    popup.hidden = true;
+                    toggle.setAttribute('aria-expanded', 'false');
+                    setMessage(loadFailed
+                        ? 'Tanggal akan tetap divalidasi saat jadwal disimpan.'
+                        : 'Tanggal merah sudah memiliki jadwal petugas.');
+                    render();
+                });
+                dayGrid.append(dayButton);
+            }
+
+            if (loading) {
+                setMessage('Memuat tanggal jadwal petugas...', 'text-blue-600');
+            } else if (loadFailed) {
+                setMessage('Daftar tanggal tidak dapat dimuat; server tetap memvalidasi jadwal.', 'text-amber-700');
+            } else if (!operatorField.value) {
+                setMessage('Pilih petugas untuk melihat tanggal yang sudah terisi.');
+            } else {
+                setMessage('Tanggal merah sudah memiliki jadwal petugas.');
+            }
+        };
+
+        const loadUnavailableDates = async () => {
+            const currentRequestId = ++requestId;
+            unavailableDates = new Set();
+            loadFailed = false;
+
+            if (!operatorField.value) {
+                loading = false;
+                render();
+                return;
+            }
+
+            loading = true;
+            render();
+            const params = new URLSearchParams({
+                id_operator: operatorField.value,
+                month: `${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`,
+            });
+            if (calendar.dataset.exceptId) {
+                params.set('except_id', calendar.dataset.exceptId);
+            }
+
+            try {
+                const response = await fetch(`${calendar.dataset.datesUrl}?${params}`, {
+                    headers: { Accept: 'application/json' },
+                });
+                if (!response.ok) {
+                    throw new Error('Unavailable dates request failed.');
+                }
+
+                const result = await response.json();
+                if (currentRequestId !== requestId) {
+                    return;
+                }
+
+                unavailableDates = new Set(result.dates);
+                if (dateField.value && unavailableDates.has(dateField.value)) {
+                    dateField.value = '';
+                }
+            } catch {
+                if (currentRequestId !== requestId) {
+                    return;
+                }
+                loadFailed = true;
+            } finally {
+                if (currentRequestId === requestId) {
+                    loading = false;
+                    render();
+                }
+            }
+        };
+
+        toggle.addEventListener('click', () => {
+            popup.hidden = !popup.hidden;
+            toggle.setAttribute('aria-expanded', String(!popup.hidden));
+        });
+        previousButton.addEventListener('click', () => {
+            visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+            loadUnavailableDates();
+        });
+        nextButton.addEventListener('click', () => {
+            visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+            loadUnavailableDates();
+        });
+        operatorField.addEventListener('change', () => {
+            dateField.value = '';
+            visibleMonth = new Date(currentMonth);
+            loadUnavailableDates();
+        });
+        form.addEventListener('submit', event => {
+            if (!dateField.value || unavailableDates.has(dateField.value)) {
+                event.preventDefault();
+                setMessage('Pilih tanggal yang masih tersedia.', 'text-red-600');
+                toggle.focus();
+                popup.hidden = false;
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+        form.addEventListener('reset', () => {
+            requestId++;
+            unavailableDates = new Set();
+            popup.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            window.setTimeout(() => {
+                visibleMonth = dateField.value ? new Date(parseDateKey(dateField.value).getFullYear(), parseDateKey(dateField.value).getMonth(), 1) : new Date(currentMonth);
+                loadUnavailableDates();
+            }, 0);
+        });
+        document.addEventListener('click', event => {
+            if (!calendar.contains(event.target)) {
+                popup.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        form.scheduleCalendar = {
+            setDate(value) {
+                dateField.value = value;
+                if (value) {
+                    const selectedDate = parseDateKey(value);
+                    visibleMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+                }
+                loadUnavailableDates();
+            },
+        };
+
+        render();
+        loadUnavailableDates();
+    });
+};
+</script>
 @yield('scripts')
 </body>
 </html>
