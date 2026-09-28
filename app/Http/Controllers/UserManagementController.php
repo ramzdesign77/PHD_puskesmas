@@ -60,9 +60,15 @@ class UserManagementController extends Controller
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
             'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
+<<<<<<< Updated upstream
             'no_telepon' => ['nullable', 'string', 'max:20', 'unique:users,no_telepon'],
             'role' => ['required', 'in:sanitarian'],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
+=======
+            'no_telepon' => ['required', 'string', 'max:20', 'unique:users,no_telepon'],
+            'role' => ['required', Rule::in(['sanitarian', 'petugas', 'admin'])],
+            'wilayah_kerja' => ['required', 'in:Sumbersari'],
+>>>>>>> Stashed changes
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
@@ -95,9 +101,15 @@ class UserManagementController extends Controller
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username,' . $user->id_user . ',id_user'],
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
+<<<<<<< Updated upstream
             'no_telepon' => ['nullable', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
             'role' => ['required', 'in:sanitarian'],
             'wilayah_kerja' => ['nullable', 'string', 'max:150'],
+=======
+            'no_telepon' => ['required', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
+            'role' => ['required', 'in:sanitarian,petugas'],
+            'wilayah_kerja' => ['required', 'in:Sumbersari'],
+>>>>>>> Stashed changes
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['required', 'boolean'],
