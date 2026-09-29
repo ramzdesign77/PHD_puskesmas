@@ -211,10 +211,7 @@
                 <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Manajemen Edukasi</span>
             </a>
-            <a href="{{ route('analytics.index') }}" class="sidebar-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}">
-                <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span>
-                <span x-show="sidebarOpen" x-transition.opacity>Laporan & Analitik</span>
-            </a>
+
             @endif
         </nav>
 
@@ -292,9 +289,6 @@
             </a>
             <a href="{{ route('education.manage') }}" class="sidebar-link {{ request()->routeIs('education.manage') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span> Manajemen Edukasi
-            </a>
-            <a href="{{ route('analytics.index') }}" class="sidebar-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}">
-                <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span> Laporan & Analitik
             </a>
             @endif
             <a href="{{ route('schedules.index') }}" class="sidebar-link {{ request()->routeIs('schedules.*') ? 'active' : '' }}">
