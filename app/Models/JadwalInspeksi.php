@@ -84,11 +84,16 @@ class JadwalInspeksi extends Model
         Builder $query,
         int|string $idOperator,
         string $tanggalKunjungan,
+        ?string $jam = null,
         ?int $exceptId = null
     ): Builder {
         $query->where('id_operator', $idOperator)
             ->whereDate('tanggal_kunjungan', $tanggalKunjungan)
             ->where('status_kunjungan', 'terjadwal');
+
+        if ($jam !== null) {
+            $query->where('jam_mulai', $jam);
+        }
 
         if ($exceptId !== null) {
             $query->where('id_jadwal', '!=', $exceptId);

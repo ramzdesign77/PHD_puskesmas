@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/schedules/unavailable-dates', [ScheduleController::class, 'unavailableDates'])->name('schedules.unavailable-dates');
         Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
         Route::post('/schedules/{id}/assign', [ScheduleController::class, 'assign'])->name('schedules.assign');
+        Route::put('/schedules/{id}/history', [ScheduleController::class, 'updateHistory'])->name('schedules.history.update');
+        Route::delete('/schedules/{id}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
         Route::post('/schedules/{id}/batal', [ScheduleController::class, 'batal'])->name('schedules.batal');
 
         Route::prefix('admin/edukasi')->name('education.')->group(function () {

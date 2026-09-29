@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ReportController extends Controller
 {
-    private const SCHEDULE_CONFLICT_MESSAGE = 'Petugas ini sudah memiliki jadwal pada tanggal tersebut. Silakan pilih tanggal lain atau petugas lain.';
+    private const SCHEDULE_CONFLICT_MESSAGE = 'Petugas ini sudah memiliki jadwal pada tanggal dan jam tersebut. Silakan pilih tanggal dan jam lain atau petugas lain.';
 
     // ─────────────────────────────────────────────────────────────────────────
     // READ: Halaman utama (Tab 1 + Tab 2)
@@ -80,9 +80,9 @@ class ReportController extends Controller
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
         ]);
 
-        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'])) {
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'], $validated['jam_mulai'])) {
             return back()->withErrors([
-                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+                'jam_mulai' => self::SCHEDULE_CONFLICT_MESSAGE,
             ])->withInput();
         }
 
@@ -142,9 +142,9 @@ class ReportController extends Controller
             'jam_mulai' => 'required|date_format:H:i',
         ]);
 
-        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'], $idJadwal)) {
+        if ($this->hasScheduleConflict($validated['id_operator'], $validated['tanggal_kunjungan'], $validated['jam_mulai'], $idJadwal)) {
             return back()->withErrors([
-                'tanggal_kunjungan' => self::SCHEDULE_CONFLICT_MESSAGE,
+                'jam_mulai' => self::SCHEDULE_CONFLICT_MESSAGE,
             ])->withInput();
         }
 
@@ -160,9 +160,9 @@ class ReportController extends Controller
         return back()->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, ?int $exceptId = null): bool
+    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, string $jamMulai, ?int $exceptId = null): bool
     {
-        return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $exceptId)->exists();
+        return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $jamMulai, $exceptId)->exists();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

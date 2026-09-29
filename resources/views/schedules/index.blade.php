@@ -277,6 +277,29 @@
                                             <i class="fas fa-ban"></i>
                                         </button>
                                     </form>
+                                    @else
+                                        @if(in_array($jadwal->status_kunjungan, ['selesai', 'batal'], true))
+                                        <button type="button"
+                                            data-history-edit
+                                            data-id="{{ $jadwal->id_jadwal }}"
+                                            data-operator-id="{{ $jadwal->id_operator }}"
+                                            data-date="{{ $jadwal->tanggal_kunjungan?->format('Y-m-d') }}"
+                                            data-time="{{ $jadwal->jam_mulai ? \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') : '' }}"
+                                            class="btn-secondary btn-sm text-blue-600" title="Edit Riwayat Jadwal">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        @endif
+
+                                        @if($jadwal->status_kunjungan === 'batal' && !$jadwal->inspeksiIkl)
+                                        <form method="POST" action="{{ route('schedules.destroy', $jadwal->id_jadwal) }}"
+                                            onsubmit="return confirm('Hapus riwayat jadwal batal ini?')" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-secondary btn-sm text-red-600" title="Hapus Riwayat">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endif
                                     @endif
                                 @endif
 
@@ -308,6 +331,54 @@
     </div>
 
 </div>
+
+{{-- MODAL: EDIT RIWAYAT JADWAL --}}
+@if($isAdmin)
+<div id="historyEditModal" class="fixed inset-0 z-50 hidden bg-gray-900/50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-100 mb-4">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-pen text-blue-600"></i> Edit Riwayat Jadwal
+            </h3>
+            <button type="button" onclick="closeHistoryEditModal()" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Tutup">&times;</button>
+        </div>
+
+        <form id="historyEditForm" method="POST" action="" class="space-y-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <label for="history_operator" class="block text-xs font-semibold text-gray-600 mb-1">Petugas Sanitarian</label>
+                <select id="history_operator" name="id_operator" required
+                    class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <option value="" disabled>— Pilih Petugas —</option>
+                    @foreach($officers as $officer)
+                    <option value="{{ $officer->id_user }}">
+                        {{ $officer->nama_lengkap }}{{ $officer->wilayah_kerja ? ' — ' . $officer->wilayah_kerja : '' }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="history_date" class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Kunjungan</label>
+                <input id="history_date" type="date" name="tanggal_kunjungan" required
+                    class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300">
+            </div>
+            <div>
+                <label for="history_time" class="block text-xs font-semibold text-gray-600 mb-1">Jam Mulai</label>
+                <input id="history_time" type="time" name="jam_mulai" required
+                    class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300">
+            </div>
+            <p class="text-xs text-gray-500">Status jadwal dan hasil IKL tidak berubah.</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeHistoryEditModal()" class="btn-secondary btn-sm">Batal</button>
+                <button type="submit" class="btn-primary btn-sm">
+                    <i class="fas fa-save"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 
 {{-- ════════════════════════════════════════ --}}
 {{-- MODAL: RE-ASSIGN PETUGAS                --}}
@@ -386,8 +457,27 @@ function openAssignModal(idJadwal, currentOperatorId, currentTanggal, currentJam
 }
 function closeAssignModal() { hideModal('assignModal'); }
 
+function openHistoryEditModal(button) {
+    const form = document.getElementById('historyEditForm');
+    form.action = `/schedules/${button.dataset.id}/history`;
+    document.getElementById('history_operator').value = button.dataset.operatorId;
+    document.getElementById('history_date').value = button.dataset.date;
+    document.getElementById('history_time').value = button.dataset.time;
+    showModal('historyEditModal');
+}
+
+function closeHistoryEditModal() { hideModal('historyEditModal'); }
+
+document.querySelectorAll('[data-history-edit]').forEach(button => {
+    button.addEventListener('click', () => openHistoryEditModal(button));
+});
+
 document.getElementById('assignModal')?.addEventListener('click', function(e) {
     if (e.target === this) hideModal('assignModal');
+});
+
+document.getElementById('historyEditModal')?.addEventListener('click', function(e) {
+    if (e.target === this) hideModal('historyEditModal');
 });
 @endif
 
@@ -395,7 +485,10 @@ window.setupScheduleCalendars();
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-        @if($isAdmin) hideModal('assignModal'); @endif
+        @if($isAdmin)
+            hideModal('assignModal');
+            hideModal('historyEditModal');
+        @endif
     }
 });
 </script>
