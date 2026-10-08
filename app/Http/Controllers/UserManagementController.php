@@ -14,7 +14,11 @@ class UserManagementController extends Controller
     {
         abort_unless(session('role') === 'admin', 403);
 
-        $query = User::query()->whereIn('role', ['sanitarian', 'petugas', 'admin']);
+        $query = User::query()->where(function ($builder) {
+            $builder->where('role', 'like', '%admin%')
+                ->orWhere('role', 'like', '%petugas%')
+                ->orWhere('role', 'like', '%sanitarian%');
+        });
         $search = trim((string) $request->query('q'));
 
         if ($search !== '') {
@@ -26,7 +30,13 @@ class UserManagementController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('role', $request->query('role'));
+            $role = $request->query('role');
+            $query->where(function ($builder) use ($role) {
+                $builder->where('role', $role)
+                    ->orWhere('role', 'like', "{$role},%")
+                    ->orWhere('role', 'like', "%,$role")
+                    ->orWhere('role', 'like', "%,$role,%");
+            });
         }
 
         if ($request->query('status') === 'active') {
@@ -61,12 +71,15 @@ class UserManagementController extends Controller
             'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'no_telepon' => ['required', 'string', 'max:20', 'unique:users,no_telepon'],
-            'role' => ['required', Rule::in(['sanitarian', 'petugas', 'admin'])],
+            'roles' => ['required', 'array', 'min:1', 'distinct'],
+            'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'wilayah_kerja' => ['required', 'in:Sumbersari'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
+        $data['role'] = collect($data['roles'])->unique()->implode(',');
+        unset($data['roles']);
         $data['is_active'] = true;
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('petugas', 'public');
@@ -83,7 +96,6 @@ class UserManagementController extends Controller
     public function edit(User $user)
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
         return view('users.edit', compact('user'));
     }
@@ -91,7 +103,6 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -100,12 +111,16 @@ class UserManagementController extends Controller
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
             'no_telepon' => ['required', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
-            'role' => ['required', 'in:sanitarian,petugas'],
+            'roles' => ['required', 'array', 'min:1', 'distinct'],
+            'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'wilayah_kerja' => ['required', 'in:Sumbersari'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['required', 'boolean'],
         ]);
+
+        $data['role'] = collect($data['roles'])->unique()->implode(',');
+        unset($data['roles']);
 
         if (blank($data['password'])) {
             unset($data['password']);
@@ -126,18 +141,15 @@ class UserManagementController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless(in_array($user->role, ['sanitarian', 'petugas'], true), 404);
 
-        $user->update(['is_active' => false]);
-        $user->delete();
+        $user->forceDelete();
 
-        return redirect()->route('users.index')->with('success', 'Petugas berhasil dinonaktifkan dan dihapus dari daftar.');
+        return redirect()->route('users.index')->with('success', 'Akun berhasil dihapus secara permanen.');
     }
 
     public function show(User $user)
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless(in_array($user->role, ['sanitarian', 'petugas', 'admin'], true), 404);
 
         return view('users.show', compact('user'));
     }
@@ -145,7 +157,6 @@ class UserManagementController extends Controller
     public function resetPassword(User $user): RedirectResponse
     {
         abort_unless(session('role') === 'admin', 403);
-        abort_unless($user->role !== 'admin', 404);
 
         $user->update(['password' => 'password123']);
 
@@ -156,14 +167,19 @@ class UserManagementController extends Controller
     {
         abort_unless(session('role') === 'admin', 403);
 
-        $users = User::query()->whereIn('role', ['sanitarian', 'petugas', 'admin'])->orderBy('nama_lengkap')->get();
+        $users = User::query()->where(function ($builder) {
+            $builder->where('role', 'like', '%admin%')
+                ->orWhere('role', 'like', '%petugas%')
+                ->orWhere('role', 'like', '%sanitarian%');
+        })->orderBy('nama_lengkap')->get();
         $filename = 'daftar-petugas-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Nama Lengkap', 'ID Petugas', 'Username', 'Email', 'No. HP', 'Peran', 'Wilayah Kerja', 'Status']);
             foreach ($users as $user) {
-                fputcsv($handle, [$user->nama_lengkap, $user->id_petugas, $user->username, $user->email, $user->no_telepon, $user->role === 'admin' ? 'Admin' : 'Petugas', $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
+                $roles = implode(' + ', array_map(fn ($role) => ucfirst($role), $user->roles()));
+                fputcsv($handle, [$user->nama_lengkap, $user->id_petugas, $user->username, $user->email, $user->no_telepon, $roles, $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);

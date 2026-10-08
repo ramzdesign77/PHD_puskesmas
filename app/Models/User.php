@@ -55,6 +55,19 @@ class User extends Authenticatable
         return 'id_user';
     }
 
+    public function roles(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (string $role): string => trim($role),
+            explode(',', (string) $this->role),
+        )));
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roles(), true);
+    }
+
     // ─── Relations ────────────────────────────────────────────────────────────
 
     /**
@@ -70,12 +83,12 @@ class User extends Authenticatable
     /** Apakah user berperan sebagai sanitarian / petugas lapangan. */
     public function isSanitarian(): bool
     {
-        return in_array($this->role, ['petugas', 'sanitarian', 'staf_backup_kluster4'], true);
+        return collect($this->roles())->intersect(['petugas', 'sanitarian', 'staf_backup_kluster4'])->isNotEmpty();
     }
 
     /** Apakah user berperan sebagai admin atau kepala puskesmas. */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'kepala_puskesmas'], true);
+        return collect($this->roles())->intersect(['admin', 'kepala_puskesmas'])->isNotEmpty();
     }
 }

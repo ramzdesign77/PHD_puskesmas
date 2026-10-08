@@ -31,7 +31,11 @@ class RoleMiddleware
             $allowedRoles = array_merge($allowedRoles, self::ROLE_ALIASES[$role] ?? [$role]);
         }
 
-        if (! in_array($user->role, $allowedRoles, true)) {
+        $hasAllowedRole = collect($allowedRoles)->contains(
+            fn (string $allowedRole): bool => $user->hasRole($allowedRole)
+        );
+
+        if (! $hasAllowedRole) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

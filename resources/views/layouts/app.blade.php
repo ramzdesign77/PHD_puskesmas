@@ -119,6 +119,10 @@
         .fade-in { animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .sidebar-enter { transition: transform 0.3s ease, opacity 0.3s ease; }
+        .inactive-account-modal-overlay {
+            z-index: 100;
+            pointer-events: auto;
+        }
         .notification-dot {
             width: 8px; height: 8px; background: #E63946;
             border-radius: 50%; position: absolute; top: -2px; right: -2px;
@@ -369,6 +373,35 @@
                 <i class="fas fa-exclamation-circle text-red-500"></i>
                 <p class="text-sm font-medium flex-1">{{ session('error') }}</p>
                 <button @click="show = false" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        @endif
+
+        @if(session('inactive_logout_warning'))
+        <div class="inactive-account-modal-overlay fixed inset-0 flex items-center justify-center bg-gray-950/60 p-4 backdrop-blur-sm"
+             x-data="{ show: true }"
+             x-show="show"
+             x-transition>
+            <div class="w-full max-w-md rounded-2xl border-2 border-medical-red bg-white shadow-2xl"
+                 role="alertdialog"
+                 aria-modal="true"
+                 aria-labelledby="inactive-account-title">
+                <div class="bg-medical-light px-6 py-5 text-center border-b border-red-200">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-medical-red shadow-sm">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                    </div>
+                    <h2 id="inactive-account-title" class="mt-4 text-lg font-bold text-gray-900">Akun Nonaktif</h2>
+                </div>
+                <div class="p-6 text-center">
+                    <p class="text-sm leading-6 text-gray-600">{{ session('inactive_logout_warning') }}</p>
+                    <p class="mt-3 text-xs text-gray-500">Aktifkan akun melalui Manajemen Akun sebelum dapat melakukan logout.</p>
+                    <button type="button"
+                            @click="show = false"
+                            class="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-medical-red px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-medical-dark">
+                        <i class="fas fa-times-circle"></i>
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
         @endif
