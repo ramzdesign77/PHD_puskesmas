@@ -26,3 +26,17 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
 // GET /api/desa — daftar desa untuk dropdown Flutter
 Route::get('/desa', [LaporanWargaApiController::class, 'listDesa'])->name('api.desa.list');
 Route::get('/edukasi', [EducationApiController::class, 'index'])->name('api.edukasi.index');
+
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/get-image/{filename}', function ($filename) {
+    // Menghapus prefix 'educations/' jika terbawa di URL agar path tidak ganda
+    $cleanFilename = str_replace('educations/', '', $filename);
+    $path = 'educations/' . $cleanFilename;
+
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404, 'Gambar tidak ditemukan');
+    }
+
+    return response()->file(storage_path('app/public/' . $path));
+})->where('filename', '.*');
