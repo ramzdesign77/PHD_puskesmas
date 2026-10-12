@@ -67,15 +67,30 @@ class AuthController extends Controller
 
     private function mapRole(string $role): string
     {
-        return match ($role) {
-            'admin', 'kepala_puskesmas' => 'admin',
-            'petugas', 'sanitarian', 'staf_backup_kluster4' => 'officer',
-            default => 'citizen',
-        };
+        $roles = array_filter(array_map(
+            static fn (string $value): string => trim($value),
+            explode(',', $role),
+        ));
+
+        if (in_array('admin', $roles, true) || in_array('kepala_puskesmas', $roles, true)) {
+            return 'admin';
+        }
+
+        if (in_array('petugas', $roles, true) || in_array('sanitarian', $roles, true) || in_array('staf_backup_kluster4', $roles, true)) {
+            return 'officer';
+        }
+
+        return 'citizen';
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user !== null && $user->is_active === false) {
+            return redirect()->back()->with('inactive_logout_warning', 'Akun ini sedang dinonaktifkan. Anda tidak dapat keluar.');
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

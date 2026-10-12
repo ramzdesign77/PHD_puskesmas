@@ -50,6 +50,20 @@ class AuthenticationRoleTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_inactive_admin_cannot_logout_and_receives_warning(): void
+    {
+        $admin = $this->createUser('admin', 'inactive-admin@example.test');
+        $admin->update(['is_active' => false]);
+
+        $response = $this->actingAs($admin)
+            ->from(route('dashboard.admin'))
+            ->post(route('logout'));
+
+        $response->assertRedirect(route('dashboard.admin'));
+        $this->assertAuthenticatedAs($admin);
+        $this->assertSame('Akun ini sedang dinonaktifkan. Anda tidak dapat keluar.', session('inactive_logout_warning'));
+    }
+
     public function test_account_seeder_creates_hashed_admin_and_petugas_credentials(): void
     {
         $this->seed(AdminAndPetugasSeeder::class);
@@ -61,6 +75,35 @@ class AuthenticationRoleTest extends TestCase
         $this->assertTrue(Hash::check('admin123', $admin->password));
         $this->assertSame('petugas', $petugas->role);
         $this->assertTrue(Hash::check('petugas123', $petugas->password));
+    }
+
+    public function test_account_can_have_admin_and_petugas_roles(): void
+    {
+        $admin = $this->createUser('admin', 'admin@example.test');
+        $this->actingAs($admin)->post(route('users.store'), [
+            'nama_lengkap' => 'Akun Ganda',
+            'username' => 'akun_ganda',
+            'email' => 'akun_ganda@example.test',
+            'password' => 'secret123',
+            'no_telepon' => '08123456789',
+            'roles' => ['admin', 'petugas'],
+            'wilayah_kerja' => 'Sumbersari',
+        ])->assertRedirect(route('users.index'));
+
+        $user = User::where('username', 'akun_ganda')->firstOrFail();
+        $this->assertSame('admin,petugas', $user->role);
+        $this->assertTrue($user->hasRole('admin'));
+        $this->assertTrue($user->hasRole('petugas'));
+        $this->assertTrue($user->isAdmin());
+
+        $response = $this->post(route('login.post'), [
+            'username' => 'akun_ganda',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertRedirect(route('dashboard.admin'));
+        $this->assertAuthenticatedAs($user);
+        $this->get(route('users.index'))->assertOk();
     }
 
     private function createUser(string $role, string $email): User
