@@ -16,7 +16,7 @@
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Laporan</p>
                     <p class="text-3xl font-bold text-gray-800">{{ $stats['total_reports'] ?? 0 }}</p>
                     <p class="text-xs text-green-500 font-medium mt-1">
-                        <i class="fas fa-arrow-up"></i> +12 bulan ini
+                        <i class=></i> Dalam Bulan ini
                     </p>
                 </div>
                 <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">

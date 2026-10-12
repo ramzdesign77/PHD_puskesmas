@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,3 +25,4 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
 // ── Referensi Data ────────────────────────────────────────────────────────
 // GET /api/desa — daftar desa untuk dropdown Flutter
 Route::get('/desa', [LaporanWargaApiController::class, 'listDesa'])->name('api.desa.list');
+Route::get('/edukasi', [EducationApiController::class, 'index'])->name('api.edukasi.index');

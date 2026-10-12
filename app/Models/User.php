@@ -31,8 +31,6 @@ class User extends Authenticatable
         'alamat',
         'foto',
         'is_active',
-        'nip',
-        'nik',
     ];
 
     protected $hidden = ['password'];

@@ -36,10 +36,12 @@
             </div>
         @endif
 
-        <!-- Container: Judul Artikel -->
+        <!-- Container: Judul Artikel (Hanya huruf, angka, dan spasi) -->
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="title" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Judul Artikel</label>
             <input id="title" name="title" value="{{ old('title', $article->title) }}" required maxlength="255" 
+                   pattern="[A-Za-z0-9\s]+" 
+                   title="Hanya boleh memasukkan huruf, angka, dan spasi"
                    class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium shadow-none" 
                    placeholder="Contoh: Menjaga Air Bersih di Rumah">
         </div>

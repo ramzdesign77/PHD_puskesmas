@@ -39,6 +39,8 @@
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="title" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Judul Artikel</label>
             <input id="title" name="title" value="{{ old('title') }}" required maxlength="255" 
+                   pattern="[A-Za-z0-9\s]+" 
+                   title="Hanya boleh memasukkan huruf, angka, dan spasi"
                    class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium shadow-none" 
                    placeholder="Contoh: Menjaga Air Bersih di Rumah">
         </div>
@@ -60,7 +62,7 @@
         <!-- Container: Unggah Gambar -->
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="image" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                Gambar Banner <span class="font-normal text-gray-400 lowercase">(opsional, maks. 5 MB)</span>
+                Gambar Banner <span class="font-normal text-gray-400 lowercase">(opsional, maks. 2 MB)</span>
             </label>
             <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" 
                    class="block w-full bg-transparent border-0 p-0 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-red-50 file:rounded-xl file:px-4 file:py-2 file:font-semibold file:text-medical-red cursor-pointer focus:outline-none focus:ring-0">
@@ -74,7 +76,7 @@
                       placeholder="Tulis isi artikel secara lengkap di sini...">{{ old('content') }}</textarea>
         </div>
 
-        <!-- Tombol Aksi (Batal & Simpan yang Kontras & Menarik) -->
+        <!-- Tombol Aksi -->
         <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
             <a href="{{ route('education.manage') }}" class="rounded-xl px-5 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition">
                 Batal
