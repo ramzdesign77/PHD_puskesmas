@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\EducationApiController;
+use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,13 @@ use Illuminate\Support\Facades\Route;
 | Tidak memerlukan autentikasi untuk pengiriman laporan.
 | Prefix: /api
 */
+
+// ── Autentikasi Flutter Mobile ────────────────────────────────────────────
+Route::prefix('auth')->name('api.auth.')->group(function () {
+    Route::post('/register', [MobileAuthController::class, 'register'])->name('register');
+    Route::post('/login', [MobileAuthController::class, 'login'])->name('login');
+    Route::post('/logout', [MobileAuthController::class, 'logout'])->name('logout');
+});
 
 // ── Laporan Warga (tidak perlu auth) ──────────────────────────────────────
 Route::prefix('laporan')->name('api.laporan.')->group(function () {

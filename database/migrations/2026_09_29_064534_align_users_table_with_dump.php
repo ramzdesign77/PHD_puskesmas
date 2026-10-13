@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,8 +18,24 @@ return new class extends Migration
             $table->string('username', 25)->change();
             $table->string('email', 30)->nullable()->change();
             $table->string('no_telepon', 15)->nullable()->change();
-            $table->dropColumn(['nip', 'nik']);
         });
+
+        // Hapus kolom hanya jika kolom tersebut memang tersedia.
+        $columnsToDrop = [];
+
+        if (Schema::hasColumn('users', 'nip')) {
+            $columnsToDrop[] = 'nip';
+        }
+
+        if (Schema::hasColumn('users', 'nik')) {
+            $columnsToDrop[] = 'nik';
+        }
+
+        if (!empty($columnsToDrop)) {
+            Schema::table('users', function (Blueprint $table) use ($columnsToDrop) {
+                $table->dropColumn($columnsToDrop);
+            });
+        }
     }
 
     /**
@@ -32,8 +49,19 @@ return new class extends Migration
             $table->string('username', 50)->change();
             $table->string('email', 150)->nullable()->change();
             $table->string('no_telepon', 20)->nullable()->change();
-            $table->string('nip', 30)->nullable()->after('nama_lengkap');
-            $table->char('nik', 16)->nullable()->after('nip');
         });
+
+        // Tambahkan kembali kolom yang belum tersedia saja.
+        if (!Schema::hasColumn('users', 'nip')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('nip', 30)->nullable()->after('nama_lengkap');
+            });
+        }
+
+        if (!Schema::hasColumn('users', 'nik')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->char('nik', 16)->nullable()->after('nip');
+            });
+        }
     }
 };
