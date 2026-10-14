@@ -8,14 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('mobile_access_tokens', function (Blueprint $table) {
+        if (Schema::hasTable('mobile_access_tokens')) {
+            return;
+        }
+
+        Schema::create('mobile_access_tokens', function (Blueprint $table): void {
             $table->id();
-            $table->integer('id_user');
+            $table->unsignedBigInteger('id_user');
             $table->string('name')->default('flutter-mobile');
             $table->char('token_hash', 64)->unique();
             $table->timestamp('created_at')->nullable();
-            $table->foreign('id_user')->references('id_user')->on('users')->cascadeOnDelete();
             $table->index('id_user');
+            $table->foreign('id_user')->references('id_user')->on('users')->cascadeOnDelete();
         });
     }
 

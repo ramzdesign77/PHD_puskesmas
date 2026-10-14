@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('desa', function (Blueprint $table) {
-            $table->integer('id_desa', true);
-            $table->string('nama_desa', 100);
-            $table->string('kode_pos', 10)->nullable()->default('68175');
-            $table->timestamp('created_at')->nullable()->useCurrent();
-        });
+        if (! Schema::hasTable('desa')) {
+            Schema::create('desa', function (Blueprint $table) {
+                $table->integer('id_desa', true);
+                $table->string('nama_desa', 100);
+                $table->string('kode_pos', 10)->nullable()->default('68175');
+                $table->timestamp('created_at')->nullable()->useCurrent();
+            });
+        }
     }
 
     /**

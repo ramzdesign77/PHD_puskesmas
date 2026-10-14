@@ -8,28 +8,64 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('id_petugas', 30)->nullable()->after('nama_lengkap');
-            $table->string('email', 150)->nullable()->after('username');
-            $table->string('wilayah_kerja', 150)->nullable()->after('role');
-            $table->text('alamat')->nullable()->after('wilayah_kerja');
-            $table->string('foto')->nullable()->after('alamat');
-            $table->softDeletes();
-        });
+        if (! Schema::hasColumn('users', 'name')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('name')->nullable();
+            });
+        } else {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('name')->nullable()->change();
+            });
+        }
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 50)->change();
+        if (! Schema::hasColumn('users', 'email')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('email')->nullable();
+            });
+        } else {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('email')->nullable()->change();
+            });
+        }
+
+        Schema::table('users', function (Blueprint $table): void {
+            if (! Schema::hasColumn('users', 'id_petugas')) {
+                $table->string('id_petugas', 30)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'role')) {
+                $table->string('role', 50)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'wilayah_kerja')) {
+                $table->string('wilayah_kerja', 150)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'alamat')) {
+                $table->text('alamat')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'foto')) {
+                $table->string('foto')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['id_petugas', 'email', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at']);
-        });
+        $columnsToDrop = array_values(array_filter(
+            ['id_petugas', 'role', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at'],
+            fn (string $column): bool => Schema::hasColumn('users', $column),
+        ));
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['sanitarian', 'staf_backup_kluster4', 'kepala_puskesmas', 'admin'])->change();
-        });
+        if ($columnsToDrop !== []) {
+            Schema::table('users', function (Blueprint $table) use ($columnsToDrop): void {
+                $table->dropColumn($columnsToDrop);
+            });
+        }
     }
 };
