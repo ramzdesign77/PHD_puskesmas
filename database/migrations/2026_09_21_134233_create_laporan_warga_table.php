@@ -11,24 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('laporan_warga')) {
-            Schema::create('laporan_warga', function (Blueprint $table) {
-                $table->integer('id_laporan', true);
-                $table->string('kode_tiket', 20)->unique('kode_tiket');
-                $table->string('nama_pelapor', 150);
-                $table->string('nik_pelapor', 255)->nullable();
-                $table->string('no_wa', 255)->nullable();
-                $table->integer('id_desa')->index('id_desa');
-                $table->string('rt', 5);
-                $table->string('rw', 5);
-                $table->enum('kategori_laporan', ['air_masalah', 'sanitasi_lingkungan'])->default('air_masalah');
-                $table->text('deskripsi');
-                $table->string('foto_bukti')->nullable();
-                $table->enum('status_laporan', ['menunggu', 'dijadwalkan', 'selesai', 'ditolak'])->nullable()->default('menunggu');
-                $table->text('alasan_penolakan')->nullable();
-                $table->timestamp('created_at')->nullable()->useCurrent();
-            });
+        if (Schema::hasTable('laporan_warga')) {
+            return;
         }
+
+        Schema::create('laporan_warga', function (Blueprint $table) {
+            $table->integer('id_laporan', true);
+            $table->string('kode_tiket', 20)->unique('kode_tiket');
+            $table->string('nama_pelapor', 150);
+            $table->string('nik_pelapor', 255)->nullable();
+            $table->string('no_wa', 255)->nullable();
+            $table->integer('id_desa')->index('id_desa');
+            $table->string('rt', 5);
+            $table->string('rw', 5);
+            $table->enum('kategori_laporan', ['air_masalah', 'sanitasi_lingkungan'])->default('air_masalah');
+            $table->text('deskripsi');
+            $table->string('foto_bukti')->nullable();
+            $table->enum('status_laporan', ['menunggu', 'dijadwalkan', 'selesai', 'ditolak'])->nullable()->default('menunggu');
+            $table->text('alasan_penolakan')->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
+        });
     }
 
     /**

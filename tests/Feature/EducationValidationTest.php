@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,7 +12,16 @@ class EducationValidationTest extends TestCase
 
     public function test_title_rejects_special_characters(): void
     {
-        $response = $this->withSession(['role' => 'admin'])
+        $admin = User::create([
+            'nama_lengkap' => 'Administrator',
+            'username' => 'admin',
+            'password' => 'password123',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
             ->from('/admin/edukasi/create')
             ->post('/admin/edukasi', [
                 'title' => '@#$%^&*(!&(#^E!)',

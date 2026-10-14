@@ -8,9 +8,33 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        if (! Schema::hasColumn('users', 'name')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('name')->nullable();
+            });
+        } else {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('name')->nullable()->change();
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'email')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('email')->nullable();
+            });
+        } else {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('email')->nullable()->change();
+            });
+        }
+
+        Schema::table('users', function (Blueprint $table): void {
             if (! Schema::hasColumn('users', 'id_petugas')) {
                 $table->string('id_petugas', 30)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'role')) {
+                $table->string('role', 50)->nullable();
             }
 
             if (! Schema::hasColumn('users', 'wilayah_kerja')) {
@@ -25,10 +49,6 @@ return new class extends Migration
                 $table->string('foto')->nullable();
             }
 
-            if (! Schema::hasColumn('users', 'role')) {
-                $table->string('role', 50)->nullable();
-            }
-
             if (! Schema::hasColumn('users', 'deleted_at')) {
                 $table->softDeletes();
             }
@@ -37,14 +57,15 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $columns = ['id_petugas', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at'];
+        $columnsToDrop = array_values(array_filter(
+            ['id_petugas', 'role', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at'],
+            fn (string $column): bool => Schema::hasColumn('users', $column),
+        ));
 
-            foreach ($columns as $column) {
-                if (Schema::hasColumn('users', $column)) {
-                    $table->dropColumn($column);
-                }
-            }
-        });
+        if ($columnsToDrop !== []) {
+            Schema::table('users', function (Blueprint $table) use ($columnsToDrop): void {
+                $table->dropColumn($columnsToDrop);
+            });
+        }
     }
 };

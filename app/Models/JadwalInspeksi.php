@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class JadwalInspeksi extends Model
 {
@@ -15,30 +15,90 @@ class JadwalInspeksi extends Model
 
     protected $fillable = [
         'id_laporan',
-        'id_operator', // dipakai sebagai referensi ke petugas.id_petugas
+        'id_operator',
         'id_paket',
         'tanggal_kunjungan',
+        'jam_mulai',
         'jenis_kunjungan',
         'status_kunjungan',
     ];
 
+    protected $casts = [
+        'tanggal_kunjungan' => 'date',
+        'created_at' => 'datetime',
+    ];
+
+    // ─── Relations ────────────────────────────────────────────────────────────
+
+    /**
+     * Laporan warga yang memicu jadwal ini (nullable untuk IKL rutin).
+     */
     public function laporan()
     {
         return $this->belongsTo(LaporanWarga::class, 'id_laporan', 'id_laporan');
     }
 
-    public function petugas()
+    /**
+     * Petugas sanitarian yang ditugaskan (FK ke users.id_user, bukan tabel petugas).
+     */
+    public function operator()
     {
-        return $this->belongsTo(Petugas::class, 'id_operator', 'id_petugas');
+        return $this->belongsTo(User::class, 'id_operator', 'id_user');
     }
 
+    /** @deprecated Gunakan operator() — relasi sekarang langsung ke tabel users. */
+    public function petugas()
+    {
+        return $this->operator();
+    }
+
+    /**
+     * Paket alat inspeksi (nullable).
+     */
     public function paketAlat()
     {
         return $this->belongsTo(PaketAlat::class, 'id_paket', 'id_paket');
     }
 
-    public function inspeksiIkl(): HasOne
+    /**
+     * Hasil inspeksi IKL Air yang dilampirkan pada jadwal ini.
+     */
+    public function inspeksiIkl()
     {
         return $this->hasOne(InspeksiIkl::class, 'id_jadwal', 'id_jadwal');
+    }
+
+    // ─── Scopes ───────────────────────────────────────────────────────────────
+
+    public function scopeTerjadwal($query)
+    {
+        return $query->where('status_kunjungan', 'terjadwal');
+    }
+
+    public function scopeSelesai($query)
+    {
+        return $query->where('status_kunjungan', 'selesai');
+    }
+
+    public function scopeForOperatorOnDate(
+        Builder $query,
+        int|string $idOperator,
+        string $tanggalKunjungan,
+        ?string $jam = null,
+        ?int $exceptId = null
+    ): Builder {
+        $query->where('id_operator', $idOperator)
+            ->whereDate('tanggal_kunjungan', $tanggalKunjungan)
+            ->where('status_kunjungan', 'terjadwal');
+
+        if ($jam !== null) {
+            $query->where('jam_mulai', $jam);
+        }
+
+        if ($exceptId !== null) {
+            $query->where('id_jadwal', '!=', $exceptId);
+        }
+
+        return $query;
     }
 }

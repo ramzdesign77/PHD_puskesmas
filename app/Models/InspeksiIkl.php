@@ -30,6 +30,7 @@ class InspeksiIkl extends Model
 
     protected $casts = [
         'jarak_sumber_pencemar' => 'integer',
+        'tanggal_inspeksi' => 'date',
         'p1_dinding_sumur_retak' => 'boolean',
         'p2_penutup_tidak_rapat' => 'boolean',
         'p3_lantai_becek_retak' => 'boolean',
@@ -70,5 +71,18 @@ class InspeksiIkl extends Model
     public function jadwal(): BelongsTo
     {
         return $this->belongsTo(JadwalInspeksi::class, 'id_jadwal', 'id_jadwal');
+    }
+
+    /**
+     * Accessor: label kategori risiko yang mudah dibaca (human-readable).
+     */
+    public function getLabelKategoriRisikoAttribute(): string
+    {
+        return match ($this->kategori_risiko) {
+            'aman' => '✅ Aman',
+            'risiko_sedang' => '⚠️ Risiko Sedang',
+            'risiko_tinggi' => '🔴 Risiko Tinggi',
+            default => '-',
+        };
     }
 }
