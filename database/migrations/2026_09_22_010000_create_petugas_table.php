@@ -8,16 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('petugas')) {
-            Schema::create('petugas', function (Blueprint $table) {
-                $table->id('id_petugas');
-                $table->string('nama_petugas');
-                $table->string('jabatan')->nullable();
-                $table->string('no_telepon')->nullable();
-                $table->boolean('is_active')->default(true);
-                $table->timestamp('created_at')->useCurrent();
-            });
-        }
+        Schema::create('petugas', function (Blueprint $table) {
+            $table->id('id_petugas');
+            $table->string('nama_petugas');
+            $table->string('jabatan')->nullable();
+            $table->string('no_telepon')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('created_at')->useCurrent();
+        });
     }
 
     public function down(): void

@@ -11,14 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasForeignKey('jadwal_inspeksi', ['id_laporan'])) {
-            Schema::table('jadwal_inspeksi', function (Blueprint $table): void {
-                $table->foreign('id_laporan', 'jadwal_inspeksi_laporan_fk')
-                    ->references('id_laporan')
-                    ->on('laporan_warga')
-                    ->cascadeOnDelete();
-            });
-        }
+        Schema::table('jadwal_inspeksi', function (Blueprint $table) {
+            $table->foreign(['id_laporan'], 'jadwal_inspeksi_ibfk_1')->references(['id_laporan'])->on('laporan_warga')->onUpdate('no action')->onDelete('cascade');
+            $table->foreign(['id_operator'], 'jadwal_inspeksi_ibfk_2')->references(['id_user'])->on('users')->onUpdate('no action')->onDelete('cascade');
+        });
     }
 
     /**
@@ -26,13 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $foreignKey = collect(Schema::getForeignKeys('jadwal_inspeksi'))
-            ->first(fn (array $foreignKey): bool => $foreignKey['columns'] === ['id_laporan']);
-
-        if ($foreignKey !== null) {
-            Schema::table('jadwal_inspeksi', function (Blueprint $table) use ($foreignKey): void {
-                $table->dropForeign($foreignKey['name'] ?? $foreignKey['columns']);
-            });
-        }
+        Schema::table('jadwal_inspeksi', function (Blueprint $table) {
+            $table->dropForeign('jadwal_inspeksi_ibfk_1');
+            $table->dropForeign('jadwal_inspeksi_ibfk_2');
+        });
     }
 };
