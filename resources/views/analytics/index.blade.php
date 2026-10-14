@@ -41,7 +41,7 @@
                     <p class="text-xs text-gray-400 mt-0.5">Berdasarkan hasil inspeksi yang telah diselesaikan</p>
                 </div>
             </div>
-
+            
             <div class="space-y-4">
                 @php
                     $totalIkl = $summary['selesai']; // laporan yang sudah IKL
@@ -100,7 +100,7 @@
                         <li>Skor risiko dihitung otomatis (Aman/Sedang/Tinggi) → Status <strong>Selesai</strong>.</li>
                     </ol>
                 </div>
-
+                
                 <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                     <p class="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
                         <i class="fas fa-database text-green-500 w-4"></i> Relasi Database Terpusat

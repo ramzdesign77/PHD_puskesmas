@@ -215,18 +215,7 @@
                 <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Manajemen Edukasi</span>
             </a>
-            <a href="{{ route('analytics.index') }}" class="sidebar-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}">
-                <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span>
-                <span x-show="sidebarOpen" x-transition.opacity>Laporan &amp; Analitik</span>
-            </a>
-            <a href="{{ route('admin.laporan.index') }}" class="sidebar-link {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
-                <span class="sidebar-icon"><i class="fas fa-inbox"></i></span>
-                <span x-show="sidebarOpen" x-transition.opacity>Kelola Laporan</span>
-            </a>
-            <a href="{{ route('admin.inspeksi-ikl.index') }}" class="sidebar-link {{ request()->routeIs('admin.inspeksi-ikl.*') ? 'active' : '' }}">
-                <span class="sidebar-icon"><i class="fas fa-flask"></i></span>
-                <span x-show="sidebarOpen" x-transition.opacity>Rekap IKL Air</span>
-            </a>
+
             @endif
         </nav>
 

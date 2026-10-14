@@ -26,7 +26,7 @@
         ];
         [$bannerClass, $bannerTitle, $bannerDesc] = $risikoMap[$inspeksi->kategori_risiko] ?? ['bg-gray-100 border-gray-200 text-gray-800', 'TIDAK DIKETAHUI', ''];
     @endphp
-
+    
     <div class="rounded-2xl border p-5 flex flex-col md:flex-row items-center justify-between gap-4 {{ $bannerClass }} print:border-gray-300">
         <div>
             <p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Status Kualitas Lingkungan</p>
@@ -42,10 +42,10 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
+        
         {{-- Kolom Kiri: Info & Rekomendasi --}}
         <div class="md:col-span-1 space-y-6">
-
+            
             {{-- Data Pelaksanaan --}}
             <div class="card p-5">
                 <h3 class="font-bold text-gray-800 text-sm border-b border-gray-100 pb-3 mb-4">Informasi Pelaksanaan</h3>
@@ -79,12 +79,12 @@
                 </h3>
                 <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $inspeksi->rekomendasi_sanitarian }}</p>
             </div>
-
+            
         </div>
 
         {{-- Kolom Kanan: Detail Checklist --}}
         <div class="md:col-span-2 space-y-6">
-
+            
             {{-- Spesifikasi Sarana --}}
             <div class="card p-5">
                 <h3 class="font-bold text-gray-800 text-sm border-b border-gray-100 pb-3 mb-4">Spesifikasi Sarana Air</h3>
@@ -112,7 +112,7 @@
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
                     <h3 class="font-bold text-gray-800 text-sm">Rincian Hasil Checklist Fisik</h3>
                 </div>
-
+                
                 <ul class="divide-y divide-gray-100 text-sm">
                     @php
                         $checklists = [
@@ -151,7 +151,7 @@
                     @endforeach
                 </ul>
             </div>
-
+            
         </div>
     </div>
 </div>

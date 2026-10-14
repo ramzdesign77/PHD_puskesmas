@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto fade-in">
-
+    
     <!-- Tombol Kembali -->
     <div class="mb-6">
         <a href="{{ route('education.manage') }}" class="text-sm font-semibold text-medical-red hover:underline">
@@ -38,17 +38,17 @@
         <!-- Container: Judul Artikel -->
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="title" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Judul Artikel</label>
-            <input id="title" name="title" value="{{ old('title') }}" required maxlength="255"
-                   pattern="[A-Za-z0-9\s]+"
+            <input id="title" name="title" value="{{ old('title') }}" required maxlength="255" 
+                   pattern="[A-Za-z0-9\s]+" 
                    title="Hanya boleh memasukkan huruf, angka, dan spasi"
-                   class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium shadow-none"
+                   class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium shadow-none" 
                    placeholder="Contoh: Menjaga Air Bersih di Rumah">
         </div>
 
         <!-- Container: Kategori Artikel -->
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="category" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Kategori</label>
-            <select id="category" name="category" required
+            <select id="category" name="category" required 
                     class="w-full bg-transparent border-0 p-0 text-gray-800 focus:outline-none focus:ring-0 text-sm font-medium cursor-pointer shadow-none">
                 <option value="" class="text-gray-400">Pilih kategori artikel...</option>
                 @foreach(['Air & Sanitasi', 'Pengelolaan Sampah & Vektor', 'PHBS'] as $category)
@@ -64,15 +64,15 @@
             <label for="image" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
                 Gambar Banner <span class="font-normal text-gray-400 lowercase">(opsional, maks. 2 MB)</span>
             </label>
-            <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp"
+            <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" 
                    class="block w-full bg-transparent border-0 p-0 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-red-50 file:rounded-xl file:px-4 file:py-2 file:font-semibold file:text-medical-red cursor-pointer focus:outline-none focus:ring-0">
         </div>
 
         <!-- Container: Konten Artikel -->
         <div class="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/70 focus-within:border-gray-800 transition-all">
             <label for="content" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Isi Konten</label>
-            <textarea id="content" name="content" rows="10" required
-                      class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium resize-y shadow-none"
+            <textarea id="content" name="content" rows="10" required 
+                      class="w-full bg-transparent border-0 p-0 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-medium resize-y shadow-none" 
                       placeholder="Tulis isi artikel secara lengkap di sini...">{{ old('content') }}</textarea>
         </div>
 

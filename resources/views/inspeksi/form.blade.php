@@ -38,7 +38,7 @@
                     @endif
                 </div>
             </div>
-
+            
             @if($jadwal->laporan)
             <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 md:w-1/3">
                 <p class="text-xs font-bold text-gray-500 mb-2">Detail Laporan Warga</p>
