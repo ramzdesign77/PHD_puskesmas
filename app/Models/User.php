@@ -27,10 +27,15 @@ class User extends Authenticatable
         'email',
         'password',
         'no_telepon',
+        'nik',
+        'nip',
+        'nip_nik',
         'role',
+        'roles',
         'wilayah_kerja',
         'alamat',
         'foto',
+        'id_desa',
         'is_active',
     ];
 
@@ -57,6 +62,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'roles' => 'array',
         ];
     }
 
@@ -67,9 +73,42 @@ class User extends Authenticatable
 
     public function roles(): array
     {
-        return array_values(array_filter(array_map(
-            static fn (string $role): string => trim($role),
-            explode(',', (string) $this->role),
+        return $this->getRolesListAttribute();
+    }
+
+    /**
+     * Resolve roles from the new multi-role column, falling back to the legacy role.
+     *
+     * @return array<int, string>
+     */
+    public function getRolesListAttribute(): array
+    {
+        $roles = $this->getAttribute('roles');
+
+        if (is_string($roles)) {
+            $decodedRoles = json_decode($roles, true);
+            $roles = is_array($decodedRoles) ? $decodedRoles : [];
+        }
+
+        if (! is_array($roles) || $roles === []) {
+            $legacyRole = $this->getAttribute('role');
+
+            if (! is_string($legacyRole) || trim($legacyRole) === '') {
+                return [];
+            }
+
+            $decodedRoles = json_decode($legacyRole, true);
+            $roles = is_array($decodedRoles) ? $decodedRoles : explode(',', $legacyRole);
+        }
+
+        $roles = array_map(
+            static fn (mixed $role): string => is_string($role) ? trim($role) : '',
+            $roles,
+        );
+
+        return array_values(array_unique(array_filter(
+            $roles,
+            static fn (string $role): bool => $role !== '',
         )));
     }
 

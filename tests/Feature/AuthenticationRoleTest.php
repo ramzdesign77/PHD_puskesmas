@@ -92,6 +92,7 @@ class AuthenticationRoleTest extends TestCase
 
         $user = User::where('username', 'akun_ganda')->firstOrFail();
         $this->assertSame('admin,petugas', $user->role);
+        $this->assertSame(['admin', 'petugas'], $user->getRolesListAttribute());
         $this->assertTrue($user->hasRole('admin'));
         $this->assertTrue($user->hasRole('petugas'));
         $this->assertTrue($user->isAdmin());

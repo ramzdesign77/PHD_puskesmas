@@ -78,8 +78,8 @@ class UserManagementController extends Controller
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $data['role'] = collect($data['roles'])->unique()->implode(',');
-        unset($data['roles']);
+        $data['roles'] = collect($data['roles'])->unique()->values()->all();
+        $data['role'] = implode(',', $data['roles']);
         $data['is_active'] = true;
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('petugas', 'public');
@@ -119,8 +119,8 @@ class UserManagementController extends Controller
             'is_active' => ['required', 'boolean'],
         ]);
 
-        $data['role'] = collect($data['roles'])->unique()->implode(',');
-        unset($data['roles']);
+        $data['roles'] = collect($data['roles'])->unique()->values()->all();
+        $data['role'] = implode(',', $data['roles']);
 
         if (blank($data['password'])) {
             unset($data['password']);

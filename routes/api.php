@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
 use App\Http\Controllers\Api\MobileAuthController;
@@ -19,6 +20,19 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('/register', [MobileAuthController::class, 'register'])->name('register');
     Route::post('/login', [MobileAuthController::class, 'login'])->name('login');
     Route::post('/logout', [MobileAuthController::class, 'logout'])->name('logout');
+});
+
+Route::prefix('v1')->name('api.v1.')->group(function (): void {
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:10,1')
+        ->name('login');
+    Route::post('/register-warga', [AuthController::class, 'registerWarga'])
+        ->middleware('throttle:5,1')
+        ->name('register-warga');
+
+    Route::middleware('auth.mobile')->group(function (): void {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    });
 });
 
 // ── Laporan Warga (tidak perlu auth) ──────────────────────────────────────
