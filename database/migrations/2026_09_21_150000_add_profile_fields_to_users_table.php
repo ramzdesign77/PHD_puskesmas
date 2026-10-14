@@ -9,27 +9,42 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('nip_nik', 30)->nullable()->after('nama_lengkap');
-            $table->string('email', 150)->nullable()->after('username');
-            $table->string('wilayah_kerja', 150)->nullable()->after('role');
-            $table->text('alamat')->nullable()->after('wilayah_kerja');
-            $table->string('foto')->nullable()->after('alamat');
-            $table->softDeletes();
-        });
+            if (! Schema::hasColumn('users', 'id_petugas')) {
+                $table->string('id_petugas', 30)->nullable();
+            }
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 50)->change();
+            if (! Schema::hasColumn('users', 'wilayah_kerja')) {
+                $table->string('wilayah_kerja', 150)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'alamat')) {
+                $table->text('alamat')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'foto')) {
+                $table->string('foto')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'role')) {
+                $table->string('role', 50)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['nip_nik', 'email', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at']);
-        });
+            $columns = ['id_petugas', 'wilayah_kerja', 'alamat', 'foto', 'deleted_at'];
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['sanitarian', 'staf_backup_kluster4', 'kepala_puskesmas', 'admin'])->change();
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('users', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };

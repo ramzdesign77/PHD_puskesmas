@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('inspeksi_ikl', function (Blueprint $table) {
-            $table->foreign(['id_jadwal'], 'inspeksi_ikl_ibfk_1')->references(['id_jadwal'])->on('jadwal_inspeksi')->onUpdate('no action')->onDelete('cascade');
+            $table->foreign(['id_jadwal'], 'inspeksi_ikl_jadwal_fk')->references(['id_jadwal'])->on('jadwal_inspeksi')->onUpdate('no action')->onDelete('cascade');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('inspeksi_ikl', function (Blueprint $table) {
-            $table->dropForeign('inspeksi_ikl_ibfk_1');
+            $table->dropForeign('inspeksi_ikl_jadwal_fk');
         });
     }
 };
