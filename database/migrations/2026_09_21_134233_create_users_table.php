@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->integer('id_user', true);
-            $table->string('nama_lengkap', 150);
-            $table->string('username', 50)->unique('username');
-            $table->string('password');
-            $table->string('no_telepon', 20)->nullable();
-            $table->enum('role', ['sanitarian', 'staf_backup_kluster4', 'kepala_puskesmas', 'admin']);
-            $table->boolean('is_active')->nullable()->default(true);
-            $table->timestamp('created_at')->nullable()->useCurrent();
-        });
+        if (! Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->integer('id_user', true);
+                $table->string('nama_lengkap', 150);
+                $table->string('username', 50)->unique('username');
+                $table->string('password');
+                $table->string('no_telepon', 20)->nullable();
+                $table->enum('role', ['sanitarian', 'staf_backup_kluster4', 'kepala_puskesmas', 'admin']);
+                $table->boolean('is_active')->nullable()->default(true);
+                $table->timestamp('created_at')->nullable()->useCurrent();
+            });
+        }
     }
 
     /**

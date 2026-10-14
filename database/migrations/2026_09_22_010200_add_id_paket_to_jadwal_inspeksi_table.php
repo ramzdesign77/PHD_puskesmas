@@ -8,16 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('jadwal_inspeksi', function (Blueprint $table) {
-            // id_operator sudah ada di tabel ini -> kita pakai sebagai referensi ke petugas.id_petugas
-            $table->unsignedBigInteger('id_paket')->nullable()->after('id_operator');
-        });
+        if (! Schema::hasColumn('jadwal_inspeksi', 'id_paket')) {
+            Schema::table('jadwal_inspeksi', function (Blueprint $table): void {
+                $table->unsignedBigInteger('id_paket')->nullable();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('jadwal_inspeksi', function (Blueprint $table) {
-            $table->dropColumn('id_paket');
-        });
+        if (Schema::hasColumn('jadwal_inspeksi', 'id_paket')) {
+            Schema::table('jadwal_inspeksi', function (Blueprint $table): void {
+                $table->dropColumn('id_paket');
+            });
+        }
     }
 };

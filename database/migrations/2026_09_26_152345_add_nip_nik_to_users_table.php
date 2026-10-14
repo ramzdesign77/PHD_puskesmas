@@ -12,17 +12,30 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // Tambah nip dan nik setelah nama_lengkap (kolom yang pasti ada)
-            $table->string('nip', 30)->nullable()->after('nama_lengkap')->comment('Nomor Induk Pegawai');
-            $table->char('nik', 16)->nullable()->after('nip')->comment('Nomor Induk Kependudukan');
-        });
+        if (! Schema::hasColumn('users', 'nip')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('nip', 30)->nullable()->comment('Nomor Induk Pegawai');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'nik')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->char('nik', 16)->nullable()->comment('Nomor Induk Kependudukan');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['nip', 'nik']);
-        });
+        $columnsToDrop = array_values(array_filter(
+            ['nip', 'nik'],
+            fn (string $column): bool => Schema::hasColumn('users', $column),
+        ));
+
+        if ($columnsToDrop !== []) {
+            Schema::table('users', function (Blueprint $table) use ($columnsToDrop): void {
+                $table->dropColumn($columnsToDrop);
+            });
+        }
     }
 };

@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inspeksi_ikl', function (Blueprint $table) {
-            $table->integer('id_inspeksi', true);
-            $table->integer('id_jadwal')->unique('id_jadwal');
-            $table->enum('jenis_sarana_air', ['sumur_bor', 'sumur_terlindung', 'pdam', 'mata_air', 'lainnya']);
-            $table->integer('jarak_sumber_pencemar');
-            $table->boolean('p1_dinding_sumur_retak')->nullable()->default(false);
-            $table->boolean('p2_penutup_tidak_rapat')->nullable()->default(false);
-            $table->boolean('p3_lantai_becek_retak')->nullable()->default(false);
-            $table->boolean('p4_spal_tersumbat')->nullable()->default(false);
-            $table->boolean('p5_air_keruh_berbau')->nullable()->default(false);
-            $table->integer('total_skor_ya')->nullable()->default(0);
-            $table->enum('kategori_risiko', ['aman', 'risiko_sedang', 'risiko_tinggi']);
-            $table->text('rekomendasi_sanitarian');
-            $table->date('tanggal_inspeksi');
-        });
+        if (! Schema::hasTable('inspeksi_ikl')) {
+            Schema::create('inspeksi_ikl', function (Blueprint $table) {
+                $table->integer('id_inspeksi', true);
+                $table->integer('id_jadwal')->unique('id_jadwal');
+                $table->enum('jenis_sarana_air', ['sumur_bor', 'sumur_terlindung', 'pdam', 'mata_air', 'lainnya']);
+                $table->integer('jarak_sumber_pencemar');
+                $table->boolean('p1_dinding_sumur_retak')->nullable()->default(false);
+                $table->boolean('p2_penutup_tidak_rapat')->nullable()->default(false);
+                $table->boolean('p3_lantai_becek_retak')->nullable()->default(false);
+                $table->boolean('p4_spal_tersumbat')->nullable()->default(false);
+                $table->boolean('p5_air_keruh_berbau')->nullable()->default(false);
+                $table->integer('total_skor_ya')->nullable()->default(0);
+                $table->enum('kategori_risiko', ['aman', 'risiko_sedang', 'risiko_tinggi']);
+                $table->text('rekomendasi_sanitarian');
+                $table->date('tanggal_inspeksi');
+            });
+        }
     }
 
     /**
