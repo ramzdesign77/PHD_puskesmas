@@ -12,7 +12,7 @@ class UserManagementController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $query = User::query()->where(function ($builder) {
             $builder->where('role', 'like', '%admin%')
@@ -55,14 +55,14 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -95,14 +95,14 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -140,7 +140,7 @@ class UserManagementController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $user->forceDelete();
 
@@ -149,14 +149,14 @@ class UserManagementController extends Controller
 
     public function show(User $user)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.show', compact('user'));
     }
 
     public function resetPassword(User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $user->update(['password' => 'password123']);
 
@@ -165,7 +165,7 @@ class UserManagementController extends Controller
 
     public function export(Request $request)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $users = User::query()->where(function ($builder) {
             $builder->where('role', 'like', '%admin%')
@@ -183,5 +183,10 @@ class UserManagementController extends Controller
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function ensureAdminAccess(): void
+    {
+        abort_unless(request()->user()?->isAdmin(), 403);
     }
 }

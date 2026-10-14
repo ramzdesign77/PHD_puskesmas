@@ -13,40 +13,65 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $petugas = DB::table('petugas')
-            ->where('no_telepon', '081234560001')
-            ->first();
+        $this->call(PetugasSeeder::class);
 
-        $users = [
+        $petugasId = DB::table('petugas')
+            ->where('no_telepon', '081234560001')
+            ->value('id_petugas');
+
+        $accounts = [
             [
-                'nama_lengkap' => 'dr. Kepala Puskesmas',
+                'nama_lengkap' => 'Administrator',
+                'name' => 'Administrator',
                 'username' => 'admin',
                 'email' => 'admin@klinik-sanitasi.local',
+                'password' => 'admin123',
                 'role' => 'admin',
-                'no_telepon' => null,
                 'id_petugas' => null,
             ],
             [
-                'nama_lengkap' => 'Sari Dewi',
-                'username' => 'petugas',
+                'nama_lengkap' => 'Petugas Kesling',
+                'name' => 'Petugas Kesling',
+                'username' => 'petugas1',
                 'email' => 'petugas@klinik-sanitasi.local',
-                'role' => 'sanitarian',
-                'no_telepon' => $petugas?->no_telepon,
-                'id_petugas' => $petugas === null ? null : (string) $petugas->id_petugas,
+                'password' => 'petugas123',
+                'role' => 'petugas',
+                'id_petugas' => $petugasId === null ? null : (string) $petugasId,
             ],
         ];
 
-        foreach ($users as $data) {
-            if (DB::table('users')->where('username', $data['username'])->exists()) {
-                continue;
-            }
+        foreach ($accounts as $account) {
+            DB::transaction(function () use ($account): void {
+                $user = DB::table('users')
+                    ->where('username', $account['username'])
+                    ->first(['id']);
 
-            DB::table('users')->insert([
-                ...$data,
-                'password' => Hash::make('password'),
-                'is_active' => true,
-                'created_at' => now(),
-            ]);
+                $timestamp = now();
+                $attributes = [
+                    'id_user' => $user?->id,
+                    'id_petugas' => $account['id_petugas'],
+                    'nama_lengkap' => $account['nama_lengkap'],
+                    'name' => $account['name'],
+                    'username' => $account['username'],
+                    'email' => $account['email'],
+                    'password' => Hash::make($account['password']),
+                    'role' => $account['role'],
+                    'is_active' => true,
+                    'updated_at' => $timestamp,
+                ];
+
+                if ($user !== null) {
+                    DB::table('users')->where('id', $user->id)->update($attributes);
+
+                    return;
+                }
+
+                $attributes['id_user'] = null;
+                $attributes['created_at'] = $timestamp;
+                $id = DB::table('users')->insertGetId($attributes, 'id');
+
+                DB::table('users')->where('id', $id)->update(['id_user' => $id]);
+            });
         }
     }
 }

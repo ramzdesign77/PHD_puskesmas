@@ -96,6 +96,8 @@ class AuthenticationRoleTest extends TestCase
         $this->assertTrue($user->hasRole('petugas'));
         $this->assertTrue($user->isAdmin());
 
+        $this->post(route('logout'));
+
         $response = $this->post(route('login.post'), [
             'username' => 'akun_ganda',
             'password' => 'secret123',

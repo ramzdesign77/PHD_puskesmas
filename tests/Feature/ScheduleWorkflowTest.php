@@ -3,99 +3,80 @@
 namespace Tests\Feature;
 
 use App\Models\JadwalInspeksi;
-use App\Models\LaporanWarga;
-use App\Models\Petugas;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ScheduleWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_citizen_request_creates_report_and_schedule(): void
+    public function test_admin_can_create_a_routine_schedule_for_an_operator(): void
     {
-        $villageId = $this->insertVillage();
-        $preferred = Carbon::tomorrow()->setTime(9, 30)->format('Y-m-d\TH:i');
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('petugas');
+        $date = Carbon::tomorrow()->toDateString();
 
-        $response = $this->withSession([
-            'role' => 'citizen',
-            'user_name' => 'Budi Santoso',
-        ])->post(route('schedules.store'), [
-            'complaint' => 'Air sumur warga berubah warna dan berbau.',
-            'location' => 'Jl. Mawar No. 5',
-            'id_desa' => $villageId,
-            'rt' => '03',
-            'rw' => '02',
-            'preferred' => $preferred,
-            'notes' => 'Mohon membawa alat uji air.',
-        ]);
-
-        $response->assertRedirect(route('schedules.index'));
-        $this->assertDatabaseHas('laporan_warga', [
-            'nama_pelapor' => 'Budi Santoso',
-            'id_desa' => $villageId,
-            'status_laporan' => 'menunggu',
-        ]);
-        $this->assertDatabaseHas('jadwal_inspeksi', [
-            'tanggal_kunjungan' => Carbon::parse($preferred)->toDateString(),
-            'waktu_kunjungan' => '09:30:00',
-            'id_operator' => null,
-        ]);
-    }
-
-    public function test_admin_can_assign_officer_and_update_report_status(): void
-    {
-        $villageId = $this->insertVillage();
-        $report = LaporanWarga::create([
-            'kode_tiket' => 'TCK-TEST-001',
-            'nama_pelapor' => 'Budi Santoso',
-            'nik_pelapor' => null,
-            'no_wa' => null,
-            'id_desa' => $villageId,
-            'rt' => '01',
-            'rw' => '02',
-            'kategori_laporan' => 'sanitasi_lingkungan',
-            'deskripsi' => 'Keluhan saluran air.',
-            'status_laporan' => 'menunggu',
-        ]);
-        $schedule = JadwalInspeksi::create([
-            'id_laporan' => $report->getKey(),
-            'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
-            'jenis_kunjungan' => 'ikl_laporan_warga',
-            'status_kunjungan' => 'terjadwal',
-        ]);
-        $officer = Petugas::create([
-            'nama_petugas' => 'Petugas Sari Dewi',
-            'jabatan' => 'Sanitarian',
-            'is_active' => true,
-        ]);
-
-        $response = $this->withSession(['role' => 'admin'])
-            ->post(route('schedules.assign', $schedule->getKey()), [
-                'officer_id' => $officer->getKey(),
-                'assigned_date' => Carbon::tomorrow()->toDateString(),
-                'assigned_time' => '14:00',
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->post(route('schedules.store'), [
+                'id_operator' => $operator->id_user,
+                'tanggal_kunjungan' => $date,
+                'jam_mulai' => '09:30',
+                'jenis_kunjungan' => 'ikl_rutin_rt',
             ]);
 
         $response->assertRedirect(route('schedules.index'));
         $this->assertDatabaseHas('jadwal_inspeksi', [
-            'id_jadwal' => $schedule->getKey(),
-            'id_operator' => $officer->getKey(),
-            'waktu_kunjungan' => '14:00:00',
-        ]);
-        $this->assertDatabaseHas('laporan_warga', [
-            'id_laporan' => $report->getKey(),
-            'status_laporan' => 'dijadwalkan',
+            'id_operator' => $operator->id_user,
+            'tanggal_kunjungan' => $date.' 00:00:00',
+            'jam_mulai' => '09:30',
+            'jenis_kunjungan' => 'ikl_rutin_rt',
+            'status_kunjungan' => 'terjadwal',
         ]);
     }
 
-    private function insertVillage(): int
+    public function test_admin_can_assign_an_existing_schedule_to_an_operator(): void
     {
-        return (int) DB::table('desa')->insertGetId([
-            'nama_desa' => 'Sumbersari',
-            'kode_pos' => '68175',
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('petugas');
+        $schedule = JadwalInspeksi::create([
+            'id_laporan' => null,
+            'id_operator' => null,
+            'id_paket' => null,
+            'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
+            'jam_mulai' => null,
+            'jenis_kunjungan' => 'ikl_rutin_rt',
+            'status_kunjungan' => 'terjadwal',
+        ]);
+        $date = Carbon::tomorrow()->toDateString();
+
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->post(route('schedules.assign', $schedule->id_jadwal), [
+                'id_operator' => $operator->id_user,
+                'tanggal_kunjungan' => $date,
+                'jam_mulai' => '14:00',
+            ]);
+
+        $response->assertRedirect(route('schedules.index'));
+        $this->assertDatabaseHas('jadwal_inspeksi', [
+            'id_jadwal' => $schedule->id_jadwal,
+            'id_operator' => $operator->id_user,
+            'tanggal_kunjungan' => $date.' 00:00:00',
+            'jam_mulai' => '14:00',
+        ]);
+    }
+
+    private function createUser(string $role): User
+    {
+        return User::create([
+            'nama_lengkap' => ucfirst($role),
+            'username' => $role.'-'.uniqid(),
+            'password' => 'password123',
+            'role' => $role,
+            'is_active' => true,
         ]);
     }
 }

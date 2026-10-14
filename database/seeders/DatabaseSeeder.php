@@ -17,8 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DesaSeeder::class,
             PaketAlatSeeder::class,
-            PetugasSeeder::class,
-            AdminAndPetugasSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }

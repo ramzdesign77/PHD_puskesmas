@@ -64,6 +64,7 @@ class MobileAuthController extends Controller
         if ($plainToken) {
             DB::table('mobile_access_tokens')->where('token_hash', hash('sha256', $plainToken))->delete();
         }
+
         return response()->json(['message' => 'Logout berhasil.']);
     }
 

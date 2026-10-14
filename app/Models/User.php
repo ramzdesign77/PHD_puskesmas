@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -34,6 +35,17 @@ class User extends Authenticatable
     ];
 
     protected $hidden = ['password'];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $user): void {
+            $id = $user->getKey();
+
+            DB::table($user->getTable())
+                ->where('id', $id)
+                ->update(['id_user' => $id]);
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

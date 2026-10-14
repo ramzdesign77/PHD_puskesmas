@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -62,30 +63,44 @@ return new class extends Migration
             }
         });
 
-        $usersTable = DB::getTablePrefix().'users';
-        $userIdIndexExists = DB::getDriverName() === 'sqlite'
-            ? DB::selectOne("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'users_id_user_unique'")
-            : DB::selectOne("SHOW INDEX FROM `{$usersTable}` WHERE Key_name = 'users_id_user_unique'");
+        DB::statement('UPDATE users SET id_user = id WHERE id_user IS NULL OR id_user = 0');
+        DB::statement("UPDATE users SET nama_lengkap = COALESCE(nama_lengkap, name) WHERE nama_lengkap IS NULL OR nama_lengkap = ''");
+        DB::statement("UPDATE users SET role = COALESCE(role, 'sanitarian') WHERE role IS NULL OR role = ''");
+        DB::statement('UPDATE users SET is_active = 1 WHERE is_active IS NULL');
 
-        if ($userIdIndexExists === null) {
-            Schema::table('users', function (Blueprint $table) {
+        $usersWithoutUsername = DB::table('users')
+            ->whereNull('username')
+            ->orWhere('username', '')
+            ->orderBy('id')
+            ->get(['id', 'name']);
+
+        foreach ($usersWithoutUsername as $user) {
+            $baseUsername = Str::slug($user->name ?? '', '');
+            $baseUsername = $baseUsername !== '' ? $baseUsername : 'user'.$user->id;
+            $username = $baseUsername;
+            $suffix = 1;
+
+            while (DB::table('users')
+                ->where('username', $username)
+                ->where('id', '!=', $user->id)
+                ->exists()) {
+                $username = $baseUsername.$suffix;
+                $suffix++;
+            }
+
+            DB::table('users')->where('id', $user->id)->update(['username' => $username]);
+        }
+
+        if (! Schema::hasIndex('users', ['id_user'], 'unique')) {
+            Schema::table('users', function (Blueprint $table): void {
                 $table->unique('id_user', 'users_id_user_unique');
             });
         }
 
-        DB::statement('UPDATE users SET id_user = id WHERE id_user IS NULL OR id_user = 0');
-        DB::statement("UPDATE users SET nama_lengkap = COALESCE(nama_lengkap, name) WHERE nama_lengkap IS NULL OR nama_lengkap = ''");
-        DB::statement("UPDATE users SET username = COALESCE(username, REPLACE(name, ' ', '')) WHERE username IS NULL OR username = ''");
-        DB::statement("UPDATE users SET role = COALESCE(role, 'admin') WHERE role IS NULL OR role = ''");
-        DB::statement('UPDATE users SET is_active = 1 WHERE is_active IS NULL');
-
-        if (DB::getDriverName() !== 'sqlite') {
-            $tableName = DB::getTablePrefix().'users';
-            $indexExists = DB::selectOne("SHOW INDEX FROM `{$tableName}` WHERE Key_name = 'username'");
-
-            if ($indexExists === null) {
-                DB::statement('ALTER TABLE users ADD UNIQUE KEY users_username_unique (username)');
-            }
+        if (! Schema::hasIndex('users', ['username'], 'unique')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->unique('username', 'users_username_unique');
+            });
         }
     }
 
@@ -94,8 +109,26 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['id_user', 'nama_lengkap', 'id_petugas', 'username', 'no_telepon', 'role', 'wilayah_kerja', 'alamat', 'foto', 'is_active', 'deleted_at']);
-        });
+        foreach (Schema::getIndexes('users') as $index) {
+            if (
+                $index['unique']
+                && in_array($index['columns'], [['id_user'], ['username']], true)
+            ) {
+                Schema::table('users', function (Blueprint $table) use ($index): void {
+                    $table->dropUnique($index['name']);
+                });
+            }
+        }
+
+        $columnsToDrop = array_values(array_filter(
+            ['id_user', 'nama_lengkap', 'username', 'no_telepon', 'is_active'],
+            fn (string $column): bool => Schema::hasColumn('users', $column),
+        ));
+
+        if ($columnsToDrop !== []) {
+            Schema::table('users', function (Blueprint $table) use ($columnsToDrop): void {
+                $table->dropColumn($columnsToDrop);
+            });
+        }
     }
 };

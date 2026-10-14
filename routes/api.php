@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\EducationApiController;
-use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
+use App\Http\Controllers\Api\MobileAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,11 +40,11 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/get-image/{filename}', function ($filename) {
     // Menghapus prefix 'educations/' jika terbawa di URL agar path tidak ganda
     $cleanFilename = str_replace('educations/', '', $filename);
-    $path = 'educations/' . $cleanFilename;
+    $path = 'educations/'.$cleanFilename;
 
-    if (!Storage::disk('public')->exists($path)) {
+    if (! Storage::disk('public')->exists($path)) {
         abort(404, 'Gambar tidak ditemukan');
     }
 
-    return response()->file(storage_path('app/public/' . $path));
+    return response()->file(storage_path('app/public/'.$path));
 })->where('filename', '.*');

@@ -151,6 +151,11 @@ class EducationController extends Controller
     // Membatasi akses khusus admin dan petugas
     private function ensureManagementAccess(): void
     {
-        abort_unless(in_array(session('role'), ['admin', 'officer'], true), 403);
+        $user = request()->user();
+
+        abort_unless(
+            $user?->isAdmin() || $user?->isSanitarian() || session('role') === 'officer',
+            403,
+        );
     }
 }
