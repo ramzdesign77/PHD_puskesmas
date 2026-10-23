@@ -18,10 +18,21 @@
                 value="{{ old('nama_lengkap', $user?->nama_lengkap) }}" required
                 class="w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100">
         </div>
-        <div><label for="id_petugas" class="mb-1 block text-sm font-semibold text-gray-700">ID Petugas</label><input
-                id="id_petugas" name="id_petugas" value="{{ old('id_petugas', $user?->id_petugas) }}"
-                class="w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100">
-        </div>
+        @if ($user)
+            <div>
+                <p class="mb-1 text-sm font-semibold text-gray-700">ID Petugas</p>
+                <p class="rounded-lg border-2 border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600">
+                    {{ $user->id_petugas ?: 'Tidak tersedia' }}
+                </p>
+            </div>
+        @else
+            <div>
+                <p class="mb-1 text-sm font-semibold text-gray-700">ID Petugas</p>
+                <p class="rounded-lg border-2 border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                    Dibuat otomatis sesuai peran akun saat disimpan.
+                </p>
+            </div>
+        @endif
         <div><label for="email" class="mb-1 block text-sm font-semibold text-gray-700">Email</label><input
                 id="email" type="email" name="email" value="{{ old('email', $user?->email) }}"
                 class="w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100">
@@ -60,10 +71,11 @@
                 </label>
             </div>
         </fieldset>
-        <div><label for="wilayah_kerja" class="mb-1 block text-sm font-semibold text-gray-700">Wilayah kerja /
-                Penempatan</label><input id="wilayah_kerja" name="wilayah_kerja"
-                value="{{ old('wilayah_kerja', $user?->wilayah_kerja) }}" placeholder="Contoh: Desa Sumbersari"
-                class="w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-100">
+        <div>
+            <p class="mb-1 text-sm font-semibold text-gray-700">Wilayah kerja / Penempatan</p>
+            <p class="rounded-lg border-2 border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600">
+                Sumbersari
+            </p>
         </div>
         <div class="sm:col-span-2"><label for="alamat" class="mb-1 block text-sm font-semibold text-gray-700">Alamat
                 lengkap</label>
