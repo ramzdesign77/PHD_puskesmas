@@ -106,22 +106,31 @@ class UserManagementController extends Controller
             throw new RuntimeException('Nama petugas tidak dapat digunakan untuk membentuk ID.');
         }
 
-        $initials = collect($nameParts)
+        $initials = collect(array_slice($nameParts, 0, 2))
             ->map(fn (string $namePart): string => Str::upper(Str::substr($namePart, 0, 1)))
             ->implode('');
-        $initials = Str::substr($initials, 0, 30 - Str::length($prefix) - 3);
-        $startingNumber = random_int(100, 999);
+        if (Str::length($initials) === 1) {
+            $initials .= Str::upper(Str::substr($nameParts[0], 1, 1)) ?: $initials;
+        }
+        $usedNumbers = [];
 
-        for ($offset = 0; $offset < 900; $offset++) {
-            $number = 100 + (($startingNumber - 100 + $offset) % 900);
-            $idPetugas = $prefix.$number.$initials;
-
-            if (! User::withTrashed()->where('id_petugas', $idPetugas)->exists()) {
-                return $idPetugas;
+        foreach (User::withTrashed()->whereNotNull('id_petugas')->pluck('id_petugas') as $existingId) {
+            if (preg_match('/\A(?:AP|A|P)(\d{4})/u', $existingId, $matches) === 1) {
+                $usedNumbers[$matches[1]] = true;
             }
         }
 
-        throw new RuntimeException('Semua kombinasi ID petugas untuk inisial nama ini sudah digunakan.');
+        for ($series = 1; $series <= 9; $series++) {
+            for ($serial = 1; $serial <= 9; $serial++) {
+                $number = (string) (($series * 1000) + 110 + $serial);
+
+                if (! isset($usedNumbers[$number])) {
+                    return $prefix.$number.$initials;
+                }
+            }
+        }
+
+        throw new RuntimeException('Semua nomor seri ID akun sudah digunakan.');
     }
 
     public function edit(User $user)

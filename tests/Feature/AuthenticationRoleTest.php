@@ -96,7 +96,7 @@ class AuthenticationRoleTest extends TestCase
         $this->assertTrue($user->hasRole('admin'));
         $this->assertTrue($user->hasRole('petugas'));
         $this->assertTrue($user->isAdmin());
-        $this->assertSame(1, preg_match('/\AAP\d{3}AG\z/', $user->id_petugas));
+        $this->assertSame(1, preg_match('/\AAP1111AG\z/', $user->id_petugas));
 
         $response = $this->post(route('login.post'), [
             'username' => 'akun_ganda',
@@ -108,7 +108,7 @@ class AuthenticationRoleTest extends TestCase
         $this->get(route('users.index'))->assertOk();
     }
 
-    public function test_petugas_account_creation_generates_id_with_three_random_digits_and_name_initials(): void
+    public function test_petugas_account_creation_generates_id_with_first_serial_and_name_initials(): void
     {
         $admin = $this->createUser('admin', 'admin@example.test');
 
@@ -127,7 +127,7 @@ class AuthenticationRoleTest extends TestCase
         $response->assertRedirect(route('users.index'));
         $petugas = User::where('username', 'denny')->firstOrFail();
 
-        $this->assertSame(1, preg_match('/\AP\d{3}MDR\z/', $petugas->id_petugas));
+        $this->assertSame('P1111MD', $petugas->id_petugas);
         $this->assertDatabaseHas('users', [
             'id_user' => $petugas->id_user,
             'id_petugas' => $petugas->id_petugas,
@@ -152,7 +152,39 @@ class AuthenticationRoleTest extends TestCase
         $response->assertRedirect(route('users.index'));
         $user = User::where('username', 'admin_baru')->firstOrFail();
 
-        $this->assertSame(1, preg_match('/\AA\d{3}AB\z/', $user->id_petugas));
+        $this->assertSame('A1111AB', $user->id_petugas);
+    }
+
+    public function test_account_creation_moves_to_next_serial_series_after_nine_accounts(): void
+    {
+        $admin = $this->createUser('admin', 'admin@example.test');
+
+        foreach (range(1, 9) as $serial) {
+            User::create([
+                'nama_lengkap' => 'Akun '.$serial,
+                'id_petugas' => 'P111'.$serial.'A',
+                'username' => 'akun-seri-'.$serial,
+                'password' => 'secret123',
+                'role' => 'petugas',
+                'is_active' => true,
+            ]);
+        }
+
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->post(route('users.store'), [
+                'nama_lengkap' => 'Muhammad Denny Ramadhan',
+                'username' => 'seri-kedua',
+                'password' => 'secret123',
+                'no_telepon' => '08123456789',
+                'roles' => ['petugas'],
+                'wilayah_kerja' => 'Sumbersari',
+            ]);
+
+        $response->assertRedirect(route('users.index'));
+        $user = User::where('username', 'seri-kedua')->firstOrFail();
+
+        $this->assertSame('P2111MD', $user->id_petugas);
     }
 
     public function test_account_update_does_not_change_petugas_id_even_if_a_new_id_is_submitted(): void
@@ -160,7 +192,7 @@ class AuthenticationRoleTest extends TestCase
         $admin = $this->createUser('admin', 'admin@example.test');
         $petugas = User::create([
             'nama_lengkap' => 'Petugas',
-            'id_petugas' => 'P123P',
+            'id_petugas' => 'P1111P',
             'username' => 'petugas-target',
             'password' => 'secret123',
             'no_telepon' => '08123456789',
@@ -187,7 +219,7 @@ class AuthenticationRoleTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id_user' => $petugas->id_user,
             'nama_lengkap' => 'Nama Diperbarui',
-            'id_petugas' => 'P123P',
+            'id_petugas' => 'P1111P',
             'wilayah_kerja' => 'Sumbersari',
         ]);
     }
