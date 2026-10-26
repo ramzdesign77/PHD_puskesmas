@@ -6,7 +6,9 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class UserManagementController extends Controller
 {
@@ -65,21 +67,26 @@ class UserManagementController extends Controller
         $this->ensureAdminAccess();
 
         $data = $request->validate([
-            'nama_lengkap' => ['required', 'string', 'max:150'],
-            'id_petugas' => ['nullable', 'string', 'max:30', 'unique:users,id_petugas'],
+            'nama_lengkap' => ['required', 'string', 'max:150', 'regex:/\p{L}/u'],
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
             'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'no_telepon' => ['required', 'string', 'max:20', 'unique:users,no_telepon'],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
-            'wilayah_kerja' => ['required', 'in:Sumbersari'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $data['roles'] = collect($data['roles'])->unique()->values()->all();
         $data['role'] = implode(',', $data['roles']);
+        $data['wilayah_kerja'] = 'Sumbersari';
+        $roles = collect($data['roles'])->unique();
+        $data['role'] = $roles->implode(',');
+        unset($data['roles']);
+        $idPrefix = ($roles->contains('admin') ? 'A' : '')
+            .($roles->intersect(['petugas', 'sanitarian'])->isNotEmpty() ? 'P' : '');
+        $data['id_petugas'] = $this->generatePetugasId($data['nama_lengkap'], $idPrefix);
         $data['is_active'] = true;
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('petugas', 'public');
@@ -91,6 +98,41 @@ class UserManagementController extends Controller
             : 'Akun petugas sanitasi berhasil dibuat.';
 
         return redirect()->route('users.index')->with('success', $successMessage);
+    }
+
+    private function generatePetugasId(string $fullName, string $prefix): string
+    {
+        $nameParts = preg_split('/[^\p{L}]+/u', trim($fullName), -1, PREG_SPLIT_NO_EMPTY);
+
+        if ($nameParts === false || $nameParts === []) {
+            throw new RuntimeException('Nama petugas tidak dapat digunakan untuk membentuk ID.');
+        }
+
+        $initials = collect(array_slice($nameParts, 0, 2))
+            ->map(fn (string $namePart): string => Str::upper(Str::substr($namePart, 0, 1)))
+            ->implode('');
+        if (Str::length($initials) === 1) {
+            $initials .= Str::upper(Str::substr($nameParts[0], 1, 1)) ?: $initials;
+        }
+        $usedNumbers = [];
+
+        foreach (User::withTrashed()->whereNotNull('id_petugas')->pluck('id_petugas') as $existingId) {
+            if (preg_match('/\A(?:AP|A|P)(\d{4})/u', $existingId, $matches) === 1) {
+                $usedNumbers[$matches[1]] = true;
+            }
+        }
+
+        for ($series = 1; $series <= 9; $series++) {
+            for ($serial = 1; $serial <= 9; $serial++) {
+                $number = (string) (($series * 1000) + 110 + $serial);
+
+                if (! isset($usedNumbers[$number])) {
+                    return $prefix.$number.$initials;
+                }
+            }
+        }
+
+        throw new RuntimeException('Semua nomor seri ID akun sudah digunakan.');
     }
 
     public function edit(User $user)
@@ -106,14 +148,12 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'id_petugas' => ['nullable', 'string', 'max:30', Rule::unique('users', 'id_petugas')->ignore($user->id_user, 'id_user')],
             'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id_user, 'id_user')],
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
             'no_telepon' => ['required', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
-            'wilayah_kerja' => ['required', 'in:Sumbersari'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['required', 'boolean'],
@@ -121,6 +161,9 @@ class UserManagementController extends Controller
 
         $data['roles'] = collect($data['roles'])->unique()->values()->all();
         $data['role'] = implode(',', $data['roles']);
+        $data['wilayah_kerja'] = 'Sumbersari';
+        $data['role'] = collect($data['roles'])->unique()->implode(',');
+        unset($data['roles']);
 
         if (blank($data['password'])) {
             unset($data['password']);

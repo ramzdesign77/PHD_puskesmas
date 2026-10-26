@@ -14,7 +14,7 @@
         @endif
         <div>
             <h2 class="text-xl font-bold text-gray-800">{{ $user->nama_lengkap }}</h2>
-            <p class="text-sm text-gray-400">{{ $user->hasRole('admin') ? 'Akun administrator' : 'ID Petugas: ' . ($user->id_petugas ?: 'Belum diisi') }}</p>
+            <p class="text-sm text-gray-400">{{ $user->hasRole('admin') ? 'ID Admin: ' : 'ID Petugas: ' }}{{ $user->id_petugas ?: 'Belum diisi' }}</p>
         </div>
         <span class="badge ml-auto {{ $user->is_active ? 'badge-resolved' : 'bg-gray-100 text-gray-500' }}">{{ $user->is_active ? 'Aktif' : 'Nonaktif' }}</span>
     </div>
