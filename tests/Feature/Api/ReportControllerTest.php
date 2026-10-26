@@ -1,0 +1,89 @@
+<?php
+
+namespace Tests\Feature\Api;
+
+use App\Models\Desa;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class ReportControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_valid_report_is_saved_and_returns_created_response(): void
+    {
+        Storage::fake('public');
+        $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
+
+        $response = $this->postJson('/api/reports', [
+            'nama_lengkap' => 'Warga Sumbersari',
+            'nik' => '3509010101010001',
+            'nomor_telepon' => '081234567890',
+            'village_id' => $village->id_desa,
+            'rt' => '02',
+            'rw' => '03',
+            'kategori_laporan' => 'Masalah air',
+            'deskripsi_masalah' => 'Air sumur berubah warna sejak beberapa hari terakhir.',
+            'foto_bukti' => UploadedFile::fake()->image('bukti.jpg'),
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Laporan berhasil dikirim!')
+            ->assertJsonPath('data.nama_lengkap', 'Warga Sumbersari')
+            ->assertJsonPath('data.village_id', $village->id_desa)
+            ->assertJsonPath('data.status', 'Pendataan/Pending');
+        $this->assertDatabaseHas('reports', [
+            'nama_lengkap' => 'Warga Sumbersari',
+            'nik' => '3509010101010001',
+            'village_id' => $village->id_desa,
+            'status' => 'Pendataan/Pending',
+        ]);
+        Storage::disk('public')->assertExists($response->json('data.foto_bukti'));
+    }
+
+    public function test_missing_required_report_fields_return_validation_errors(): void
+    {
+        $this->postJson('/api/reports', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'nama_lengkap',
+                'nik',
+                'nomor_telepon',
+                'village_id',
+                'rt',
+                'rw',
+                'kategori_laporan',
+                'deskripsi_masalah',
+            ]);
+
+        $this->assertDatabaseCount('reports', 0);
+    }
+
+    public function test_invalid_report_values_and_photo_return_validation_errors(): void
+    {
+        $this->postJson('/api/reports', [
+            'nama_lengkap' => 'Warga',
+            'nik' => 'not-a-16-digit-nik',
+            'nomor_telepon' => '081234567890',
+            'village_id' => 999999,
+            'rt' => '02',
+            'rw' => '03',
+            'kategori_laporan' => 'Kategori tidak dikenal',
+            'deskripsi_masalah' => str_repeat('a', 2001),
+            'foto_bukti' => UploadedFile::fake()->create('bukti.txt', 1, 'text/plain'),
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'nik',
+                'village_id',
+                'kategori_laporan',
+                'deskripsi_masalah',
+                'foto_bukti',
+            ]);
+
+        $this->assertDatabaseCount('reports', 0);
+    }
+}

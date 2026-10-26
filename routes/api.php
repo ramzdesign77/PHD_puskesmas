@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
 use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +37,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 });
 
 // ── Laporan Warga (tidak perlu auth) ──────────────────────────────────────
+Route::post('/reports', [ReportController::class, 'store'])->name('api.reports.store');
+
 Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // POST /api/laporan — kirim laporan baru dari Flutter
     Route::post('/', [LaporanWargaApiController::class, 'store'])->name('store');
