@@ -168,13 +168,6 @@ return new class extends Migration
                 }
             }
 
-            if (Schema::hasTable('ref_paket_alat')) {
-                Schema::table('ref_paket_alat', function (Blueprint $table): void {
-                    if (! Schema::hasColumn('ref_paket_alat', 'updated_at')) {
-                        $table->timestamp('updated_at')->nullable();
-                    }
-                });
-            }
 
             if (Schema::hasTable('trx_laporan_warga')) {
                 if (
@@ -224,30 +217,11 @@ return new class extends Migration
             }
 
             if (Schema::hasTable('trx_jadwal_inspeksi')) {
-                if (
-                    Schema::hasTable('ref_paket_alat')
-                    && Schema::hasColumn('trx_jadwal_inspeksi', 'id_paket')
-                    && DB::table('trx_jadwal_inspeksi')
-                        ->whereNotNull('id_paket')
-                        ->whereNotIn('id_paket', DB::table('ref_paket_alat')->select('id_paket'))
-                        ->exists()
-                ) {
-                    throw new RuntimeException('Cannot add the trx_jadwal_inspeksi.id_paket foreign key while orphaned package references exist.');
-                }
-
                 Schema::table('trx_jadwal_inspeksi', function (Blueprint $table): void {
                     if (! Schema::hasColumn('trx_jadwal_inspeksi', 'updated_at')) {
                         $table->timestamp('updated_at')->nullable();
                     }
-
-                    if (Schema::hasColumn('trx_jadwal_inspeksi', 'id_paket')) {
-                        $table->unsignedBigInteger('id_paket')->nullable()->change();
-                    }
                 });
-
-                if (Schema::hasTable('ref_paket_alat') && Schema::hasColumn('trx_jadwal_inspeksi', 'id_paket')) {
-                    $this->addForeignKeyIfMissing('trx_jadwal_inspeksi', 'id_paket', 'ref_paket_alat', 'id_paket', 'fk_trx_jadwal_inspeksi_id_paket');
-                }
 
                 if (
                     Schema::hasColumn('trx_jadwal_inspeksi', 'id_operator')
@@ -295,22 +269,6 @@ return new class extends Migration
                 }
             }
 
-            if (Schema::hasTable('log_notifikasi_wa')) {
-                Schema::table('log_notifikasi_wa', function (Blueprint $table): void {
-                    if (! Schema::hasColumn('log_notifikasi_wa', 'response_gateway')) {
-                        $table->text('response_gateway')->nullable();
-                    }
-
-                });
-
-                if (Schema::hasColumn('log_notifikasi_wa', 'status_kirim') && Schema::hasColumn('log_notifikasi_wa', 'sent_at')) {
-                    $this->addIndexIfMissing(
-                        'log_notifikasi_wa',
-                        ['status_kirim', 'sent_at'],
-                        'idx_log_notifikasi_wa_status_sentat',
-                    );
-                }
-            }
         } finally {
             Schema::enableForeignKeyConstraints();
         }
@@ -426,13 +384,6 @@ return new class extends Migration
                 });
             }
 
-            if (Schema::hasTable('ref_paket_alat')) {
-                Schema::table('ref_paket_alat', function (Blueprint $table): void {
-                    if (Schema::hasColumn('ref_paket_alat', 'updated_at')) {
-                        $table->dropColumn('updated_at');
-                    }
-                });
-            }
 
             if (Schema::hasTable('trx_laporan_warga')) {
                 Schema::table('trx_laporan_warga', function (Blueprint $table): void {
@@ -472,14 +423,6 @@ return new class extends Migration
                         $table->dropIndex('idx_trx_jadwal_inspeksi_operator_date_status');
                     }
 
-                    $foreignKeys = collect(Schema::getForeignKeys('trx_jadwal_inspeksi'))
-                        ->first(fn (array $foreignKey): bool => ($foreignKey['columns'] ?? []) === ['id_paket']
-                            && ($foreignKey['foreign_table'] ?? null) === 'ref_paket_alat'
-                            && in_array($foreignKey['name'] ?? null, [null, 'fk_trx_jadwal_inspeksi_id_paket'], true));
-
-                    if ($foreignKeys !== null) {
-                        $table->dropForeign($foreignKeys['name'] ?? 'fk_trx_jadwal_inspeksi_id_paket');
-                    }
 
                     if (Schema::hasColumn('trx_jadwal_inspeksi', 'updated_at')) {
                         $table->dropColumn('updated_at');
@@ -501,17 +444,6 @@ return new class extends Migration
                 });
             }
 
-            if (Schema::hasTable('log_notifikasi_wa')) {
-                Schema::table('log_notifikasi_wa', function (Blueprint $table): void {
-                    if (Schema::hasIndex('log_notifikasi_wa', 'idx_log_notifikasi_wa_status_sentat')) {
-                        $table->dropIndex('idx_log_notifikasi_wa_status_sentat');
-                    }
-
-                    if (Schema::hasColumn('log_notifikasi_wa', 'response_gateway')) {
-                        $table->dropColumn('response_gateway');
-                    }
-                });
-            }
         } finally {
             Schema::enableForeignKeyConstraints();
         }

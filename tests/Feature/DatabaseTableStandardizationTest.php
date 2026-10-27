@@ -20,7 +20,6 @@ class DatabaseTableStandardizationTest extends TestCase
 
         foreach ([
             'ref_desa',
-            'ref_paket_alat',
             'ref_edukasi',
             'app_users',
             'app_petugas',
@@ -32,13 +31,10 @@ class DatabaseTableStandardizationTest extends TestCase
             $this->assertTrue(Schema::hasTable($table), "Expected {$table} to exist after migration.");
         }
 
-        $this->assertTrue(Schema::hasTable('log_notifikasi_wa'));
-
         $migration->down();
 
         foreach ([
             'desa',
-            'paket_alat',
             'educations',
             'users',
             'petugas',
@@ -49,7 +45,5 @@ class DatabaseTableStandardizationTest extends TestCase
         ] as $table) {
             $this->assertTrue(Schema::hasTable($table), "Expected {$table} to exist after rollback.");
         }
-        $this->assertTrue(Schema::hasTable('log_notifikasi_wa'));
-        $this->assertTrue(Schema::hasTable('log_notifikasi_wa'));
     }
 }

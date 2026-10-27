@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             DesaSeeder::class,
-            PaketAlatSeeder::class,
             UserSeeder::class,
         ]);
     }

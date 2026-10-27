@@ -17,14 +17,12 @@ class PrefixedTableStandardizationTest extends TestCase
         $tables = [
             'tm_desa' => 'ref_desa',
             'tm_edukasi' => 'ref_edukasi',
-            'tm_paket_alat' => 'ref_paket_alat',
             'tm_petugas' => 'app_petugas',
             'tm_users' => 'app_users',
             'tr_mobile_access_tokens' => 'app_mobile_tokens',
             'tr_laporan_warga' => 'trx_laporan_warga',
             'tr_jadwal_inspeksi' => 'trx_jadwal_inspeksi',
             'tr_inspeksi_ikl' => 'trx_inspeksi_ikl',
-            'tr_log_notifikasi_wa' => 'log_notifikasi_wa',
         ];
 
         Schema::disableForeignKeyConstraints();

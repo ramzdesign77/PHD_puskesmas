@@ -125,7 +125,6 @@ class ScheduleControllerTest extends TestCase
         return JadwalInspeksi::create([
             'id_laporan' => null,
             'id_operator' => $operator->id_user,
-            'id_paket' => null,
             'tanggal_kunjungan' => '2026-09-01',
             'jam_mulai' => '08:00',
             'jenis_kunjungan' => 'ikl_rutin_rt',

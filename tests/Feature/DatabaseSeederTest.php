@@ -18,7 +18,6 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertDatabaseCount('ref_desa', 5);
-        $this->assertDatabaseCount('ref_paket_alat', 7);
         $this->assertDatabaseCount('app_petugas', 5);
         $this->assertDatabaseCount('app_users', 2);
 

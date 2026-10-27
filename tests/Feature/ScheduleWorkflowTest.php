@@ -78,7 +78,6 @@ class ScheduleWorkflowTest extends TestCase
         $schedule = JadwalInspeksi::create([
             'id_laporan' => null,
             'id_operator' => null,
-            'id_paket' => null,
             'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
             'jam_mulai' => null,
             'jenis_kunjungan' => 'ikl_rutin_rt',

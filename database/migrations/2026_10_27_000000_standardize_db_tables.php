@@ -20,7 +20,6 @@ return new class extends Migration
 
         $tables = [
             'desa' => 'ref_desa',
-            'paket_alat' => 'ref_paket_alat',
             'educations' => 'ref_edukasi',
             'users' => 'app_users',
             'petugas' => 'app_petugas',
@@ -60,7 +59,6 @@ return new class extends Migration
     {
         $tables = [
             'ref_desa' => 'desa',
-            'ref_paket_alat' => 'paket_alat',
             'ref_edukasi' => 'educations',
             'app_users' => 'users',
             'app_petugas' => 'petugas',
