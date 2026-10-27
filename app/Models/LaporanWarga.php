@@ -4,15 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LaporanWarga extends Model
 {
-    protected $table = 'laporan_warga';
+    protected $table = 'trx_laporan_warga';
 
     protected $primaryKey = 'id_laporan';
 
-    /** Tabel ini hanya punya created_at, tidak ada updated_at. */
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'kode_tiket',
@@ -27,15 +29,21 @@ class LaporanWarga extends Model
         'foto_bukti',
         'status_laporan',
         'alasan_penolakan',
+        'latitude',
+        'longitude',
+        'updated_at',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     // ─── Relations ────────────────────────────────────────────────────────────
 
-    public function desa()
+    public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');
     }
@@ -44,9 +52,15 @@ class LaporanWarga extends Model
      * Satu laporan memiliki satu jadwal inspeksi.
      * Gunakan hasOne karena satu laporan hanya memiliki satu jadwal aktif.
      */
-    public function jadwal()
+    public function jadwal(): HasOne
     {
-        return $this->hasOne(JadwalInspeksi::class, 'id_laporan', 'id_laporan');
+        return $this->hasOne(JadwalInspeksi::class, 'id_laporan', 'id_laporan')
+            ->latestOfMany('id_jadwal');
+    }
+
+    public function notifikasiWa(): HasMany
+    {
+        return $this->hasMany(LogNotifikasiWa::class, 'id_laporan', 'id_laporan');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────────

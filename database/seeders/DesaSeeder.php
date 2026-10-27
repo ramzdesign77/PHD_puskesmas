@@ -18,9 +18,14 @@ class DesaSeeder extends Seeder
         ];
 
         foreach ($desa as $data) {
-            DB::table('desa')->updateOrInsert(
+            $data['updated_at'] = now();
+
+            DB::table('ref_desa')->updateOrInsert(
                 ['nama_desa' => $data['nama_desa']],
-                ['kode_pos' => $data['kode_pos']],
+                [
+                    'kode_pos' => $data['kode_pos'],
+                    'updated_at' => $data['updated_at'],
+                ],
             );
         }
     }

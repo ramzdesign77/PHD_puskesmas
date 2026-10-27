@@ -53,7 +53,7 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:users,id_user',
+            'id_operator' => 'required|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
@@ -81,7 +81,7 @@ class ScheduleController extends Controller
     public function assign(Request $request, int $id)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:users,id_user',
+            'id_operator' => 'required|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
         ]);
@@ -111,7 +111,7 @@ class ScheduleController extends Controller
             ->findOrFail($id);
 
         $validated = $request->validate([
-            'id_operator' => 'required|exists:users,id_user',
+            'id_operator' => 'required|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date',
             'jam_mulai' => 'required|date_format:H:i',
         ]);

@@ -18,12 +18,13 @@ class PetugasSeeder extends Seeder
         ];
 
         foreach ($petugas as $data) {
-            DB::table('petugas')->updateOrInsert(
+            DB::table('app_petugas')->updateOrInsert(
                 ['no_telepon' => $data['no_telepon']],
                 [
                     'nama_petugas' => $data['nama_petugas'],
                     'jabatan' => $data['jabatan'],
                     'is_active' => true,
+                    'updated_at' => now(),
                 ],
             );
         }

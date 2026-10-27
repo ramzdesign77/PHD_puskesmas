@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -14,14 +16,15 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $table = 'users';
+    protected $table = 'app_users';
 
     protected $primaryKey = 'id_user';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'nama_lengkap',
+        'name',
         'id_petugas',
         'username',
         'email',
@@ -43,13 +46,80 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
-        static::created(function (self $user): void {
-            $id = $user->getKey();
-
-            DB::table($user->getTable())
-                ->where('id', $id)
-                ->update(['id_user' => $id]);
+        static::creating(function (self $user): void {
+            $user->synchronizeNameAndIdentity();
         });
+
+        static::saving(function (self $user): void {
+            $user->synchronizeNameAndIdentity();
+
+            $roles = $user->roles;
+            $legacyRole = $user->role;
+
+            if ($user->isDirty('role') && ! $user->isDirty('roles')) {
+                $decodedLegacyRole = is_string($legacyRole) ? json_decode($legacyRole, true) : null;
+                $roles = is_array($decodedLegacyRole) ? $decodedLegacyRole : explode(',', (string) $legacyRole);
+            }
+
+            if (is_string($roles) && trim($roles) !== '') {
+                $decodedRoles = json_decode($roles, true);
+                $roles = is_array($decodedRoles) ? $decodedRoles : explode(',', $roles);
+            }
+
+            if (is_string($legacyRole) && trim($legacyRole) !== '' && (! is_array($roles) || $roles === [])) {
+                $decodedLegacyRole = json_decode($legacyRole, true);
+                $roles = is_array($decodedLegacyRole) ? $decodedLegacyRole : explode(',', $legacyRole);
+            }
+
+            $roles = is_array($roles) ? array_values(array_unique(array_filter(array_map(
+                static fn ($role): string => is_string($role) ? trim($role) : '',
+                $roles,
+            ), static fn (string $role): bool => $role !== ''))) : [];
+
+            if ($roles !== []) {
+                $user->roles = $roles;
+                $user->role = implode(',', $roles);
+            } elseif (is_string($legacyRole) && trim($legacyRole) !== '') {
+                $user->roles = [trim($legacyRole)];
+                $user->role = trim($legacyRole);
+            } else {
+                $user->roles = [];
+                $user->role = '';
+            }
+        });
+
+        static::created(function (self $user): void {
+            $userId = $user->getKey();
+
+            if ($userId !== null) {
+                $updated = DB::table($user->getTable())
+                    ->where('id', $userId)
+                    ->whereNull('id_user')
+                    ->update(['id_user' => $userId]);
+
+                if ($updated > 0) {
+                    $user->setAttribute('id_user', $userId);
+                    $user->syncOriginalAttribute('id_user', $userId);
+                }
+            }
+        });
+    }
+
+    private function synchronizeNameAndIdentity(): void
+    {
+        if (blank($this->name) && filled($this->nama_lengkap)) {
+            $this->name = $this->nama_lengkap;
+        }
+
+        if (blank($this->nama_lengkap) && filled($this->name)) {
+            $this->nama_lengkap = $this->name;
+        }
+
+        if (filled($this->nip) && blank($this->nip_nik)) {
+            $this->nip_nik = $this->nip;
+        } elseif (filled($this->nik) && blank($this->nip_nik)) {
+            $this->nip_nik = $this->nik;
+        }
     }
 
     /**
@@ -69,6 +139,16 @@ class User extends Authenticatable
     public function getRouteKeyName(): string
     {
         return 'id_user';
+    }
+
+    public function desa(): BelongsTo
+    {
+        return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');
+    }
+
+    public function mobileTokens(): HasMany
+    {
+        return $this->hasMany(MobileAccessToken::class, 'id_user', 'id_user');
     }
 
     public function roles(): array
@@ -122,7 +202,7 @@ class User extends Authenticatable
     /**
      * Jadwal inspeksi yang ditugaskan kepada user (petugas sanitarian).
      */
-    public function jadwalInspeksi()
+    public function jadwalInspeksi(): HasMany
     {
         return $this->hasMany(JadwalInspeksi::class, 'id_operator', 'id_user');
     }

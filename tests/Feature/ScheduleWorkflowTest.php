@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Desa;
 use App\Models\JadwalInspeksi;
+use App\Models\LaporanWarga;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -11,6 +13,38 @@ use Tests\TestCase;
 class ScheduleWorkflowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_report_resolves_the_latest_schedule_after_a_cancelled_schedule_is_replaced(): void
+    {
+        $village = Desa::create([
+            'nama_desa' => 'Schedule Test Village',
+        ]);
+        $report = LaporanWarga::create([
+            'kode_tiket' => 'IKL-20261027-0001',
+            'nama_pelapor' => 'Resident Test',
+            'id_desa' => $village->id_desa,
+            'rt' => '01',
+            'rw' => '02',
+            'kategori_laporan' => 'air_masalah',
+            'deskripsi' => 'Test report description.',
+            'status_laporan' => 'menunggu',
+        ]);
+
+        JadwalInspeksi::create([
+            'id_laporan' => $report->id_laporan,
+            'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
+            'jenis_kunjungan' => 'ikl_laporan_warga',
+            'status_kunjungan' => 'batal',
+        ]);
+        $replacementSchedule = JadwalInspeksi::create([
+            'id_laporan' => $report->id_laporan,
+            'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
+            'jenis_kunjungan' => 'ikl_laporan_warga',
+            'status_kunjungan' => 'terjadwal',
+        ]);
+
+        $this->assertSame($replacementSchedule->id_jadwal, $report->fresh()->jadwal->id_jadwal);
+    }
 
     public function test_admin_can_create_a_routine_schedule_for_an_operator(): void
     {
@@ -28,7 +62,7 @@ class ScheduleWorkflowTest extends TestCase
             ]);
 
         $response->assertRedirect(route('schedules.index'));
-        $this->assertDatabaseHas('jadwal_inspeksi', [
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_operator' => $operator->id_user,
             'tanggal_kunjungan' => $date.' 00:00:00',
             'jam_mulai' => '09:30',
@@ -61,7 +95,7 @@ class ScheduleWorkflowTest extends TestCase
             ]);
 
         $response->assertRedirect(route('schedules.index'));
-        $this->assertDatabaseHas('jadwal_inspeksi', [
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'id_operator' => $operator->id_user,
             'tanggal_kunjungan' => $date.' 00:00:00',

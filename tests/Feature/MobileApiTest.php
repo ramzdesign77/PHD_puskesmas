@@ -68,7 +68,7 @@ class MobileApiTest extends TestCase
             ->assertJsonStructure(['kode_tiket']);
 
         $ticketCode = $submission->json('kode_tiket');
-        $this->assertDatabaseHas('laporan_warga', [
+        $this->assertDatabaseHas('trx_laporan_warga', [
             'kode_tiket' => $ticketCode,
             'id_desa' => $village->id_desa,
         ]);

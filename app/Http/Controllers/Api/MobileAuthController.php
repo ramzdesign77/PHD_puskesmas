@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MobileAccessToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -17,8 +17,8 @@ class MobileAuthController extends Controller
     {
         $validated = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:30'],
-            'username' => ['required', 'string', 'min:3', 'max:25', 'alpha_dash', Rule::unique('users', 'username')->whereNull('deleted_at')],
-            'email' => ['required', 'email', 'max:30', Rule::unique('users', 'email')->whereNull('deleted_at')],
+            'username' => ['required', 'string', 'min:3', 'max:25', 'alpha_dash', Rule::unique('app_users', 'username')->whereNull('deleted_at')],
+            'email' => ['required', 'email', 'max:30', Rule::unique('app_users', 'email')->whereNull('deleted_at')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -62,7 +62,7 @@ class MobileAuthController extends Controller
     {
         $plainToken = $request->bearerToken();
         if ($plainToken) {
-            DB::table('mobile_access_tokens')->where('token_hash', hash('sha256', $plainToken))->delete();
+            MobileAccessToken::query()->where('token_hash', hash('sha256', $plainToken))->delete();
         }
 
         return response()->json(['message' => 'Logout berhasil.']);
@@ -71,7 +71,7 @@ class MobileAuthController extends Controller
     private function issueToken(User $user, string $message, int $status): JsonResponse
     {
         $plainToken = Str::random(80);
-        DB::table('mobile_access_tokens')->insert([
+        MobileAccessToken::query()->create([
             'id_user' => $user->id_user,
             'name' => 'flutter-mobile',
             'token_hash' => hash('sha256', $plainToken),

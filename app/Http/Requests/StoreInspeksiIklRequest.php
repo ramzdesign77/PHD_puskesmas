@@ -17,7 +17,7 @@ class StoreInspeksiIklRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_jadwal' => ['required', 'exists:jadwal_inspeksi,id_jadwal', 'unique:inspeksi_ikl,id_jadwal'],
+            'id_jadwal' => ['required', 'exists:trx_jadwal_inspeksi,id_jadwal', 'unique:trx_inspeksi_ikl,id_jadwal'],
             'jenis_sarana_air' => ['required', 'in:sumur_bor,sumur_terlindung,pdam,mata_air,lainnya'],
             'jarak_sumber_pencemar' => ['required', 'integer', 'min:0', 'max:999'],
 

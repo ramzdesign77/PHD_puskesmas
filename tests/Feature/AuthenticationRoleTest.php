@@ -130,7 +130,7 @@ class AuthenticationRoleTest extends TestCase
         $petugas = User::where('username', 'denny')->firstOrFail();
 
         $this->assertSame('P1111MD', $petugas->id_petugas);
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('app_users', [
             'id_user' => $petugas->id_user,
             'id_petugas' => $petugas->id_petugas,
         ]);
@@ -218,7 +218,7 @@ class AuthenticationRoleTest extends TestCase
             ]);
 
         $response->assertRedirect(route('users.index'));
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('app_users', [
             'id_user' => $petugas->id_user,
             'nama_lengkap' => 'Nama Diperbarui',
             'id_petugas' => 'P1111P',

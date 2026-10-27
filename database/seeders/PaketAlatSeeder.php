@@ -48,11 +48,12 @@ class PaketAlatSeeder extends Seeder
         ];
 
         foreach ($paketAlat as $data) {
-            DB::table('paket_alat')->updateOrInsert(
+            DB::table('ref_paket_alat')->updateOrInsert(
                 ['nama_paket' => $data['nama_paket']],
                 [
                     'kategori_laporan' => $data['kategori_laporan'],
                     'deskripsi_alat' => $data['deskripsi_alat'],
+                    'updated_at' => now(),
                 ],
             );
         }

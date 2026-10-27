@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\MobileAccessToken;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateMobileToken
@@ -19,7 +19,7 @@ class AuthenticateMobileToken
             return $this->unauthenticatedResponse();
         }
 
-        $token = DB::table('mobile_access_tokens')
+        $token = MobileAccessToken::query()
             ->where('token_hash', hash('sha256', $plainToken))
             ->first(['id_user']);
 

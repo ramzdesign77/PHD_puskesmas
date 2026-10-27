@@ -125,7 +125,7 @@ class EducationController extends Controller
                 'min:5',
                 'max:255',
                 'regex:/^[\pL\pN\s]+$/u', // Hanya mengizinkan huruf, angka, dan spasi
-                Rule::unique('educations', 'title')->ignore($id),
+                Rule::unique('ref_edukasi', 'title')->ignore($id),
             ],
 
             // Pengaturan Upload Gambar

@@ -76,8 +76,8 @@ class LaporanAdminController extends Controller
     public function terima(Request $request, $id_laporan)
     {
         $validated = $request->validate([
-            'id_petugas' => 'required|exists:petugas,id_petugas',
-            'id_paket' => 'required|exists:paket_alat,id_paket',
+            'id_petugas' => 'required|exists:app_petugas,id_petugas',
+            'id_paket' => 'required|exists:ref_paket_alat,id_paket',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jenis_kunjungan' => 'required|string',
         ]);

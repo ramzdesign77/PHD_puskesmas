@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MobileAccessToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,13 +57,13 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'username' => ['required', 'string', 'min:3', 'max:50', 'alpha_dash', Rule::unique('users', 'username')],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'alpha_dash', Rule::unique('app_users', 'username')],
+            'email' => ['required', 'email', 'max:255', Rule::unique('app_users', 'email')],
             'password' => ['required', 'string', 'min:8'],
             'nik' => ['required', 'digits:16'],
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string', 'max:500'],
-            'id_desa' => ['required', 'integer', 'exists:desa,id_desa'],
+            'id_desa' => ['required', 'integer', 'exists:ref_desa,id_desa'],
         ]);
 
         return DB::transaction(function () use ($validated): JsonResponse {
@@ -86,7 +87,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        DB::table('mobile_access_tokens')
+        MobileAccessToken::query()
             ->where('token_hash', hash('sha256', (string) $request->bearerToken()))
             ->delete();
 
@@ -101,7 +102,7 @@ class AuthController extends Controller
     {
         $plainToken = Str::random(80);
 
-        DB::table('mobile_access_tokens')->insert([
+        MobileAccessToken::query()->create([
             'id_user' => $user->id_user,
             'name' => 'flutter-mobile',
             'token_hash' => hash('sha256', $plainToken),

@@ -68,10 +68,10 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150', 'regex:/\p{L}/u'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
-            'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:app_users,username'],
+            'email' => ['nullable', 'email', 'max:150', 'unique:app_users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'no_telepon' => ['required', 'string', 'max:20', 'unique:users,no_telepon'],
+            'no_telepon' => ['required', 'string', 'max:20', 'unique:app_users,no_telepon'],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'alamat' => ['nullable', 'string', 'max:500'],
@@ -148,10 +148,10 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id_user, 'id_user')],
-            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('app_users', 'username')->ignore($user->id_user, 'id_user')],
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
-            'no_telepon' => ['required', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
+            'no_telepon' => ['required', 'string', 'max:20', Rule::unique('app_users', 'no_telepon')->ignore($user->id_user, 'id_user')],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'alamat' => ['nullable', 'string', 'max:500'],

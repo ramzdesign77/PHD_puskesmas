@@ -16,7 +16,7 @@ class InspeksiIklController extends Controller
 {
     /**
      * Halaman rekap semua hasil IKL Air yang sudah selesai diinspeksi.
-     * Menggabungkan: laporan_warga + jadwal_inspeksi + petugas + inspeksi_ikl
+     * Menggabungkan: trx_laporan_warga + trx_jadwal_inspeksi + app_users + trx_inspeksi_ikl
      */
     public function index(Request $request): View
     {

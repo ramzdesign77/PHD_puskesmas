@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InspeksiIkl extends Model
 {
-    protected $table = 'inspeksi_ikl';
+    protected $table = 'trx_inspeksi_ikl';
 
     protected $primaryKey = 'id_inspeksi';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'id_jadwal',
@@ -26,6 +26,11 @@ class InspeksiIkl extends Model
         'kategori_risiko',
         'rekomendasi_sanitarian',
         'tanggal_inspeksi',
+        'intervensi_fisik',
+        'catatan_intervensi',
+        'foto_inspeksi',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [

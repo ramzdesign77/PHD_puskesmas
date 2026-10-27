@@ -35,11 +35,11 @@ class ReportControllerTest extends TestCase
             ->assertJsonPath('data.nama_lengkap', 'Warga Sumbersari')
             ->assertJsonPath('data.village_id', $village->id_desa)
             ->assertJsonPath('data.status', 'Pendataan/Pending');
-        $this->assertDatabaseHas('reports', [
-            'nama_lengkap' => 'Warga Sumbersari',
-            'nik' => '3509010101010001',
-            'village_id' => $village->id_desa,
-            'status' => 'Pendataan/Pending',
+        $this->assertDatabaseHas('trx_laporan_warga', [
+            'nama_pelapor' => 'Warga Sumbersari',
+            'nik_pelapor' => '3509010101010001',
+            'id_desa' => $village->id_desa,
+            'status_laporan' => 'menunggu',
         ]);
         Storage::disk('public')->assertExists($response->json('data.foto_bukti'));
     }
@@ -59,7 +59,7 @@ class ReportControllerTest extends TestCase
                 'deskripsi_masalah',
             ]);
 
-        $this->assertDatabaseCount('reports', 0);
+        $this->assertDatabaseCount('trx_laporan_warga', 0);
     }
 
     public function test_invalid_report_values_and_photo_return_validation_errors(): void
@@ -84,6 +84,6 @@ class ReportControllerTest extends TestCase
                 'foto_bukti',
             ]);
 
-        $this->assertDatabaseCount('reports', 0);
+        $this->assertDatabaseCount('trx_laporan_warga', 0);
     }
 }

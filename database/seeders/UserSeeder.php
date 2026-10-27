@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     {
         $this->call(PetugasSeeder::class);
 
-        $petugasId = DB::table('petugas')
+        $petugasId = DB::table('app_petugas')
             ->where('no_telepon', '081234560001')
             ->value('id_petugas');
 
@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
 
         foreach ($accounts as $account) {
             DB::transaction(function () use ($account): void {
-                $user = DB::table('users')
+                $user = DB::table('app_users')
                     ->where('username', $account['username'])
                     ->first(['id']);
 
@@ -61,16 +61,16 @@ class UserSeeder extends Seeder
                 ];
 
                 if ($user !== null) {
-                    DB::table('users')->where('id', $user->id)->update($attributes);
+                    DB::table('app_users')->where('id', $user->id)->update($attributes);
 
                     return;
                 }
 
                 $attributes['id_user'] = null;
                 $attributes['created_at'] = $timestamp;
-                $id = DB::table('users')->insertGetId($attributes, 'id');
+                $id = DB::table('app_users')->insertGetId($attributes, 'id');
 
-                DB::table('users')->where('id', $id)->update(['id_user' => $id]);
+                DB::table('app_users')->where('id', $id)->update(['id_user' => $id]);
             });
         }
     }

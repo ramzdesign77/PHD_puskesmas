@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class JadwalInspeksi extends Model
 {
-    protected $table = 'jadwal_inspeksi';
+    protected $table = 'trx_jadwal_inspeksi';
 
     protected $primaryKey = 'id_jadwal';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'id_laporan',
@@ -21,11 +23,13 @@ class JadwalInspeksi extends Model
         'jam_mulai',
         'jenis_kunjungan',
         'status_kunjungan',
+        'updated_at',
     ];
 
     protected $casts = [
         'tanggal_kunjungan' => 'date',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // ─── Relations ────────────────────────────────────────────────────────────
@@ -33,21 +37,21 @@ class JadwalInspeksi extends Model
     /**
      * Laporan warga yang memicu jadwal ini (nullable untuk IKL rutin).
      */
-    public function laporan()
+    public function laporan(): BelongsTo
     {
         return $this->belongsTo(LaporanWarga::class, 'id_laporan', 'id_laporan');
     }
 
     /**
-     * Petugas sanitarian yang ditugaskan (FK ke users.id_user, bukan tabel petugas).
+     * Petugas sanitarian yang ditugaskan (FK ke app_users.id_user, bukan app_petugas).
      */
-    public function operator()
+    public function operator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_operator', 'id_user');
     }
 
-    /** @deprecated Gunakan operator() — relasi sekarang langsung ke tabel users. */
-    public function petugas()
+    /** @deprecated Gunakan operator() — relasi sekarang langsung ke app_users. */
+    public function petugas(): BelongsTo
     {
         return $this->operator();
     }
@@ -55,7 +59,7 @@ class JadwalInspeksi extends Model
     /**
      * Paket alat inspeksi (nullable).
      */
-    public function paketAlat()
+    public function paketAlat(): BelongsTo
     {
         return $this->belongsTo(PaketAlat::class, 'id_paket', 'id_paket');
     }
@@ -63,7 +67,7 @@ class JadwalInspeksi extends Model
     /**
      * Hasil inspeksi IKL Air yang dilampirkan pada jadwal ini.
      */
-    public function inspeksiIkl()
+    public function inspeksiIkl(): HasOne
     {
         return $this->hasOne(InspeksiIkl::class, 'id_jadwal', 'id_jadwal');
     }

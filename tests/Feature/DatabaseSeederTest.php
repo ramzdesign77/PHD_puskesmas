@@ -17,21 +17,21 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
         $this->seed();
 
-        $this->assertDatabaseCount('desa', 5);
-        $this->assertDatabaseCount('paket_alat', 7);
-        $this->assertDatabaseCount('petugas', 5);
-        $this->assertDatabaseCount('users', 2);
+        $this->assertDatabaseCount('ref_desa', 5);
+        $this->assertDatabaseCount('ref_paket_alat', 7);
+        $this->assertDatabaseCount('app_petugas', 5);
+        $this->assertDatabaseCount('app_users', 2);
 
         foreach (['admin', 'petugas1'] as $username) {
-            $user = DB::table('users')->where('username', $username)->first();
+            $user = DB::table('app_users')->where('username', $username)->first();
 
             $this->assertNotNull($user);
             $this->assertSame((int) $user->id, (int) $user->id_user);
         }
 
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('app_users', [
             'username' => 'petugas1',
-            'id_petugas' => (string) DB::table('petugas')
+            'id_petugas' => (string) DB::table('app_petugas')
                 ->where('no_telepon', '081234560001')
                 ->value('id_petugas'),
         ]);
@@ -42,22 +42,22 @@ class DatabaseSeederTest extends TestCase
         $this->seed(UserSeeder::class);
         $this->seed(UserSeeder::class);
 
-        $this->assertDatabaseCount('users', 2);
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseCount('app_users', 2);
+        $this->assertDatabaseHas('app_users', [
             'username' => 'admin',
             'role' => 'admin',
         ]);
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('app_users', [
             'username' => 'petugas1',
             'role' => 'petugas',
         ]);
         $this->assertTrue(Hash::check(
             'admin123',
-            DB::table('users')->where('username', 'admin')->value('password'),
+            DB::table('app_users')->where('username', 'admin')->value('password'),
         ));
         $this->assertTrue(Hash::check(
             'petugas123',
-            DB::table('users')->where('username', 'petugas1')->value('password'),
+            DB::table('app_users')->where('username', 'petugas1')->value('password'),
         ));
     }
 }

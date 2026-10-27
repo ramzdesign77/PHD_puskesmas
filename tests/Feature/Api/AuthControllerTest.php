@@ -33,7 +33,7 @@ class AuthControllerTest extends TestCase
             ->assertJsonPath('message', 'Login berhasil')
             ->assertJsonPath('data.user.id', $user->id_user)
             ->assertJsonPath('data.user.roles', ['admin', 'petugas']);
-        $this->assertDatabaseHas('mobile_access_tokens', [
+        $this->assertDatabaseHas('app_mobile_tokens', [
             'id_user' => $user->id_user,
             'token_hash' => hash('sha256', $token),
         ]);
@@ -56,7 +56,7 @@ class AuthControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.user.username', 'warga01');
-        $this->assertDatabaseHas('mobile_access_tokens', [
+        $this->assertDatabaseHas('app_mobile_tokens', [
             'id_user' => $user->id_user,
             'token_hash' => hash('sha256', $token),
         ]);
@@ -67,7 +67,7 @@ class AuthControllerTest extends TestCase
         ])->assertUnauthorized()
             ->assertJsonPath('success', false);
 
-        $this->assertDatabaseCount('mobile_access_tokens', 1);
+        $this->assertDatabaseCount('app_mobile_tokens', 1);
     }
 
     public function test_register_warga_stores_required_profile_fields_and_forces_warga_role(): void
@@ -96,7 +96,7 @@ class AuthControllerTest extends TestCase
         $this->assertSame(['warga'], $user->roles);
         $this->assertSame($village->id_desa, $user->id_desa);
         $this->assertTrue(Hash::check('secret123', $user->password));
-        $this->assertDatabaseHas('mobile_access_tokens', [
+        $this->assertDatabaseHas('app_mobile_tokens', [
             'id_user' => $user->id_user,
             'token_hash' => hash('sha256', $token),
         ]);
@@ -117,8 +117,8 @@ class AuthControllerTest extends TestCase
                 'id_desa',
             ]);
 
-        $this->assertDatabaseCount('users', 0);
-        $this->assertDatabaseCount('mobile_access_tokens', 0);
+        $this->assertDatabaseCount('app_users', 0);
+        $this->assertDatabaseCount('app_mobile_tokens', 0);
     }
 
     public function test_logout_requires_a_valid_token_and_deletes_only_that_token(): void
@@ -130,7 +130,7 @@ class AuthControllerTest extends TestCase
         ]);
         $token = 'known-mobile-token';
 
-        DB::table('mobile_access_tokens')->insert([
+        DB::table('app_mobile_tokens')->insert([
             'id_user' => $user->id_user,
             'name' => 'flutter-mobile',
             'token_hash' => hash('sha256', $token),
@@ -144,7 +144,7 @@ class AuthControllerTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('message', 'Logout berhasil.');
 
-        $this->assertDatabaseMissing('mobile_access_tokens', [
+        $this->assertDatabaseMissing('app_mobile_tokens', [
             'token_hash' => hash('sha256', $token),
         ]);
     }
