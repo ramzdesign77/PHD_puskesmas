@@ -125,7 +125,7 @@ class EducationController extends Controller
                 'min:5',
                 'max:255',
                 'regex:/^[\pL\pN\s]+$/u', // Hanya mengizinkan huruf, angka, dan spasi
-                Rule::unique('educations', 'title')->ignore($id),
+                Rule::unique('ref_edukasi', 'title')->ignore($id),
             ],
 
             // Pengaturan Upload Gambar
@@ -151,6 +151,11 @@ class EducationController extends Controller
     // Membatasi akses khusus admin dan petugas
     private function ensureManagementAccess(): void
     {
-        abort_unless(in_array(session('role'), ['admin', 'officer'], true), 403);
+        $user = request()->user();
+
+        abort_unless(
+            $user?->isAdmin() || $user?->isSanitarian() || session('role') === 'officer',
+            403,
+        );
     }
 }

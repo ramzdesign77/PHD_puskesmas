@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Education;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 
 class EducationApiController extends Controller
 {
@@ -22,7 +21,7 @@ class EducationApiController extends Controller
                 'category' => $article->category,
                 'excerpt' => $article->excerpt,
                 'content' => $article->content,
-                'image' => $article->image ? asset('storage/' . $article->image) : null,
+                'image' => $article->image ? asset('storage/'.$article->image) : null,
                 'created_at' => $article->created_at?->toISOString(),
             ]);
 

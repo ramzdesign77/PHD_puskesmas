@@ -39,7 +39,7 @@ class LaporanWargaApiController extends Controller
                 'nama_pelapor' => 'required|string|max:150',
                 'nik_pelapor' => 'nullable|digits:16',
                 'no_wa' => 'nullable|string|max:20',
-                'id_desa' => 'required|integer|exists:desa,id_desa',
+                'id_desa' => 'required|integer|exists:ref_desa,id_desa',
                 'rt' => 'required|string|max:5',
                 'rw' => 'required|string|max:5',
                 'kategori_laporan' => 'required|in:air_masalah,sanitasi_lingkungan',

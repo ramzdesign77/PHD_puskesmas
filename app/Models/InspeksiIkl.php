@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InspeksiIkl extends Model
 {
-    protected $table = 'inspeksi_ikl';
+    protected $table = 'trx_inspeksi_ikl';
 
     protected $primaryKey = 'id_inspeksi';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'id_jadwal',
@@ -25,9 +26,15 @@ class InspeksiIkl extends Model
         'kategori_risiko',
         'rekomendasi_sanitarian',
         'tanggal_inspeksi',
+        'intervensi_fisik',
+        'catatan_intervensi',
+        'foto_inspeksi',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
+        'jarak_sumber_pencemar' => 'integer',
         'tanggal_inspeksi' => 'date',
         'p1_dinding_sumur_retak' => 'boolean',
         'p2_penutup_tidak_rapat' => 'boolean',
@@ -35,41 +42,40 @@ class InspeksiIkl extends Model
         'p4_spal_tersumbat' => 'boolean',
         'p5_air_keruh_berbau' => 'boolean',
         'total_skor_ya' => 'integer',
-        'jarak_sumber_pencemar' => 'integer',
     ];
 
-    // ─── Relations ────────────────────────────────────────────────────────────
-
     /**
-     * Jadwal kunjungan yang menghasilkan data inspeksi ini.
+     * Label bahasa Indonesia untuk setiap parameter checklist.
+     *
+     * @return array<string, string>
      */
-    public function jadwal()
+    public static function labelParameter(): array
     {
-        return $this->belongsTo(JadwalInspeksi::class, 'id_jadwal', 'id_jadwal');
+        return [
+            'p1_dinding_sumur_retak' => 'Dinding sumur retak / tidak diplester',
+            'p2_penutup_tidak_rapat' => 'Tutup sumur tidak ada / tidak rapat',
+            'p3_lantai_becek_retak' => 'Lantai sumur becek / retak / tidak ada',
+            'p4_spal_tersumbat' => 'SPAL tersumbat / tidak ada',
+            'p5_air_keruh_berbau' => 'Air keruh / berbau / berasa',
+        ];
     }
 
-    // ─── Business Logic ───────────────────────────────────────────────────────
-
     /**
-     * Hitung total skor (jumlah kondisi berbahaya yang = true)
-     * dan tentukan kategori risiko berdasarkan scoring WHO/Kemenkes.
-     *
-     * Kategori:
-     *   0     → aman
-     *   1–2   → risiko_sedang
-     *   3–5   → risiko_tinggi
+     * Hitung kategori risiko berdasarkan total skor (jumlah jawaban "Ya").
+     * Aman: 0 | Risiko Sedang: 1–2 | Risiko Tinggi: 3–5
      */
-    public static function hitungKategoriRisiko(int $totalSkor): string
+    public static function hitungKategoriRisiko(int $totalSkorYa): string
     {
-        if ($totalSkor === 0) {
-            return 'aman';
-        }
+        return match (true) {
+            $totalSkorYa === 0 => 'aman',
+            $totalSkorYa <= 2 => 'risiko_sedang',
+            default => 'risiko_tinggi',
+        };
+    }
 
-        if ($totalSkor <= 2) {
-            return 'risiko_sedang';
-        }
-
-        return 'risiko_tinggi';
+    public function jadwal(): BelongsTo
+    {
+        return $this->belongsTo(JadwalInspeksi::class, 'id_jadwal', 'id_jadwal');
     }
 
     /**

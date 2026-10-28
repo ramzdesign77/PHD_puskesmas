@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* ═══════════════════════════════════════════
    SIMKES Custom Design System
@@ -6,28 +6,40 @@
 ═══════════════════════════════════════════ */
 
 @theme {
-    --color-medical-red:   #E63946;
-    --color-medical-dark:  #C1121F;
-    --color-medical-light: #FFE8EA;
-    --font-inter: 'Inter', sans-serif;
+    --color-medical-red: #e63946;
+    --color-medical-dark: #c1121f;
+    --color-medical-light: #ffe8ea;
+    --font-inter: "Inter", sans-serif;
 }
 
 /* Base Resets */
-*, *::before, *::after {
-    font-family: 'Inter', sans-serif;
+*,
+*::before,
+*::after {
+    font-family: "Inter", sans-serif;
     box-sizing: border-box;
 }
 
 body {
-    background-color: #F8FAFC;
-    color: #1E293B;
+    background-color: #f8fafc;
+    color: #1e293b;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #F1F5F9; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
 
 /* ─── Buttons ─────────────────────────────── */
 .btn-primary {
@@ -35,7 +47,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, #E63946 0%, #C1121F 100%);
+    background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
     color: white;
     font-weight: 600;
     font-size: 14px;
@@ -49,7 +61,9 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(230, 57, 70, 0.45);
 }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:active {
+    transform: translateY(0);
+}
 
 .btn-secondary {
     display: inline-flex;
@@ -61,11 +75,15 @@ body {
     font-weight: 600;
     font-size: 14px;
     border-radius: 12px;
-    border: 1.5px solid #E2E8F0;
+    border: 1.5px solid #e2e8f0;
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.btn-secondary:hover { border-color: #E63946; color: #E63946; background: #FFF5F5; }
+.btn-secondary:hover {
+    border-color: #e63946;
+    color: #e63946;
+    background: #fff5f5;
+}
 
 .btn-sm {
     padding: 6px 14px;
@@ -77,8 +95,10 @@ body {
 .card {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
-    border: 1px solid rgba(229,231,235,0.5);
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(229, 231, 235, 0.5);
 }
 
 /* ─── Form Elements ────────────────────────── */
@@ -86,7 +106,7 @@ body {
     width: 100%;
     padding: 10px 14px;
     background: white;
-    border: 2px solid #CBD5E1;
+    border: 2px solid #cbd5e1;
     border-radius: 10px;
     font-size: 14px;
     color: #374151;
@@ -94,7 +114,7 @@ body {
     outline: none;
 }
 .form-input:focus {
-    border-color: #E63946;
+    border-color: #e63946;
     box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.12);
 }
 .form-label {
@@ -116,23 +136,37 @@ body {
     font-weight: 600;
     letter-spacing: 0.3px;
 }
-.badge-pending     { background: #FEF3C7; color: #D97706; }
-.badge-progress    { background: #DBEAFE; color: #1D4ED8; }
-.badge-resolved    { background: #DCFCE7; color: #16A34A; }
-.badge-assigned    { background: #EDE9FE; color: #7C3AED; }
+.badge-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+.badge-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.badge-resolved {
+    background: #dcfce7;
+    color: #16a34a;
+}
+.badge-assigned {
+    background: #ede9fe;
+    color: #7c3aed;
+}
 
 /* ─── Stat Cards ──────────────────────────── */
 .stat-card {
     background: white;
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid rgba(229,231,235,0.6);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(229, 231, 235, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* ─── Table ───────────────────────────────── */
@@ -142,32 +176,62 @@ body {
     font-size: 13px;
 }
 .data-table th {
-    background: #F8FAFC;
-    color: #64748B;
+    background: #f8fafc;
+    color: #64748b;
     font-weight: 600;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 12px 16px;
     text-align: left;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid #e2e8f0;
 }
 .data-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid #F1F5F9;
+    border-bottom: 1px solid #f1f5f9;
     color: #374151;
     vertical-align: middle;
 }
-.data-table tr:hover td { background: #FAFBFF; }
-.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td {
+    background: #fafbff;
+}
+.data-table tr:last-child td {
+    border-bottom: none;
+}
 
 /* ─── Animations ──────────────────────────── */
-.fade-in { animation: fadeIn 0.4s ease; }
-@keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+.fade-in {
+    animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
-.slide-in { animation: slideIn 0.3s ease; }
-@keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: translateX(0); } }
+.slide-in {
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
 
 /* ─── Medical Gradient ────────────────────── */
-.medical-gradient { background: linear-gradient(135deg, #E63946 0%, #C1121F 100%); }
-.medical-gradient-soft { background: linear-gradient(135deg, #FFF0F1 0%, #FFE8EA 100%); }
+.medical-gradient {
+    background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+}
+.medical-gradient-soft {
+    background: linear-gradient(135deg, #fff0f1 0%, #ffe8ea 100%);
+}

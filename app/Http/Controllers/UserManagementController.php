@@ -14,7 +14,7 @@ class UserManagementController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $query = User::query()->where(function ($builder) {
             $builder->where('role', 'like', '%admin%')
@@ -57,27 +57,29 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150', 'regex:/\p{L}/u'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
-            'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:app_users,username'],
+            'email' => ['nullable', 'email', 'max:150', 'unique:app_users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'no_telepon' => ['required', 'string', 'max:20', 'unique:users,no_telepon'],
+            'no_telepon' => ['required', 'string', 'max:20', 'unique:app_users,no_telepon'],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'alamat' => ['nullable', 'string', 'max:500'],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
+        $data['roles'] = collect($data['roles'])->unique()->values()->all();
+        $data['role'] = implode(',', $data['roles']);
         $data['wilayah_kerja'] = 'Sumbersari';
         $roles = collect($data['roles'])->unique();
         $data['role'] = $roles->implode(',');
@@ -135,21 +137,21 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id_user, 'id_user')],
-            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('app_users', 'username')->ignore($user->id_user, 'id_user')],
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user')],
             'password' => ['nullable', 'string', 'min:6'],
-            'no_telepon' => ['required', 'string', 'max:20', Rule::unique('users', 'no_telepon')->ignore($user->id_user, 'id_user')],
+            'no_telepon' => ['required', 'string', 'max:20', Rule::unique('app_users', 'no_telepon')->ignore($user->id_user, 'id_user')],
             'roles' => ['required', 'array', 'min:1', 'distinct'],
             'roles.*' => ['string', Rule::in(['sanitarian', 'petugas', 'admin'])],
             'alamat' => ['nullable', 'string', 'max:500'],
@@ -157,6 +159,8 @@ class UserManagementController extends Controller
             'is_active' => ['required', 'boolean'],
         ]);
 
+        $data['roles'] = collect($data['roles'])->unique()->values()->all();
+        $data['role'] = implode(',', $data['roles']);
         $data['wilayah_kerja'] = 'Sumbersari';
         $data['role'] = collect($data['roles'])->unique()->implode(',');
         unset($data['roles']);
@@ -179,7 +183,7 @@ class UserManagementController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $user->forceDelete();
 
@@ -188,14 +192,14 @@ class UserManagementController extends Controller
 
     public function show(User $user)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         return view('users.show', compact('user'));
     }
 
     public function resetPassword(User $user): RedirectResponse
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $user->update(['password' => 'password123']);
 
@@ -204,7 +208,7 @@ class UserManagementController extends Controller
 
     public function export(Request $request)
     {
-        abort_unless(session('role') === 'admin', 403);
+        $this->ensureAdminAccess();
 
         $users = User::query()->where(function ($builder) {
             $builder->where('role', 'like', '%admin%')
@@ -222,5 +226,10 @@ class UserManagementController extends Controller
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function ensureAdminAccess(): void
+    {
+        abort_unless(request()->user()?->isAdmin(), 403);
     }
 }

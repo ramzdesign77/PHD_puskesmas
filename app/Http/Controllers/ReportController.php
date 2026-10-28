@@ -74,7 +74,7 @@ class ReportController extends Controller
     public function jadwalkan(Request $request, int $idLaporan)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:users,id_user',
+            'id_operator' => 'required|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
@@ -137,7 +137,7 @@ class ReportController extends Controller
     public function reschedule(Request $request, int $idJadwal)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:users,id_user',
+            'id_operator' => 'required|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
         ]);
@@ -243,16 +243,16 @@ class ReportController extends Controller
     /**
      * Query Eloquent JOIN lengkap untuk Tab 2 (Rekap Hasil Inspeksi IKL Air).
      *
-     * Mengambil data dari: laporan_warga → jadwal_inspeksi → users → inspeksi_ikl
+     * Mengambil data dari: trx_laporan_warga → trx_jadwal_inspeksi → app_users → trx_inspeksi_ikl
      * Hanya laporan berstatus 'selesai' dengan data inspeksi yang lengkap.
      */
     private function queryRekapIkl(Request $request)
     {
-        $query = DB::table('laporan_warga as lw')
-            ->join('jadwal_inspeksi as ji', 'lw.id_laporan', '=', 'ji.id_laporan')
-            ->join('users as u', 'ji.id_operator', '=', 'u.id_user')
-            ->join('inspeksi_ikl as ikl', 'ji.id_jadwal', '=', 'ikl.id_jadwal')
-            ->leftJoin('desa as d', 'lw.id_desa', '=', 'd.id_desa')
+        $query = DB::table('trx_laporan_warga as lw')
+            ->join('trx_jadwal_inspeksi as ji', 'lw.id_laporan', '=', 'ji.id_laporan')
+            ->join('app_users as u', 'ji.id_operator', '=', 'u.id_user')
+            ->join('trx_inspeksi_ikl as ikl', 'ji.id_jadwal', '=', 'ikl.id_jadwal')
+            ->leftJoin('ref_desa as d', 'lw.id_desa', '=', 'd.id_desa')
             ->where('lw.status_laporan', 'selesai')
             ->where('ji.status_kunjungan', 'selesai')
             ->select([
@@ -325,7 +325,7 @@ class ReportController extends Controller
         $validated = $request->validate([
             'kategori_laporan' => 'required|string',
             'deskripsi' => 'required|string|min:10',
-            'id_desa' => 'required|exists:desa,id_desa',
+            'id_desa' => 'required|exists:ref_desa,id_desa',
         ]);
 
         LaporanWarga::create([

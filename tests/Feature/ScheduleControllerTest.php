@@ -28,7 +28,7 @@ class ScheduleControllerTest extends TestCase
             ]);
 
         $response->assertRedirect(route('schedules.index'));
-        $this->assertDatabaseHas('jadwal_inspeksi', [
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $completedSchedule->id_jadwal,
             'status_kunjungan' => 'selesai',
             'tanggal_kunjungan' => '2026-09-10 00:00:00',
@@ -41,7 +41,7 @@ class ScheduleControllerTest extends TestCase
             'jam_mulai' => '10:00',
         ])->assertRedirect(route('schedules.index'));
 
-        $this->assertDatabaseHas('jadwal_inspeksi', [
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $cancelledSchedule->id_jadwal,
             'status_kunjungan' => 'batal',
             'tanggal_kunjungan' => '2026-09-11 00:00:00',
@@ -60,7 +60,7 @@ class ScheduleControllerTest extends TestCase
             ->delete(route('schedules.destroy', $schedule->id_jadwal));
 
         $response->assertRedirect(route('schedules.index'));
-        $this->assertDatabaseMissing('jadwal_inspeksi', ['id_jadwal' => $schedule->id_jadwal]);
+        $this->assertDatabaseMissing('trx_jadwal_inspeksi', ['id_jadwal' => $schedule->id_jadwal]);
     }
 
     public function test_completed_schedule_and_inspection_cannot_be_deleted(): void
@@ -84,8 +84,8 @@ class ScheduleControllerTest extends TestCase
 
         $response->assertRedirect(route('schedules.index'))
             ->assertSessionHas('error');
-        $this->assertDatabaseHas('jadwal_inspeksi', ['id_jadwal' => $schedule->id_jadwal]);
-        $this->assertDatabaseHas('inspeksi_ikl', ['id_inspeksi' => $inspection->id_inspeksi]);
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', ['id_jadwal' => $schedule->id_jadwal]);
+        $this->assertDatabaseHas('trx_inspeksi_ikl', ['id_inspeksi' => $inspection->id_inspeksi]);
     }
 
     public function test_petugas_cannot_edit_terminal_schedule_history(): void
@@ -102,7 +102,7 @@ class ScheduleControllerTest extends TestCase
             ])
             ->assertForbidden();
 
-        $this->assertDatabaseHas('jadwal_inspeksi', [
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'status_kunjungan' => 'batal',
             'tanggal_kunjungan' => '2026-09-01 00:00:00',
@@ -125,7 +125,6 @@ class ScheduleControllerTest extends TestCase
         return JadwalInspeksi::create([
             'id_laporan' => null,
             'id_operator' => $operator->id_user,
-            'id_paket' => null,
             'tanggal_kunjungan' => '2026-09-01',
             'jam_mulai' => '08:00',
             'jenis_kunjungan' => 'ikl_rutin_rt',

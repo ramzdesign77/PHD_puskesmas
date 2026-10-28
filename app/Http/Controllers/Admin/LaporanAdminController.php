@@ -76,10 +76,10 @@ class LaporanAdminController extends Controller
     public function terima(Request $request, $id_laporan)
     {
         $validated = $request->validate([
-            'id_petugas'        => 'required|exists:petugas,id_petugas',
-            'id_paket'          => 'required|exists:paket_alat,id_paket',
+            'id_petugas' => 'required|exists:app_petugas,id_petugas',
+            'id_paket' => 'required|exists:ref_paket_alat,id_paket',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
-            'jenis_kunjungan'   => 'required|string',
+            'jenis_kunjungan' => 'required|string',
         ]);
 
         $laporan = LaporanWarga::findOrFail($id_laporan);
@@ -88,12 +88,12 @@ class LaporanAdminController extends Controller
         $laporan->save();
 
         JadwalInspeksi::create([
-            'id_laporan'        => $laporan->id_laporan,
-            'id_operator'       => $validated['id_petugas'],
-            'id_paket'          => $validated['id_paket'],
+            'id_laporan' => $laporan->id_laporan,
+            'id_operator' => $validated['id_petugas'],
+            'id_paket' => $validated['id_paket'],
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
-            'jenis_kunjungan'   => $validated['jenis_kunjungan'],
-            'status_kunjungan'  => 'terjadwal',
+            'jenis_kunjungan' => $validated['jenis_kunjungan'],
+            'status_kunjungan' => 'terjadwal',
         ]);
 
         return redirect()->route('admin.laporan.index')
