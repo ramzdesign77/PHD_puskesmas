@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
+use App\Http\Controllers\Api\InspectionController;
+use App\Http\Middleware\OfficerAuth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,6 +23,14 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('/logout', [MobileAuthController::class, 'logout'])->name('logout');
 });
 
+Route::prefix('v1/officer')
+    ->middleware(OfficerAuth::class)
+    ->name('api.v1.officer.')
+    ->group(function (): void {
+        Route::post('/inspections', [InspectionController::class, 'store'])
+            ->name('inspections.store');
+    });
+
 // ── Laporan Warga (tidak perlu auth) ──────────────────────────────────────
 Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // POST /api/laporan — kirim laporan baru dari Flutter
@@ -29,6 +39,7 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // GET /api/laporan/{kode_tiket} — cek status laporan by kode tiket
     Route::get('/{kode_tiket}', [LaporanWargaApiController::class, 'statusByTiket'])->name('status');
 });
+
 
 // ── Referensi Data ────────────────────────────────────────────────────────
 // GET /api/desa — daftar desa untuk dropdown Flutter
