@@ -111,7 +111,6 @@ class User extends Authenticatable
         if (blank($this->nama_lengkap) && filled($this->name)) {
             $this->nama_lengkap = $this->name;
         }
-
     }
 
     /**

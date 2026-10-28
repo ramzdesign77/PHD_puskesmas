@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Controller untuk halaman Kelola Jadwal (halaman terpisah).
@@ -15,7 +16,7 @@ class ScheduleController extends Controller
 {
     private const SCHEDULE_CONFLICT_MESSAGE = 'Petugas ini sudah memiliki jadwal pada tanggal dan jam tersebut. Silakan pilih jam lain atau petugas lain.';
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $role = session('role');
 
@@ -50,7 +51,7 @@ class ScheduleController extends Controller
         return view('schedules.index', compact('schedules', 'officers', 'role', 'summary'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'id_operator' => 'required|exists:app_users,id_user',
@@ -75,10 +76,10 @@ class ScheduleController extends Controller
         ]);
 
         return redirect()->route('schedules.index')
-            ->with('success', 'Jadwal IKL Rutin berhasil ditambahkan.');
+            ->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
-    public function assign(Request $request, int $id)
+    public function assign(Request $request, int $id): RedirectResponse
     {
         $validated = $request->validate([
             'id_operator' => 'required|exists:app_users,id_user',
@@ -144,7 +145,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function batal(int $id)
+    public function batal(int $id): RedirectResponse
     {
         $jadwal = JadwalInspeksi::with('laporan')
             ->where('status_kunjungan', 'terjadwal')
