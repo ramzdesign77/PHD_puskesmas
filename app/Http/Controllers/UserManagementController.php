@@ -78,12 +78,10 @@ class UserManagementController extends Controller
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $data['roles'] = collect($data['roles'])->unique()->values()->all();
-        $data['role'] = implode(',', $data['roles']);
-        $data['wilayah_kerja'] = 'Sumbersari';
         $roles = collect($data['roles'])->unique();
         $data['role'] = $roles->implode(',');
         unset($data['roles']);
+        $data['wilayah_kerja'] = 'Sumbersari';
         $idPrefix = ($roles->contains('admin') ? 'A' : '')
             .($roles->intersect(['petugas', 'sanitarian'])->isNotEmpty() ? 'P' : '');
         $data['id_petugas'] = $this->generatePetugasId($data['nama_lengkap'], $idPrefix);
@@ -159,11 +157,9 @@ class UserManagementController extends Controller
             'is_active' => ['required', 'boolean'],
         ]);
 
-        $data['roles'] = collect($data['roles'])->unique()->values()->all();
-        $data['role'] = implode(',', $data['roles']);
-        $data['wilayah_kerja'] = 'Sumbersari';
         $data['role'] = collect($data['roles'])->unique()->implode(',');
         unset($data['roles']);
+        $data['wilayah_kerja'] = 'Sumbersari';
 
         if (blank($data['password'])) {
             unset($data['password']);

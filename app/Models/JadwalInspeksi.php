@@ -24,6 +24,7 @@ class JadwalInspeksi extends Model
         'jenis_kunjungan',
         'status_kunjungan',
         'updated_at',
+        'catatan',
     ];
 
     protected $casts = [
