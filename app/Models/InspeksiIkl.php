@@ -67,8 +67,8 @@ class InspeksiIkl extends Model
     public static function hitungKategoriRisiko(int $totalSkorYa): string
     {
         return match (true) {
-            $totalSkorYa === 0 => 'aman',
-            $totalSkorYa <= 2 => 'risiko_sedang',
+            $totalSkorYa <= 1 => 'aman',
+            $totalSkorYa <= 3 => 'risiko_sedang',
             default => 'risiko_tinggi',
         };
     }

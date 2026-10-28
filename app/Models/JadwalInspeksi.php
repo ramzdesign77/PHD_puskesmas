@@ -18,6 +18,7 @@ class JadwalInspeksi extends Model
     protected $fillable = [
         'id_laporan',
         'id_operator',
+        'id_paket',
         'tanggal_kunjungan',
         'jam_mulai',
         'jenis_kunjungan',

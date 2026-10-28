@@ -72,7 +72,6 @@ class AuthController extends Controller
                 'username' => trim($validated['username']),
                 'email' => strtolower(trim($validated['email'])),
                 'password' => $validated['password'],
-                'nik' => $validated['nik'],
                 'no_telepon' => trim($validated['no_telepon']),
                 'alamat' => trim($validated['alamat']),
                 'id_desa' => $validated['id_desa'],

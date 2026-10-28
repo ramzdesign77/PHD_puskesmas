@@ -71,6 +71,9 @@ class MobileAuthController extends Controller
     private function issueToken(User $user, string $message, int $status): JsonResponse
     {
         $plainToken = Str::random(80);
+        $user->loadMissing('petugasProfile');
+        $isOfficer = $user->isSanitarian() || $user->hasRole('officer');
+
         MobileAccessToken::query()->create([
             'id_user' => $user->id_user,
             'name' => 'flutter-mobile',
@@ -87,6 +90,11 @@ class MobileAuthController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->role,
+                'jabatan' => $isOfficer
+                    ? ($user->petugasProfile?->jabatan ?: 'Petugas Kesling')
+                    : null,
+                'nip' => null,
+                'wilayah_kerja' => $user->wilayah_kerja,
             ],
         ], $status);
     }

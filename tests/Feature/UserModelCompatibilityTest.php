@@ -11,7 +11,7 @@ class UserModelCompatibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_new_user_records_keep_legacy_columns_and_ids_synchronized(): void
+    public function test_new_user_records_keep_ids_and_names_synchronized(): void
     {
         $user = User::create([
             'nama_lengkap' => 'Administrator Test',
@@ -19,7 +19,6 @@ class UserModelCompatibilityTest extends TestCase
             'email' => 'administrator-test@example.test',
             'password' => 'test-password',
             'role' => 'admin',
-            'nip' => 'NIP-123',
         ]);
 
         $storedUser = DB::table('app_users')->where('username', 'administrator-test')->first();
@@ -27,7 +26,6 @@ class UserModelCompatibilityTest extends TestCase
         $this->assertSame($storedUser->id, $storedUser->id_user);
         $this->assertSame('Administrator Test', $storedUser->name);
         $this->assertSame('Administrator Test', $storedUser->nama_lengkap);
-        $this->assertSame('NIP-123', $storedUser->nip_nik);
         $this->assertSame('admin', $storedUser->role);
         $this->assertSame(['admin'], json_decode($storedUser->roles, true));
 
