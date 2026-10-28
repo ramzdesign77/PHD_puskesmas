@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
 use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\OfficerApiController;
 use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,24 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });
+
+$registerOfficerRoutes = static function (string $prefix, string $name): void {
+    Route::prefix($prefix)
+        ->name($name)
+        ->middleware('mobile.token')
+        ->group(function (): void {
+            Route::get('/dashboard', [OfficerApiController::class, 'dashboard'])->name('dashboard');
+            Route::get('/tasks', [OfficerApiController::class, 'tasks'])->name('tasks');
+            Route::post('/reports/{id_laporan}/verify', [OfficerApiController::class, 'verifyReport'])
+                ->whereNumber('id_laporan')
+                ->name('reports.verify');
+            Route::post('/inspections', [OfficerApiController::class, 'storeInspection'])->name('inspections.store');
+            Route::get('/stbm-desa', [OfficerApiController::class, 'stbmDesa'])->name('stbm-desa');
+        });
+};
+
+$registerOfficerRoutes('v1/officer', 'api.v1.officer.');
+$registerOfficerRoutes('officer', 'api.officer.');
 
 // ── Laporan Warga (tidak perlu auth) ──────────────────────────────────────
 Route::post('/reports', [ReportController::class, 'store'])->name('api.reports.store');

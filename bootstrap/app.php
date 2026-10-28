@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'auth.mobile' => AuthenticateMobileToken::class,
+            'mobile.token' => AuthenticateMobileToken::class,
             'role' => RoleMiddleware::class,
         ]);
     })

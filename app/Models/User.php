@@ -30,9 +30,6 @@ class User extends Authenticatable
         'email',
         'password',
         'no_telepon',
-        'nik',
-        'nip',
-        'nip_nik',
         'role',
         'roles',
         'wilayah_kerja',
@@ -47,11 +44,11 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::creating(function (self $user): void {
-            $user->synchronizeNameAndIdentity();
+            $user->synchronizeNames();
         });
 
         static::saving(function (self $user): void {
-            $user->synchronizeNameAndIdentity();
+            $user->synchronizeNames();
 
             $roles = $user->roles;
             $legacyRole = $user->role;
@@ -105,7 +102,7 @@ class User extends Authenticatable
         });
     }
 
-    private function synchronizeNameAndIdentity(): void
+    private function synchronizeNames(): void
     {
         if (blank($this->name) && filled($this->nama_lengkap)) {
             $this->name = $this->nama_lengkap;
@@ -115,11 +112,6 @@ class User extends Authenticatable
             $this->nama_lengkap = $this->name;
         }
 
-        if (filled($this->nip) && blank($this->nip_nik)) {
-            $this->nip_nik = $this->nip;
-        } elseif (filled($this->nik) && blank($this->nip_nik)) {
-            $this->nip_nik = $this->nik;
-        }
     }
 
     /**
@@ -144,6 +136,11 @@ class User extends Authenticatable
     public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');
+    }
+
+    public function petugasProfile(): BelongsTo
+    {
+        return $this->belongsTo(Petugas::class, 'id_petugas', 'id_petugas');
     }
 
     public function mobileTokens(): HasMany
