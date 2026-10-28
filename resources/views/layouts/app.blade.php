@@ -211,6 +211,10 @@
                 <span class="sidebar-icon"><i class="fas fa-users-cog"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Manajemen Petugas</span>
             </a>
+            <a href="{{ route('warga.index') }}" class="sidebar-link {{ request()->routeIs('warga.*') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+                <span x-show="sidebarOpen" x-transition.opacity>Manajemen Warga</span>
+            </a>
             <a href="{{ route('education.manage') }}" class="sidebar-link {{ request()->routeIs('education.manage') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span>
                 <span x-show="sidebarOpen" x-transition.opacity>Manajemen Edukasi</span>
@@ -290,6 +294,9 @@
             @if(session('role') === 'admin')
             <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-users-cog"></i></span> Manajemen Petugas
+            </a>
+            <a href="{{ route('warga.index') }}" class="sidebar-link {{ request()->routeIs('warga.*') ? 'active' : '' }}">
+                <span class="sidebar-icon"><i class="fas fa-users"></i></span> Manajemen Warga
             </a>
             <a href="{{ route('education.manage') }}" class="sidebar-link {{ request()->routeIs('education.manage') ? 'active' : '' }}">
                 <span class="sidebar-icon"><i class="fas fa-book-medical"></i></span> Manajemen Edukasi

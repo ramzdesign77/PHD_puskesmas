@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Desa;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 use RuntimeException;
 
 class UserManagementController extends Controller
@@ -53,6 +56,122 @@ class UserManagementController extends Controller
         $roles = collect(['sanitarian', 'petugas', 'admin']);
 
         return view('users.index', compact('users', 'roles'));
+    }
+
+    public function indexWarga(Request $request): View
+    {
+        $this->ensureAdminAccess();
+
+        $query = User::query()
+            ->select([
+                'id_user',
+                'nama_lengkap',
+                'username',
+                'email',
+                'no_telepon',
+                'id_desa',
+                'is_active',
+                'created_at',
+            ])
+            ->with('desa:id_desa,nama_desa')
+            ->where(function (Builder $query): void {
+                $query->where(function (Builder $query): void {
+                    $query->where('role', 'warga')
+                        ->where(function (Builder $query): void {
+                            $query->whereNull('roles')
+                                ->orWhereJsonLength('roles', 0)
+                                ->orWhere(function (Builder $query): void {
+                                    $query->whereJsonContains('roles', 'warga')
+                                        ->whereJsonLength('roles', 1);
+                                });
+                        });
+                })->orWhere(function (Builder $query): void {
+                    $query->whereJsonContains('roles', 'warga')
+                        ->whereJsonLength('roles', 1);
+                });
+            });
+        $search = trim((string) $request->query('q'));
+
+        if ($search !== '') {
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('no_telepon', 'like', "%{$search}%")
+                    ->orWhereHas('desa', function (Builder $desaQuery) use ($search): void {
+                        $desaQuery->where('nama_desa', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->query('status') === 'active') {
+            $query->where('is_active', true);
+        } elseif ($request->query('status') === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $wargas = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
+
+        return view('warga.index', compact('wargas'));
+    }
+
+    public function showWarga(User $user): View
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+        $user->load('desa:id_desa,nama_desa');
+
+        return view('warga.show', compact('user'));
+    }
+
+    public function editWarga(User $user): View
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+        $desas = Desa::query()->orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
+
+        return view('warga.edit', compact('user', 'desas'));
+    }
+
+    public function updateWarga(Request $request, User $user): RedirectResponse
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+
+        $data = $request->validate([
+            'nama_lengkap' => ['required', 'string', 'max:150'],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('app_users', 'username')->ignore($user->id_user, 'id_user')],
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user')],
+            'no_telepon' => ['nullable', 'string', 'max:20', Rule::unique('app_users', 'no_telepon')->ignore($user->id_user, 'id_user')],
+            'alamat' => ['nullable', 'string', 'max:500'],
+            'id_desa' => ['nullable', 'integer', Rule::exists('ref_desa', 'id_desa')],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $user->update($data);
+
+        return redirect()->route('warga.index')->with('success', 'Data warga berhasil diperbarui.');
+    }
+
+    public function resetWargaPassword(User $user): RedirectResponse
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+
+        $user->mobileTokens()->delete();
+        $user->update(['password' => 'password123']);
+
+        return redirect()->route('warga.index')->with('success', "Password {$user->nama_lengkap} berhasil direset ke password123.");
+    }
+
+    public function destroyWarga(User $user): RedirectResponse
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+
+        $user->forceDelete();
+
+        return redirect()->route('warga.index')->with('success', 'Akun warga berhasil dihapus secara permanen.');
     }
 
     public function create()
@@ -227,5 +346,10 @@ class UserManagementController extends Controller
     private function ensureAdminAccess(): void
     {
         abort_unless(request()->user()?->isAdmin(), 403);
+    }
+
+    private function ensureWargaAccount(User $user): void
+    {
+        abort_unless($user->roles() === ['warga'], 404);
     }
 }
