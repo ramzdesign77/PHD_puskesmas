@@ -44,13 +44,34 @@ class ReportControllerTest extends TestCase
         Storage::disk('public')->assertExists($response->json('data.foto_bukti'));
     }
 
+    public function test_report_can_be_submitted_without_a_nik(): void
+    {
+        $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
+
+        $this->postJson('/api/reports', [
+            'nama_lengkap' => 'Warga Sumbersari',
+            'nomor_telepon' => '081234567890',
+            'village_id' => $village->id_desa,
+            'rt' => '02',
+            'rw' => '03',
+            'kategori_laporan' => 'Masalah air',
+            'deskripsi_masalah' => 'Air sumur berubah warna sejak beberapa hari terakhir.',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.nik', null);
+
+        $this->assertDatabaseHas('trx_laporan_warga', [
+            'nama_pelapor' => 'Warga Sumbersari',
+            'nik_pelapor' => null,
+        ]);
+    }
+
     public function test_missing_required_report_fields_return_validation_errors(): void
     {
         $this->postJson('/api/reports', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'nama_lengkap',
-                'nik',
                 'nomor_telepon',
                 'village_id',
                 'rt',
@@ -66,7 +87,7 @@ class ReportControllerTest extends TestCase
     {
         $this->postJson('/api/reports', [
             'nama_lengkap' => 'Warga',
-            'nik' => 'not-a-16-digit-nik',
+            'nik' => str_repeat('1', 17),
             'nomor_telepon' => '081234567890',
             'village_id' => 999999,
             'rt' => '02',

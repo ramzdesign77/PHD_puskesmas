@@ -37,7 +37,7 @@ class ScheduleController extends Controller
         $schedules = $query->paginate(20)->withQueryString();
 
         $officers = User::where('is_active', true)
-            ->whereIn('role', ['petugas', 'sanitarian', 'staf_backup_kluster4'])
+            ->sanitarian()
             ->orderBy('nama_lengkap')
             ->get(['id_user', 'nama_lengkap', 'wilayah_kerja']);
 

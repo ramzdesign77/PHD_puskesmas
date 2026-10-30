@@ -22,7 +22,7 @@ class ReportController extends Controller
         $laporan = LaporanWarga::query()->create([
             'kode_tiket' => LaporanWarga::generateKodeTiket(),
             'nama_pelapor' => $validated['nama_lengkap'],
-            'nik_pelapor' => $validated['nik'],
+            'nik_pelapor' => $validated['nik'] ?? null,
             'no_wa' => $validated['nomor_telepon'],
             'id_desa' => $validated['village_id'],
             'rt' => $validated['rt'],

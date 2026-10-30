@@ -7,6 +7,7 @@ use App\Models\Desa;
 use App\Models\LaporanWarga;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -37,7 +38,7 @@ class LaporanWargaApiController extends Controller
         try {
             $validated = $request->validate([
                 'nama_pelapor' => 'required|string|max:150',
-                'nik_pelapor' => 'nullable|digits:16',
+                'nik_pelapor' => 'nullable|string|max:16',
                 'no_wa' => 'nullable|string|max:20',
                 'id_desa' => 'required|integer|exists:ref_desa,id_desa',
                 'rt' => 'required|string|max:5',
@@ -163,5 +164,74 @@ class LaporanWargaApiController extends Controller
                 ] : null,
             ],
         ]);
+    }
+
+    /**
+     * GET /api/v1/laporan/track/{kode_tiket}
+     */
+    public function track(string $kodeTiket): JsonResponse
+    {
+        $laporan = LaporanWarga::with([
+            'desa:id_desa,nama_desa',
+            'jadwal.operator:id_user,nama_lengkap',
+            'jadwal.inspeksiIkl',
+        ])
+            ->where('kode_tiket', $kodeTiket)
+            ->first();
+
+        if (! $laporan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode tiket tidak ditemukan.',
+            ], 404);
+        }
+
+        $jadwal = $laporan->jadwal;
+        $hasilIkl = $jadwal?->inspeksiIkl;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'kode_tiket' => $laporan->kode_tiket,
+                'status_laporan' => $laporan->status_laporan,
+                'status_step' => $this->statusStep($laporan->status_laporan),
+                'nama_desa' => $laporan->desa?->nama_desa,
+                'rt' => $laporan->rt,
+                'rw' => $laporan->rw,
+                'kategori_laporan' => $laporan->kategori_laporan,
+                'deskripsi' => $laporan->deskripsi,
+                'created_at' => $laporan->created_at?->format('d M Y H:i'),
+                'jadwal' => $jadwal ? [
+                    'tanggal_kunjungan' => $jadwal->tanggal_kunjungan?->toDateString(),
+                    'waktu_kunjungan' => $jadwal->jam_mulai
+                        ? Carbon::parse($jadwal->jam_mulai)->format('H:i')
+                        : null,
+                    'status_kunjungan' => $jadwal->status_kunjungan,
+                    'nama_petugas' => $jadwal->operator?->nama_lengkap,
+                    'petugas' => $jadwal->operator?->nama_lengkap,
+                ] : null,
+                'hasil_ikl' => $hasilIkl ? [
+                    'kategori_risiko' => $hasilIkl->kategori_risiko,
+                    'total_skor_ya' => $hasilIkl->total_skor_ya,
+                    'rekomendasi_sanitarian' => $hasilIkl->rekomendasi_sanitarian,
+                    'intervensi_fisik' => $hasilIkl->intervensi_fisik,
+                    'tanggal_inspeksi' => $hasilIkl->tanggal_inspeksi?->toDateString(),
+                ] : null,
+                'desa' => $laporan->desa?->nama_desa,
+            ],
+        ]);
+    }
+
+    private function statusStep(?string $statusLaporan): string
+    {
+        return match ($statusLaporan) {
+            'dikirim', 'menunggu' => 'dikirim',
+            'diproses', 'dibaca', 'diterima' => 'diproses',
+            'dijadwalkan' => 'dijadwalkan',
+            'ditindaklanjuti' => 'ditindaklanjuti',
+            'selesai' => 'selesai',
+            'ditolak' => 'ditolak',
+            default => 'dikirim',
+        };
     }
 }

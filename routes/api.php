@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EducationApiController;
-use App\Http\Controllers\Api\LaporanWargaApiController;
 use App\Http\Controllers\Api\InspectionController;
+use App\Http\Controllers\Api\LaporanWargaApiController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\OfficerApiController;
 use App\Http\Controllers\Api\ReportController;
@@ -46,6 +46,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware('auth.mobile')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
+
+    Route::get('/laporan/track/{kode_tiket}', [LaporanWargaApiController::class, 'track'])
+        ->name('laporan.track');
 });
 
 $registerOfficerRoutes = static function (string $prefix, string $name): void {
@@ -76,7 +79,6 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // GET /api/laporan/{kode_tiket} — cek status laporan by kode tiket
     Route::get('/{kode_tiket}', [LaporanWargaApiController::class, 'statusByTiket'])->name('status');
 });
-
 
 // ── Referensi Data ────────────────────────────────────────────────────────
 // GET /api/desa — daftar desa untuk dropdown Flutter
