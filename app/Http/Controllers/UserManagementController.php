@@ -3,16 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 use RuntimeException;
 
 class UserManagementController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $this->ensureAdminAccess();
 
@@ -33,11 +35,17 @@ class UserManagementController extends Controller
 
         if ($request->filled('role')) {
             $role = $request->query('role');
-            $query->where(function ($builder) use ($role) {
-                $builder->where('role', $role)
-                    ->orWhere('role', 'like', "{$role},%")
-                    ->orWhere('role', 'like', "%,$role")
-                    ->orWhere('role', 'like', "%,$role,%");
+            $matchingRoles = in_array($role, ['petugas', 'sanitarian'], true)
+                ? ['petugas', 'sanitarian'] : [$role];
+
+            $query->where(function (Builder $builder) use ($matchingRoles): void {
+                $builder->whereIn('role', $matchingRoles);
+
+                foreach ($matchingRoles as $matchingRole) {
+                    $builder->orWhere('role', 'like', "{$matchingRole},%")
+                        ->orWhere('role', 'like', "%,{$matchingRole}")
+                        ->orWhere('role', 'like', "%,{$matchingRole},%");
+                }
             });
         }
 
@@ -53,6 +61,83 @@ class UserManagementController extends Controller
         $roles = collect(['sanitarian', 'petugas', 'admin']);
 
         return view('users.index', compact('users', 'roles'));
+    }
+
+    public function indexWarga(Request $request): View
+    {
+        $this->ensureAdminAccess();
+
+        $query = User::query()
+            ->select([
+                'id_user',
+                'nama_lengkap',
+                'username',
+                'email',
+                'no_telepon',
+                'id_desa',
+                'is_active',
+                'created_at',
+            ])
+            ->with('desa:id_desa,nama_desa')
+            ->where(function (Builder $query): void {
+                $query->where(function (Builder $query): void {
+                    $query->where('role', 'warga')
+                        ->where(function (Builder $query): void {
+                            $query->whereNull('roles')
+                                ->orWhereJsonLength('roles', 0)
+                                ->orWhere(function (Builder $query): void {
+                                    $query->whereJsonContains('roles', 'warga')
+                                        ->whereJsonLength('roles', 1);
+                                });
+                        });
+                })->orWhere(function (Builder $query): void {
+                    $query->whereJsonContains('roles', 'warga')
+                        ->whereJsonLength('roles', 1);
+                });
+            });
+        $search = trim((string) $request->query('q'));
+
+        if ($search !== '') {
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('no_telepon', 'like', "%{$search}%")
+                    ->orWhereHas('desa', function (Builder $desaQuery) use ($search): void {
+                        $desaQuery->where('nama_desa', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->query('status') === 'active') {
+            $query->where('is_active', true);
+        } elseif ($request->query('status') === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $wargas = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
+
+        return view('warga.index', compact('wargas'));
+    }
+
+    public function showWarga(User $user): View
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+        $user->load('desa:id_desa,nama_desa');
+
+        return view('warga.show', compact('user'));
+    }
+
+    public function resetWargaPassword(User $user): RedirectResponse
+    {
+        $this->ensureAdminAccess();
+        $this->ensureWargaAccount($user);
+
+        $user->mobileTokens()->delete();
+        $user->update(['password' => 'password123']);
+
+        return redirect()->route('warga.index')->with('success', "Password {$user->nama_lengkap} berhasil direset ke password123.");
     }
 
     public function create()
@@ -133,9 +218,10 @@ class UserManagementController extends Controller
         throw new RuntimeException('Semua nomor seri ID akun sudah digunakan.');
     }
 
-    public function edit(User $user)
+    public function edit(User $user): View
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         return view('users.edit', compact('user'));
     }
@@ -143,6 +229,7 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -180,15 +267,17 @@ class UserManagementController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         $user->forceDelete();
 
         return redirect()->route('users.index')->with('success', 'Akun berhasil dihapus secara permanen.');
     }
 
-    public function show(User $user)
+    public function show(User $user): View
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         return view('users.show', compact('user'));
     }
@@ -227,5 +316,15 @@ class UserManagementController extends Controller
     private function ensureAdminAccess(): void
     {
         abort_unless(request()->user()?->isAdmin(), 403);
+    }
+
+    private function ensureWargaAccount(User $user): void
+    {
+        abort_unless($user->roles() === ['warga'], 404);
+    }
+
+    private function ensureStaffAccount(User $user): void
+    {
+        abort_unless($user->isAdmin() || $user->isSanitarian(), 404);
     }
 }
