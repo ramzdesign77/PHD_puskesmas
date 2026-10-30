@@ -15,7 +15,7 @@ use RuntimeException;
 
 class UserManagementController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $this->ensureAdminAccess();
 
@@ -36,11 +36,17 @@ class UserManagementController extends Controller
 
         if ($request->filled('role')) {
             $role = $request->query('role');
-            $query->where(function ($builder) use ($role) {
-                $builder->where('role', $role)
-                    ->orWhere('role', 'like', "{$role},%")
-                    ->orWhere('role', 'like', "%,$role")
-                    ->orWhere('role', 'like', "%,$role,%");
+            $matchingRoles = in_array($role, ['petugas', 'sanitarian'], true)
+                ? ['petugas', 'sanitarian'] : [$role];
+
+            $query->where(function (Builder $builder) use ($matchingRoles): void {
+                $builder->whereIn('role', $matchingRoles);
+
+                foreach ($matchingRoles as $matchingRole) {
+                    $builder->orWhere('role', 'like', "{$matchingRole},%")
+                        ->orWhere('role', 'like', "%,{$matchingRole}")
+                        ->orWhere('role', 'like', "%,{$matchingRole},%");
+                }
             });
         }
 
