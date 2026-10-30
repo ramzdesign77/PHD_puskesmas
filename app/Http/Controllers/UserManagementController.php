@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Desa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -130,35 +129,6 @@ class UserManagementController extends Controller
         return view('warga.show', compact('user'));
     }
 
-    public function editWarga(User $user): View
-    {
-        $this->ensureAdminAccess();
-        $this->ensureWargaAccount($user);
-        $desas = Desa::query()->orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
-
-        return view('warga.edit', compact('user', 'desas'));
-    }
-
-    public function updateWarga(Request $request, User $user): RedirectResponse
-    {
-        $this->ensureAdminAccess();
-        $this->ensureWargaAccount($user);
-
-        $data = $request->validate([
-            'nama_lengkap' => ['required', 'string', 'max:150'],
-            'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('app_users', 'username')->ignore($user->id_user, 'id_user')],
-            'email' => ['nullable', 'email', 'max:150', Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user')],
-            'no_telepon' => ['nullable', 'string', 'max:20', Rule::unique('app_users', 'no_telepon')->ignore($user->id_user, 'id_user')],
-            'alamat' => ['nullable', 'string', 'max:500'],
-            'id_desa' => ['nullable', 'integer', Rule::exists('ref_desa', 'id_desa')],
-            'is_active' => ['required', 'boolean'],
-        ]);
-
-        $user->update($data);
-
-        return redirect()->route('warga.index')->with('success', 'Data warga berhasil diperbarui.');
-    }
-
     public function resetWargaPassword(User $user): RedirectResponse
     {
         $this->ensureAdminAccess();
@@ -168,16 +138,6 @@ class UserManagementController extends Controller
         $user->update(['password' => 'password123']);
 
         return redirect()->route('warga.index')->with('success', "Password {$user->nama_lengkap} berhasil direset ke password123.");
-    }
-
-    public function destroyWarga(User $user): RedirectResponse
-    {
-        $this->ensureAdminAccess();
-        $this->ensureWargaAccount($user);
-
-        $user->forceDelete();
-
-        return redirect()->route('warga.index')->with('success', 'Akun warga berhasil dihapus secara permanen.');
     }
 
     public function create()
@@ -258,9 +218,10 @@ class UserManagementController extends Controller
         throw new RuntimeException('Semua nomor seri ID akun sudah digunakan.');
     }
 
-    public function edit(User $user)
+    public function edit(User $user): View
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         return view('users.edit', compact('user'));
     }
@@ -268,6 +229,7 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         $data = $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:150'],
@@ -305,15 +267,17 @@ class UserManagementController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         $user->forceDelete();
 
         return redirect()->route('users.index')->with('success', 'Akun berhasil dihapus secara permanen.');
     }
 
-    public function show(User $user)
+    public function show(User $user): View
     {
         $this->ensureAdminAccess();
+        $this->ensureStaffAccount($user);
 
         return view('users.show', compact('user'));
     }
@@ -357,5 +321,10 @@ class UserManagementController extends Controller
     private function ensureWargaAccount(User $user): void
     {
         abort_unless($user->roles() === ['warga'], 404);
+    }
+
+    private function ensureStaffAccount(User $user): void
+    {
+        abort_unless($user->isAdmin() || $user->isSanitarian(), 404);
     }
 }

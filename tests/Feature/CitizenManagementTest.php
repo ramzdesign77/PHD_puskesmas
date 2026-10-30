@@ -7,6 +7,7 @@ use App\Models\MobileAccessToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CitizenManagementTest extends TestCase
@@ -76,7 +77,7 @@ class CitizenManagementTest extends TestCase
             ->assertDontSee($activeWarga->username);
     }
 
-    public function test_admin_can_view_and_edit_citizen_details(): void
+    public function test_admin_can_view_citizen_details_without_edit_or_delete_actions(): void
     {
         $admin = $this->createUser('admin', 'admin');
         $warga = $this->createUser('warga', 'warga-detail', [
@@ -86,27 +87,28 @@ class CitizenManagementTest extends TestCase
 
         $indexResponse = $this->actingAs($admin)->get(route('warga.index'));
         $showResponse = $this->get(route('warga.show', $warga));
-        $editResponse = $this->get(route('warga.edit', $warga));
 
         $indexResponse->assertSee(route('warga.show', $warga), false)
-            ->assertSee(route('warga.edit', $warga), false)
             ->assertSee(route('warga.reset-password', $warga), false)
-            ->assertSee(route('warga.destroy', $warga), false);
+            ->assertDontSee('Edit akun warga')
+            ->assertDontSee('Hapus akun warga')
+            ->assertDontSee('name="_method" value="DELETE"', false)
+            ->assertDontSee('/warga/'.$warga->id_user.'/edit', false);
         $showResponse->assertOk()
             ->assertSee('Warga Detail')
-            ->assertSee('Jl. Sehat No. 1');
-        $editResponse->assertOk()
-            ->assertSee('Edit Akun Warga')
-            ->assertSee('warga-detail');
+            ->assertSee('Jl. Sehat No. 1')
+            ->assertDontSee('Ubah')
+            ->assertDontSee('/warga/'.$warga->id_user.'/edit', false);
     }
 
-    public function test_admin_can_update_citizen_profile_without_changing_its_role(): void
+    public function test_admin_cannot_update_a_citizen_profile_using_the_removed_endpoint(): void
     {
         $admin = $this->createUser('admin', 'admin');
         $desa = Desa::forceCreate(['nama_desa' => 'Ajung']);
         $warga = $this->createUser('warga', 'warga-lama');
+        $originalAttributes = $warga->fresh()->getAttributes();
 
-        $response = $this->actingAs($admin)->put(route('warga.update', $warga), [
+        $response = $this->actingAs($admin)->put('/warga/'.$warga->id_user, [
             'nama_lengkap' => 'Warga Baru',
             'username' => 'warga-baru',
             'email' => 'warga@example.test',
@@ -118,36 +120,18 @@ class CitizenManagementTest extends TestCase
             'roles' => ['admin'],
         ]);
 
-        $response->assertRedirect(route('warga.index'));
-        $this->assertDatabaseHas('app_users', [
-            'id_user' => $warga->id_user,
-            'nama_lengkap' => 'Warga Baru',
-            'username' => 'warga-baru',
-            'email' => 'warga@example.test',
-            'no_telepon' => '081234567890',
-            'alamat' => 'Jl. Sehat No. 2',
-            'id_desa' => $desa->id_desa,
-            'is_active' => false,
-            'role' => 'warga',
-        ]);
-        $this->assertSame(['warga'], $warga->fresh()->roles());
+        $response->assertMethodNotAllowed();
+        $this->assertSame($originalAttributes, $warga->fresh()->getAttributes());
     }
 
-    public function test_citizen_profile_update_rejects_an_existing_username(): void
+    public function test_removed_citizen_edit_page_returns_not_found(): void
     {
         $admin = $this->createUser('admin', 'admin');
-        $existingWarga = $this->createUser('warga', 'warga-sudah-ada');
-        $targetWarga = $this->createUser('warga', 'warga-lama');
+        $warga = $this->createUser('warga', 'warga-edit');
 
-        $response = $this->actingAs($admin)->put(route('warga.update', $targetWarga), [
-            'nama_lengkap' => 'Warga Baru',
-            'username' => $existingWarga->username,
-            'is_active' => true,
-        ]);
+        $response = $this->actingAs($admin)->get('/warga/'.$warga->id_user.'/edit');
 
-        $response->assertInvalid(['username']);
-        $this->assertSame('warga-lama', $targetWarga->fresh()->username);
-        $this->assertSame('Warga', $targetWarga->fresh()->nama_lengkap);
+        $response->assertNotFound();
     }
 
     public function test_admin_can_reset_a_citizen_password(): void
@@ -168,15 +152,85 @@ class CitizenManagementTest extends TestCase
         $this->assertDatabaseMissing('app_mobile_tokens', ['id' => $mobileToken->id]);
     }
 
-    public function test_admin_can_permanently_delete_a_citizen_account(): void
+    public function test_admin_cannot_delete_a_citizen_account_using_the_removed_endpoint(): void
     {
         $admin = $this->createUser('admin', 'admin');
         $warga = $this->createUser('warga', 'warga-hapus');
 
-        $response = $this->actingAs($admin)->delete(route('warga.destroy', $warga));
+        $response = $this->actingAs($admin)->delete('/warga/'.$warga->id_user);
 
-        $response->assertRedirect(route('warga.index'));
-        $this->assertDatabaseMissing('app_users', ['id_user' => $warga->id_user]);
+        $response->assertMethodNotAllowed();
+        $this->assertModelExists($warga);
+    }
+
+    public function test_citizen_details_and_edit_form_are_not_available_through_staff_management(): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+        $warga = $this->createUser('warga', 'warga-edit');
+
+        $showResponse = $this->actingAs($admin)->get(route('users.show', $warga));
+        $editResponse = $this->get(route('users.edit', $warga));
+
+        $showResponse->assertNotFound();
+        $editResponse->assertNotFound();
+    }
+
+    public function test_admin_cannot_update_a_citizen_account_through_staff_management(): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+        $warga = $this->createUser('warga', 'warga-lama');
+        $originalAttributes = $warga->fresh()->getAttributes();
+
+        $response = $this->actingAs($admin)->put(route('users.update', $warga), [
+            'nama_lengkap' => 'Warga Baru',
+            'username' => 'warga-baru',
+            'email' => 'warga@example.test',
+            'password' => null,
+            'no_telepon' => '081234567890',
+            'roles' => ['admin'],
+            'alamat' => 'Jl. Sehat No. 2',
+            'is_active' => false,
+        ]);
+
+        $response->assertNotFound();
+        $this->assertSame($originalAttributes, $warga->fresh()->getAttributes());
+    }
+
+    public function test_admin_cannot_delete_a_citizen_account_through_staff_management(): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+        $warga = $this->createUser('warga', 'warga-hapus');
+
+        $response = $this->actingAs($admin)->delete(route('users.destroy', $warga));
+
+        $response->assertNotFound();
+        $this->assertModelExists($warga);
+    }
+
+    #[DataProvider('staffRoles')]
+    public function test_admin_can_still_view_and_edit_staff_accounts(string $role): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+        $staffAccount = $this->createUser($role, $role.'-edit');
+
+        $showResponse = $this->actingAs($admin)->get(route('users.show', $staffAccount));
+        $editResponse = $this->get(route('users.edit', $staffAccount));
+
+        $showResponse->assertOk();
+        $editResponse->assertSee($staffAccount->username)
+            ->assertSee(route('users.update', $staffAccount), false);
+    }
+
+    #[DataProvider('staffRoles')]
+    public function test_admin_can_still_delete_a_staff_account(string $role): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+        $staffAccount = $this->createUser($role, $role.'-hapus');
+
+        $response = $this->actingAs($admin)->delete(route('users.destroy', $staffAccount));
+
+        $response->assertRedirect(route('users.index'));
+        $this->assertDatabaseMissing('app_users', ['id_user' => $staffAccount->id_user]);
     }
 
     public function test_citizen_actions_return_not_found_for_non_citizen_accounts(): void
@@ -187,15 +241,13 @@ class CitizenManagementTest extends TestCase
         $this->actingAs($admin);
 
         $this->get(route('warga.show', $petugas))->assertNotFound();
-        $this->get(route('warga.edit', $petugas))->assertNotFound();
-        $this->put(route('warga.update', $petugas), [])->assertNotFound();
         $this->post(route('warga.reset-password', $petugas))->assertNotFound();
-        $this->delete(route('warga.destroy', $petugas))->assertNotFound();
         $adminWithWargaRole = $this->createUser('admin', 'admin-warga', [
             'role' => 'admin,warga',
             'roles' => ['admin', 'warga'],
         ]);
-        $this->delete(route('warga.destroy', $adminWithWargaRole))->assertNotFound();
+        $this->get(route('warga.show', $adminWithWargaRole))->assertNotFound();
+        $this->post(route('warga.reset-password', $adminWithWargaRole))->assertNotFound();
         $this->assertModelExists($petugas);
         $this->assertModelExists($adminWithWargaRole);
     }
@@ -226,11 +278,22 @@ class CitizenManagementTest extends TestCase
     }
 
     /**
+     * @return array<string, array{string}>
+     */
+    public static function staffRoles(): array
+    {
+        return [
+            'admin' => ['admin'],
+            'petugas' => ['petugas'],
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     private function createUser(string $role, string $username, array $attributes = []): User
     {
-        return User::create([
+        return User::factory()->create([
             'nama_lengkap' => ucfirst($role),
             'username' => $username,
             'password' => 'secret123',

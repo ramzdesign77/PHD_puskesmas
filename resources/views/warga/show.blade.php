@@ -44,7 +44,6 @@
 
     <div class="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-5">
         <a href="{{ route('warga.index') }}" class="btn-secondary">Kembali</a>
-        <a href="{{ route('warga.edit', $user) }}" class="btn-primary"><i class="fas fa-pen"></i> Ubah</a>
     </div>
 </div>
 @endsection
