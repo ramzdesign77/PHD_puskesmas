@@ -67,6 +67,13 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/schedules/unavailable-dates', [ScheduleController::class, 'unavailableDates'])
             ->name('schedules.unavailable-dates');
 
+        Route::get('/warga', [UserManagementController::class, 'indexWarga'])->name('warga.index');
+        Route::get('/warga/{user}', [UserManagementController::class, 'showWarga'])->name('warga.show');
+        Route::get('/warga/{user}/edit', [UserManagementController::class, 'editWarga'])->name('warga.edit');
+        Route::put('/warga/{user}', [UserManagementController::class, 'updateWarga'])->name('warga.update');
+        Route::post('/warga/{user}/reset-password', [UserManagementController::class, 'resetWargaPassword'])
+            ->name('warga.reset-password');
+        Route::delete('/warga/{user}', [UserManagementController::class, 'destroyWarga'])->name('warga.destroy');
         Route::get('/users/export', [UserManagementController::class, 'export'])->name('users.export');
         Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
             ->name('users.reset-password');
