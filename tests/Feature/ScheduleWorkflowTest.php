@@ -102,6 +102,62 @@ class ScheduleWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_schedule_a_report_for_a_user_with_admin_and_petugas_roles(): void
+    {
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('admin,petugas');
+        $village = Desa::create([
+            'nama_desa' => 'Multi-role Test Village',
+        ]);
+        $report = LaporanWarga::create([
+            'kode_tiket' => 'IKL-20261029-0001',
+            'nama_pelapor' => 'Resident Test',
+            'id_desa' => $village->id_desa,
+            'rt' => '01',
+            'rw' => '02',
+            'kategori_laporan' => 'air_masalah',
+            'deskripsi' => 'Test report description.',
+            'status_laporan' => 'menunggu',
+        ]);
+        $date = Carbon::tomorrow()->toDateString();
+
+        $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('reports.index'))
+            ->assertSee($operator->nama_lengkap);
+
+        $response = $this->from(route('reports.index'))
+            ->post(route('reports.jadwalkan', $report->id_laporan), [
+                'id_operator' => $operator->id_user,
+                'tanggal_kunjungan' => $date,
+                'jam_mulai' => '09:30',
+                'jenis_kunjungan' => 'ikl_laporan_warga',
+            ]);
+
+        $response->assertRedirect(route('reports.index'));
+        $this->assertDatabaseHas('trx_laporan_warga', [
+            'id_laporan' => $report->id_laporan,
+            'status_laporan' => 'dijadwalkan',
+        ]);
+        $this->assertDatabaseHas('trx_jadwal_inspeksi', [
+            'id_laporan' => $report->id_laporan,
+            'id_operator' => $operator->id_user,
+            'tanggal_kunjungan' => $date.' 00:00:00',
+            'status_kunjungan' => 'terjadwal',
+        ]);
+    }
+
+    public function test_schedule_management_lists_users_with_admin_and_petugas_roles_as_officers(): void
+    {
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('admin,petugas');
+
+        $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('schedules.index'))
+            ->assertSee($operator->nama_lengkap);
+    }
+
     private function createUser(string $role): User
     {
         return User::create([

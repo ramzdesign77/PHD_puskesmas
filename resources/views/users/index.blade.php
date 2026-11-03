@@ -17,7 +17,7 @@
 
     <form method="GET" action="{{ route('users.index') }}" class="card flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
         <div class="relative flex-1"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i><input name="q" value="{{ request('q') }}" placeholder="Cari nama, ID petugas, atau username..." class="form-input pl-9"></div>
-        <select name="role" class="form-input lg:w-40"><option value="">Semua jenis akun</option><option value="sanitarian" @selected(request('role') === 'sanitarian')>Petugas</option><option value="admin" @selected(request('role') === 'admin')>Admin</option></select>
+        <select name="role" class="form-input lg:w-40"><option value="">Semua jenis akun</option><option value="petugas" @selected(in_array(request('role'), ['petugas', 'sanitarian'], true))>Petugas</option><option value="admin" @selected(request('role') === 'admin')>Admin</option></select>
         <select name="status" class="form-input lg:w-40"><option value="">Semua status</option><option value="active" @selected(request('status') === 'active')>Aktif</option><option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option></select>
         <select name="per_page" class="form-input lg:w-32"><option value="10" @selected(request('per_page', '10') === '10')>10 data</option><option value="25" @selected(request('per_page') === '25')>25 data</option><option value="50" @selected(request('per_page') === '50')>50 data</option></select>
         <button class="btn-primary justify-center" type="submit"><i class="fas fa-filter"></i> Terapkan</button>

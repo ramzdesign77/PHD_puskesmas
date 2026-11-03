@@ -1,59 +1,92 @@
- HEAD
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PHD_puskesmas
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi Klinik Sanitasi Puskesmas untuk pengelolaan laporan warga, jadwal
+kunjungan, inspeksi kesehatan lingkungan (IKL), dan layanan mobile petugas.
 
-## About Laravel
+## Integrasi inspeksi IKL pada aplikasi mobile
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Aturan risiko IKL dihitung di server berdasarkan lima jawaban checklist:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- `0` jawaban Ya: Aman
+- `1–2` jawaban Ya: Sedang
+- `3–5` jawaban Ya: Tinggi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Menyiapkan perubahan pada aplikasi yang sudah berjalan
 
-## Learning Laravel
+Pastikan migrasi inti sudah diterapkan dan tabel `app_users`, `app_mobile_tokens`,
+`trx_laporan_warga`, `trx_jadwal_inspeksi`, serta `trx_inspeksi_ikl` tersedia.
+Migrasi tambahan menyimpan catatan petugas dan foto bukti inspeksi.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```sh
+php artisan migrate --path=database/migrations/2026_11_02_230000_add_mobile_details_to_inspeksi_ikl_table.php
+php artisan optimize:clear
+php artisan route:list --path=api/v1/officer
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Hubungkan ponsel dan server pada jaringan lokal yang sama. Login petugas melalui
+`POST /api/auth/login`, lalu kirim token yang diterima sebagai
+`Authorization: Bearer {token}`. Endpoint inspeksi hanya menerima akun petugas
+aktif dan jadwal yang ditugaskan kepada petugas tersebut dengan status
+`terjadwal`.
 
-## Contributing
+### Mengirim hasil inspeksi
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Kirim `POST /api/v1/officer/inspections` dengan semua jawaban checklist:
 
-## Code of Conduct
+```json
+{
+  "id_jadwal": 123,
+  "jenis_sarana_air": "sumur_terlindung",
+  "jarak_sumber_pencemar": 12,
+  "tanggal_inspeksi": "2026-11-02",
+  "p1_dinding_sumur_retak": true,
+  "p2_penutup_tidak_rapat": false,
+  "p3_lantai_becek_retak": true,
+  "p4_spal_tersumbat": false,
+  "p5_air_keruh_berbau": false,
+  "rekomendasi_sanitarian": "Perbaiki lantai dan dinding sumur.",
+  "intervensi_fisik": "Tidak Ada",
+  "catatan_intervensi": "",
+  "catatan_petugas": ""
+}
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Jenis sarana yang diterima: `sumur_bor`, `sumur_terlindung`, `pdam`,
+`mata_air`, atau `lainnya`. Jarak sumber pencemar berupa integer 0–99999;
+rekomendasi 5–2000 karakter. Tanggal inspeksi tidak boleh melewati hari ini.
+Skor dan kategori selalu dihitung dari checklist oleh API, bukan dari nilai
+yang dikirim klien.
 
-## Security Vulnerabilities
+Foto bersifat opsional. Jika dikirim, gunakan `multipart/form-data` dengan nama
+field `foto_bukti`, nilai boolean `1` atau `0`, dan ukuran foto maksimum 5 MB.
+Foto disimpan di disk privat `local`. Catatan petugas, catatan intervensi, dan
+foto tidak ditampilkan pada endpoint pelacakan laporan publik.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Respons `201` berisi `data.id_inspeksi`, `id_jadwal`, `total_skor_ya`,
+`kategori_risiko`, `label_kategori_risiko`, `tanggal_inspeksi`,
+`rekomendasi_sanitarian`, `intervensi_fisik`, `status_kunjungan`, dan
+`status_laporan`. Status kunjungan menjadi `selesai`; `status_laporan` bernilai
+`null` untuk jadwal rutin yang tidak berasal dari laporan warga. Pengiriman
+ulang hasil untuk jadwal yang sama ditolak dengan HTTP `409`.
 
-## License
+### Melacak laporan dan mengambil jadwal petugas
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`GET /api/laporan/{kode_tiket}` menyertakan `data.hasil_inspeksi`: `null` bila
+jadwal terbaru belum memiliki hasil, atau ringkasan hasil inspeksi final.
+Catatan internal dan foto tidak disertakan. Hasil diambil dari jadwal terbaru
+agar jadwal pengganti tidak tertutup oleh jadwal lama yang batal.
+
+`GET /api/v1/officer/tasks` dan `GET /api/v1/officer/dashboard` menyertakan
+`id_jadwal` pada data jadwal sehingga aplikasi mobile dapat mengirim hasil ke
+jadwal yang benar. Pertahankan route dan implementasi yang sudah ada bila
+menggabungkan perubahan ini ke versi proyek yang lebih baru; jangan
+mendefinisikan route inspeksi yang sama dua kali.
+
+### Pemeriksaan
+
+Jalankan tes alur inspeksi dengan database pengujian:
+
+```sh
+php artisan test --filter=InspectionFlowTest
+```

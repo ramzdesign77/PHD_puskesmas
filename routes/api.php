@@ -3,11 +3,9 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\LaporanWargaApiController;
-use App\Http\Controllers\Api\InspectionController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\OfficerApiController;
 use App\Http\Controllers\Api\ReportController;
-use App\Http\Middleware\OfficerAuth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,14 +25,6 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('/logout', [MobileAuthController::class, 'logout'])->name('logout');
 });
 
-Route::prefix('v1/officer')
-    ->middleware(OfficerAuth::class)
-    ->name('api.v1.officer.')
-    ->group(function (): void {
-        Route::post('/inspections', [InspectionController::class, 'store'])
-            ->name('inspections.store');
-    });
-
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:10,1')
@@ -46,6 +36,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware('auth.mobile')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
+
+    Route::get('/laporan/track/{kode_tiket}', [LaporanWargaApiController::class, 'track'])
+        ->name('laporan.track');
 });
 
 $registerOfficerRoutes = static function (string $prefix, string $name): void {
@@ -76,7 +69,6 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // GET /api/laporan/{kode_tiket} — cek status laporan by kode tiket
     Route::get('/{kode_tiket}', [LaporanWargaApiController::class, 'statusByTiket'])->name('status');
 });
-
 
 // ── Referensi Data ────────────────────────────────────────────────────────
 // GET /api/desa — daftar desa untuk dropdown Flutter

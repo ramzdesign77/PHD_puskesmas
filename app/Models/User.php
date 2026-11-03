@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
+    private const SANITARIAN_ROLES = ['petugas', 'sanitarian', 'staf_backup_kluster4'];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
@@ -193,6 +196,19 @@ class User extends Authenticatable
         return in_array($role, $this->roles(), true);
     }
 
+    public function scopeSanitarian(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            foreach (self::SANITARIAN_ROLES as $role) {
+                $query->orWhereJsonContains('roles', $role)
+                    ->orWhere('role', $role)
+                    ->orWhere('role', 'like', $role.',%')
+                    ->orWhere('role', 'like', '%,'.$role.',%')
+                    ->orWhere('role', 'like', '%,'.$role);
+            }
+        });
+    }
+
     // ─── Relations ────────────────────────────────────────────────────────────
 
     /**
@@ -208,7 +224,7 @@ class User extends Authenticatable
     /** Apakah user berperan sebagai sanitarian / petugas lapangan. */
     public function isSanitarian(): bool
     {
-        return collect($this->roles())->intersect(['petugas', 'sanitarian', 'staf_backup_kluster4'])->isNotEmpty();
+        return collect($this->roles())->intersect(self::SANITARIAN_ROLES)->isNotEmpty();
     }
 
     /** Apakah user berperan sebagai admin atau kepala puskesmas. */

@@ -18,6 +18,7 @@ class LaporanWarga extends Model
 
     protected $fillable = [
         'kode_tiket',
+        'id_user',
         'nama_pelapor',
         'nik_pelapor',
         'no_wa',
@@ -27,6 +28,8 @@ class LaporanWarga extends Model
         'kategori_laporan',
         'deskripsi',
         'foto_bukti',
+        'alamat_detail',
+        'patokan_alamat',
         'status_laporan',
         'alasan_penolakan',
         'latitude',
@@ -46,6 +49,11 @@ class LaporanWarga extends Model
     public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');
+    }
+
+    public function pelapor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_user', 'id');
     }
 
     /**
@@ -100,5 +108,18 @@ class LaporanWarga extends Model
         $suffix = strtoupper(substr(uniqid(), -4));
 
         return $prefix.$suffix;
+    }
+
+    public function getKategoriLabelAttribute(): string
+    {
+        return match ($this->kategori_laporan) {
+            'air_sumur_keruh_berbau' => 'Air Sumur Keruh / Berbau',
+            'sarang_nyamuk_dbd' => 'Sarang Nyamuk / Indikasi DBD',
+            'jamban_limbah_stbm' => 'Masalah Jamban & Limbah STBM',
+            'tumpukan_sampah' => 'Tumpukan Sampah',
+            'air_masalah' => 'Masalah Air',
+            'sanitasi_lingkungan' => 'Sanitasi Lingkungan',
+            default => (string) $this->kategori_laporan,
+        };
     }
 }

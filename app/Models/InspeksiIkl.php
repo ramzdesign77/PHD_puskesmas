@@ -28,7 +28,9 @@ class InspeksiIkl extends Model
         'tanggal_inspeksi',
         'intervensi_fisik',
         'catatan_intervensi',
+        'catatan_petugas',
         'foto_inspeksi',
+        'foto_bukti',
         'created_at',
         'updated_at',
     ];
@@ -67,8 +69,8 @@ class InspeksiIkl extends Model
     public static function hitungKategoriRisiko(int $totalSkorYa): string
     {
         return match (true) {
-            $totalSkorYa <= 1 => 'aman',
-            $totalSkorYa <= 3 => 'risiko_sedang',
+            $totalSkorYa <= 0 => 'aman',
+            $totalSkorYa <= 2 => 'risiko_sedang',
             default => 'risiko_tinggi',
         };
     }

@@ -82,20 +82,10 @@
                                     <a href="{{ route('warga.show', $warga) }}" class="btn-secondary btn-sm" title="Lihat" aria-label="Lihat akun warga">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('warga.edit', $warga) }}" class="btn-secondary btn-sm" title="Edit" aria-label="Edit akun warga">
-                                        <i class="fas fa-pen"></i>
-                                    </a>
                                     <form action="{{ route('warga.reset-password', $warga) }}" method="POST" onsubmit="return confirm('Reset password warga ini menjadi password123?')">
                                         @csrf
                                         <button class="btn-secondary btn-sm text-amber-600" type="submit" title="Reset Password" aria-label="Reset password warga">
                                             <i class="fas fa-key"></i>
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('warga.destroy', $warga) }}" method="POST" onsubmit="return confirm('Hapus akun warga ini secara permanen?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn-secondary btn-sm text-red-600" type="submit" title="Hapus" aria-label="Hapus akun warga">
-                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
                                 </div>

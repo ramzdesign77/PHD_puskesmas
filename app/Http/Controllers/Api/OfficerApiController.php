@@ -66,17 +66,11 @@ class OfficerApiController extends Controller
             ])
             ->map(fn (JadwalInspeksi $schedule): array => $this->scheduleTask($schedule));
 
-        $recentTasks = $recentReports
-            ->concat($todaySchedules)
-            ->sortByDesc('_sort_at')
-            ->take(10)
-            ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
-            ->values();
-
         $assignedSchedules = JadwalInspeksi::query()->whereIn('id_operator', $operatorIds);
 
         return response()->json([
             'success' => true,
+            'message' => 'Ringkasan dashboard petugas berhasil diambil.',
             'data' => [
                 'officer' => $this->officerData($officer),
                 'summary' => [
@@ -93,7 +87,14 @@ class OfficerApiController extends Controller
                         ->where('status_kunjungan', 'selesai')
                         ->count(),
                 ],
-                'recent_tasks' => $recentTasks,
+                'recent_tasks' => [
+                    'laporan_menunggu' => $recentReports
+                        ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                        ->values(),
+                    'jadwal_hari_ini' => $todaySchedules
+                        ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                        ->values(),
+                ],
             ],
         ]);
     }
@@ -170,6 +171,32 @@ class OfficerApiController extends Controller
             ));
         }
 
+        if ($filter === 'selesai') {
+            $completedReports = LaporanWarga::query()
+                ->with('desa:id_desa,nama_desa')
+                ->where('status_laporan', 'selesai')
+                ->when($search !== '', fn (Builder $query) => $this->searchReports($query, $search))
+                ->latest('created_at')
+                ->limit(101)
+                ->get([
+                    'id_laporan',
+                    'kode_tiket',
+                    'kategori_laporan',
+                    'nama_pelapor',
+                    'id_desa',
+                    'rt',
+                    'rw',
+                    'deskripsi',
+                    'foto_bukti',
+                    'created_at',
+                ]);
+
+            $hasMore = $hasMore || $completedReports->count() > 100;
+            $tasks = $tasks->concat($completedReports->take(100)->map(
+                fn (LaporanWarga $report): array => $this->reportTask($report),
+            ));
+        }
+
         $hasMore = $hasMore || $tasks->count() > 100;
         $tasks = $tasks
             ->sortByDesc('_sort_at')
@@ -179,6 +206,7 @@ class OfficerApiController extends Controller
 
         return response()->json([
             'success' => true,
+            'message' => 'Daftar tugas petugas berhasil diambil.',
             'data' => $tasks,
             'meta' => [
                 'filter' => $filter,
@@ -276,6 +304,24 @@ class OfficerApiController extends Controller
     public function storeInspection(Request $request): JsonResponse
     {
         $officer = $this->authorizeOfficer($request);
+
+        $parameterAliases = [
+            'p1_dinding_sumur_retak' => ['p1', 'p1_dinding_sumur_retak'],
+            'p2_penutup_tidak_rapat' => ['p2', 'p2_lantai_sumur_retak', 'p2_penutup_tidak_rapat'],
+            'p3_lantai_becek_retak' => ['p3', 'p3_bibir_sumur_tidak_ada', 'p3_lantai_becek_retak'],
+            'p4_spal_tersumbat' => ['p4', 'p4_saluran_pembuangan_rusak', 'p4_spal_tersumbat'],
+            'p5_air_keruh_berbau' => ['p5', 'p5_air_keruh_berbau'],
+        ];
+
+        foreach ($parameterAliases as $canonicalName => $aliases) {
+            foreach ($aliases as $alias) {
+                if ($request->exists($alias)) {
+                    $request->merge([$canonicalName => $request->input($alias)]);
+                    break;
+                }
+            }
+        }
+
         $validated = $request->validate([
             'id_jadwal' => [
                 'required',
@@ -286,51 +332,66 @@ class OfficerApiController extends Controller
             'jenis_sarana_air' => ['required', Rule::in(['sumur_bor', 'sumur_terlindung', 'pdam', 'mata_air', 'lainnya'])],
             'jarak_sumber_pencemar' => ['required', 'integer', 'min:0', 'max:99999'],
             'p1_dinding_sumur_retak' => ['required', 'boolean'],
-            'p2_lantai_sumur_retak' => ['required', 'boolean'],
-            'p3_bibir_sumur_tidak_ada' => ['required', 'boolean'],
-            'p4_saluran_pembuangan_rusak' => ['required', 'boolean'],
+            'p2_penutup_tidak_rapat' => ['required', 'boolean'],
+            'p3_lantai_becek_retak' => ['required', 'boolean'],
+            'p4_spal_tersumbat' => ['required', 'boolean'],
             'p5_air_keruh_berbau' => ['required', 'boolean'],
             'rekomendasi_sanitarian' => ['required', 'string', 'min:5', 'max:2000'],
             'intervensi_fisik' => ['nullable', 'string', 'max:150'],
             'catatan_intervensi' => ['nullable', 'string', 'max:10000'],
+            'catatan_petugas' => ['nullable', 'string', 'max:10000'],
+            'foto_bukti' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_inspeksi' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $schedule = JadwalInspeksi::query()
-            ->with('laporan')
-            ->whereIn('id_operator', $this->operatorIds($officer))
-            ->where('status_kunjungan', 'terjadwal')
-            ->findOrFail($validated['id_jadwal']);
-
         $checklist = [
             'p1_dinding_sumur_retak',
-            'p2_lantai_sumur_retak',
-            'p3_bibir_sumur_tidak_ada',
-            'p4_saluran_pembuangan_rusak',
+            'p2_penutup_tidak_rapat',
+            'p3_lantai_becek_retak',
+            'p4_spal_tersumbat',
             'p5_air_keruh_berbau',
         ];
         $totalSkorYa = collect($checklist)
             ->filter(fn (string $field): bool => (bool) $validated[$field])
             ->count();
         $kategoriRisiko = InspeksiIkl::hitungKategoriRisiko($totalSkorYa);
-        $fotoPath = $request->file('foto_inspeksi')?->store('inspeksi-ikl', 'public');
+        $fotoBukti = $request->file('foto_bukti');
+        $fotoDisk = $fotoBukti !== null ? 'local' : 'public';
+        $fotoPath = $fotoBukti !== null
+            ? $fotoBukti->store('inspeksi-ikl', $fotoDisk)
+            : $request->file('foto_inspeksi')?->store('inspeksi-ikl', $fotoDisk);
 
         try {
-            $inspection = DB::transaction(function () use (
-                $schedule,
+            $result = DB::transaction(function () use (
                 $validated,
                 $totalSkorYa,
                 $kategoriRisiko,
                 $fotoPath,
-            ): InspeksiIkl {
+                $officer,
+            ): array {
+                $schedule = JadwalInspeksi::query()
+                    ->with('laporan')
+                    ->whereKey($validated['id_jadwal'])
+                    ->whereIn('id_operator', $this->operatorIds($officer))
+                    ->where('status_kunjungan', 'terjadwal')
+                    ->lockForUpdate()
+                    ->first();
+
+                abort_if($schedule === null, 404, 'Jadwal inspeksi tidak ditemukan atau tidak ditugaskan kepada akun Anda.');
+                abort_if(
+                    InspeksiIkl::query()->where('id_jadwal', $schedule->id_jadwal)->exists(),
+                    409,
+                    'Hasil inspeksi untuk jadwal ini sudah pernah dikirim.',
+                );
+
                 $inspection = InspeksiIkl::query()->create([
                     'id_jadwal' => $schedule->id_jadwal,
                     'jenis_sarana_air' => $validated['jenis_sarana_air'],
                     'jarak_sumber_pencemar' => $validated['jarak_sumber_pencemar'],
                     'p1_dinding_sumur_retak' => (bool) $validated['p1_dinding_sumur_retak'],
-                    'p2_penutup_tidak_rapat' => (bool) $validated['p3_bibir_sumur_tidak_ada'],
-                    'p3_lantai_becek_retak' => (bool) $validated['p2_lantai_sumur_retak'],
-                    'p4_spal_tersumbat' => (bool) $validated['p4_saluran_pembuangan_rusak'],
+                    'p2_penutup_tidak_rapat' => (bool) $validated['p2_penutup_tidak_rapat'],
+                    'p3_lantai_becek_retak' => (bool) $validated['p3_lantai_becek_retak'],
+                    'p4_spal_tersumbat' => (bool) $validated['p4_spal_tersumbat'],
                     'p5_air_keruh_berbau' => (bool) $validated['p5_air_keruh_berbau'],
                     'total_skor_ya' => $totalSkorYa,
                     'kategori_risiko' => $kategoriRisiko,
@@ -338,17 +399,22 @@ class OfficerApiController extends Controller
                     'tanggal_inspeksi' => now()->toDateString(),
                     'intervensi_fisik' => $validated['intervensi_fisik'] ?? null,
                     'catatan_intervensi' => $validated['catatan_intervensi'] ?? null,
+                    'catatan_petugas' => $validated['catatan_petugas'] ?? null,
                     'foto_inspeksi' => $fotoPath,
+                    'foto_bukti' => $fotoPath,
                 ]);
 
                 $schedule->update(['status_kunjungan' => 'selesai']);
                 $schedule->laporan?->update(['status_laporan' => 'selesai']);
 
-                return $inspection;
+                return [
+                    'inspection' => $inspection,
+                    'schedule' => $schedule->fresh(),
+                ];
             });
         } catch (Throwable $exception) {
             if ($fotoPath !== null) {
-                Storage::disk('public')->delete($fotoPath);
+                Storage::disk($fotoDisk)->delete($fotoPath);
             }
 
             throw $exception;
@@ -358,13 +424,13 @@ class OfficerApiController extends Controller
             'success' => true,
             'message' => 'Hasil inspeksi IKL berhasil disimpan.',
             'data' => [
-                'id_inspeksi' => $inspection->id_inspeksi,
-                'id_jadwal' => $inspection->id_jadwal,
-                'total_skor_ya' => $inspection->total_skor_ya,
-                'kategori_risiko' => $inspection->kategori_risiko,
-                'foto_inspeksi' => $inspection->foto_inspeksi,
-                'status_kunjungan' => $schedule->fresh()->status_kunjungan,
-                'status_laporan' => $schedule->laporan?->fresh()->status_laporan,
+                'id_inspeksi' => $result['inspection']->id_inspeksi,
+                'id_jadwal' => $result['inspection']->id_jadwal,
+                'total_skor_ya' => $result['inspection']->total_skor_ya,
+                'kategori_risiko' => $result['inspection']->kategori_risiko,
+                'foto_inspeksi' => $result['inspection']->foto_inspeksi,
+                'status_kunjungan' => $result['schedule']->status_kunjungan,
+                'status_laporan' => $result['schedule']->laporan?->fresh()->status_laporan,
             ],
         ], 201);
     }

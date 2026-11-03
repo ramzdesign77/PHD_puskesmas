@@ -77,6 +77,7 @@ class OfficerApiControllerTest extends TestCase
             ])
             ->assertJsonFragment([
                 'type' => 'jadwal_ikl',
+                'id_jadwal' => $schedule->id_jadwal,
                 'nama_pelapor' => 'Resident '.$scheduledReport->kode_tiket,
                 'nama_desa' => 'Sumbersari',
                 'paket_alat' => 'Paket Inspeksi Air',
@@ -197,7 +198,7 @@ class OfficerApiControllerTest extends TestCase
         string $riskCategory,
     ): void {
         $this->travelTo(now()->startOfDay());
-        Storage::fake('public');
+        Storage::fake('local');
         $officer = $this->createUser('petugas');
         $token = $this->createToken($officer);
         $village = Desa::query()->create(['nama_desa' => 'Tegal Gede']);
@@ -205,19 +206,20 @@ class OfficerApiControllerTest extends TestCase
         $schedule = $this->createSchedule($officer, $report, 'terjadwal', now()->toDateString());
         $answers = [
             'p1_dinding_sumur_retak',
-            'p2_lantai_sumur_retak',
-            'p3_bibir_sumur_tidak_ada',
-            'p4_saluran_pembuangan_rusak',
+            'p2_penutup_tidak_rapat',
+            'p3_lantai_becek_retak',
+            'p4_spal_tersumbat',
             'p5_air_keruh_berbau',
         ];
         $payload = [
             'id_jadwal' => $schedule->id_jadwal,
             'jenis_sarana_air' => 'sumur_bor',
             'jarak_sumber_pencemar' => 10,
+            'tanggal_inspeksi' => now()->toDateString(),
             'rekomendasi_sanitarian' => 'Bersihkan dan rawat sarana air secara berkala.',
             'intervensi_fisik' => 'Pemberian Kaporit',
             'catatan_intervensi' => 'Dosis sesuai standar setempat.',
-            'foto_inspeksi' => UploadedFile::fake()->image('inspeksi.jpg'),
+            'foto_bukti' => UploadedFile::fake()->image('inspeksi.jpg'),
         ];
 
         foreach ($answers as $position => $answer) {
@@ -225,7 +227,7 @@ class OfficerApiControllerTest extends TestCase
         }
 
         $response = $this->withToken($token)
-            ->postJson('/api/v1/officer/inspections', $payload);
+            ->post('/api/v1/officer/inspections', $payload, ['Accept' => 'application/json']);
 
         $response->assertCreated()
             ->assertJsonPath('data.total_skor_ya', $score)
@@ -237,8 +239,8 @@ class OfficerApiControllerTest extends TestCase
         $this->assertSame($score, $inspection->total_skor_ya);
         $this->assertSame($riskCategory, $inspection->kategori_risiko);
         $this->assertSame('Pemberian Kaporit', $inspection->intervensi_fisik);
-        $this->assertNotNull($inspection->foto_inspeksi);
-        Storage::disk('public')->assertExists($inspection->foto_inspeksi);
+        $this->assertNotNull($inspection->foto_bukti);
+        Storage::disk('local')->assertExists($inspection->foto_bukti);
         $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'status_kunjungan' => 'selesai',
@@ -253,9 +255,9 @@ class OfficerApiControllerTest extends TestCase
     {
         return [
             'zero risks' => [0, 'aman'],
-            'one risk' => [1, 'aman'],
+            'one risk' => [1, 'risiko_sedang'],
             'two risks' => [2, 'risiko_sedang'],
-            'three risks' => [3, 'risiko_sedang'],
+            'three risks' => [3, 'risiko_tinggi'],
             'four risks' => [4, 'risiko_tinggi'],
             'five risks' => [5, 'risiko_tinggi'],
         ];
@@ -275,10 +277,11 @@ class OfficerApiControllerTest extends TestCase
                 'id_jadwal' => $schedule->id_jadwal,
                 'jenis_sarana_air' => 'sumur_bor',
                 'jarak_sumber_pencemar' => 10,
+                'tanggal_inspeksi' => now()->toDateString(),
                 'p1_dinding_sumur_retak' => false,
-                'p2_lantai_sumur_retak' => false,
-                'p3_bibir_sumur_tidak_ada' => false,
-                'p4_saluran_pembuangan_rusak' => false,
+                'p2_penutup_tidak_rapat' => false,
+                'p3_lantai_becek_retak' => false,
+                'p4_spal_tersumbat' => false,
                 'p5_air_keruh_berbau' => false,
                 'rekomendasi_sanitarian' => 'Periksa kondisi sarana air secara berkala.',
             ])
@@ -300,7 +303,7 @@ class OfficerApiControllerTest extends TestCase
             'id_jadwal' => $schedule->id_jadwal,
             'jenis_sarana_air' => 'sumur_bor',
             'jarak_sumber_pencemar' => 5,
-            'total_skor_ya' => 1,
+            'total_skor_ya' => 0,
             'kategori_risiko' => 'aman',
             'rekomendasi_sanitarian' => 'Pertahankan kebersihan sarana air.',
             'tanggal_inspeksi' => now()->toDateString(),
