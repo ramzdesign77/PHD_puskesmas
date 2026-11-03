@@ -14,13 +14,13 @@
     </div>
 
     <form method="GET" action="{{ route('warga.index') }}" class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-        <div class="relative flex-1">
+        <div class="relative flex-1 min-w-[280px]">
             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
             <input
                 name="q"
                 value="{{ request('q') }}"
                 placeholder="Cari nama, username, kontak, atau desa..."
-                class="form-input pl-9"
+                class="form-input w-full pl-9"
                 aria-label="Cari akun warga"
             >
         </div>
