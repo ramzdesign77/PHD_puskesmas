@@ -19,13 +19,16 @@ class MobileAuthController extends Controller
             'nama_lengkap' => ['required', 'string', 'max:30'],
             'username' => ['required', 'string', 'min:3', 'max:25', 'alpha_dash', Rule::unique('app_users', 'username')->whereNull('deleted_at')],
             'email' => ['required', 'email', 'max:30', Rule::unique('app_users', 'email')->whereNull('deleted_at')],
+            'no_telepon' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create([
             'nama_lengkap' => trim($validated['nama_lengkap']),
+            'name' => trim($validated['username']),
             'username' => trim($validated['username']),
             'email' => strtolower(trim($validated['email'])),
+            'no_telepon' => trim($validated['no_telepon']),
             'password' => $validated['password'],
             // Registrasi publik hanya dapat membuat akun warga, bukan admin/petugas.
             'role' => 'warga',
@@ -89,6 +92,7 @@ class MobileAuthController extends Controller
                 'nama_lengkap' => $user->nama_lengkap,
                 'username' => $user->username,
                 'email' => $user->email,
+                'no_telepon' => $user->no_telepon,
                 'role' => $user->role,
                 'jabatan' => $isOfficer
                     ? ($user->petugasProfile?->jabatan ?: 'Petugas Kesling')

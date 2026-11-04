@@ -16,6 +16,27 @@ class MobileApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_mobile_registration_saves_and_returns_phone_number(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'nama_lengkap' => 'Warga Contoh',
+            'username' => 'warga-contoh',
+            'email' => 'warga-contoh@example.test',
+            'no_telepon' => '081234567890',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('user.no_telepon', '081234567890');
+
+        $this->assertDatabaseHas('app_users', [
+            'username' => 'warga-contoh',
+            'name' => 'warga-contoh',
+            'no_telepon' => '081234567890',
+        ]);
+    }
+
     public function test_public_education_and_village_endpoints_return_mobile_data(): void
     {
         Education::query()->create([

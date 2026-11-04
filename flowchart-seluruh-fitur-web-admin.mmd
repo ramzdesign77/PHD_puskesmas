@@ -1,0 +1,304 @@
+flowchart TD
+    mulai([Mulai]) --> halamanLogin
+
+    subgraph AUTH["Autentikasi & Akses Portal"]
+        halamanLogin[Halaman Login Admin / Petugas<br/>Username atau email dan kata sandi]
+        isiKredensial[Admin / petugas mengisi kredensial]
+        kredensialValid{Kredensial valid?}
+        loginGagal[Tampilkan pesan kesalahan login]
+        akunAktif{Akun aktif?}
+        akunNonaktif[Tolak akses dan tampilkan pesan<br/>akun nonaktif]
+        buatSesi[Buat sesi login dan petakan peran]
+        peranPengguna{Peran pengguna?}
+        dashboardAdmin[Akses sebagai Admin]
+        dashboardPetugas[Akses sebagai Petugas Kesling]
+        logout[Logout]
+        hapusSesi[Hapus sesi dan token CSRF]
+
+        halamanLogin --> isiKredensial --> kredensialValid
+        kredensialValid -->|Tidak| loginGagal --> halamanLogin
+        kredensialValid -->|Ya| akunAktif
+        akunAktif -->|Tidak| akunNonaktif --> halamanLogin
+        akunAktif -->|Ya| buatSesi --> peranPengguna
+        peranPengguna -->|Admin / Kepala Puskesmas| dashboardAdmin
+        peranPengguna -->|Petugas / Sanitarian| dashboardPetugas
+        logout --> hapusSesi
+    end
+
+    dashboardAdmin --> muatDashboard
+    dashboardPetugas --> muatDashboard
+
+    subgraph DASH["Dashboard Utama"]
+        muatDashboard[Memuat ringkasan saat halaman dibuka]
+        bacaDashboard[Baca statistik dari database]
+        tampilDashboard[Tampilkan statistik sesuai peran:<br/>Admin: total laporan, menunggu, selesai,<br/>petugas aktif; Petugas: jadwal aktif;<br/>serta 5 aktivitas laporan terbaru]
+        catatanArtikel[Nilai artikel = 0 belum dihitung;<br/>bukan kartu statistik Admin saat ini]
+
+        muatDashboard --> bacaDashboard -->|Baca| dbDashboard[(Database MySQL)]
+        dbDashboard -->|Statistik terkini| tampilDashboard --> catatanArtikel
+    end
+
+    catatanArtikel --> menuDashboard
+    menuDashboard{Pilih menu sesuai peran sesi}
+    menuAdmin{Pilih menu / aksi Admin}
+    menuPetugas{Pilih menu Petugas}
+
+    subgraph LAPORAN["Rekap Laporan Pengaduan Sanitasi Warga"]
+        bukaLaporan[Buka Rekap Laporan dan Analitik]
+        muatLaporan[Muat laporan masuk, rekap hasil IKL,<br/>dan ringkasan status]
+        filterLaporan[Filter status / desa;<br/>pagination daftar dan rekap]
+        tampilLaporan[Tampilkan kode tiket, pelapor,<br/>lokasi, status dan jadwal]
+        aksiLaporan{Pilih aksi laporan}
+        detailLaporan[Lihat detail, deskripsi,<br/>data pelapor dan foto bukti jika tersedia]
+        statusDibaca{Status masih Menunggu?}
+        tandaiDibaca[Ubah status menjadi Dibaca]
+        keputusanLaporan{Tentukan tindak lanjut}
+
+        alasanTolak[Isi alasan penolakan]
+        validasiTolak{Alasan terisi<br/>minimal 5 karakter?}
+        errorTolak[Tampilkan kesalahan validasi]
+        simpanTolak[Ubah status menjadi Ditolak<br/>dan simpan alasan]
+        suksesTolak[Tampilkan pesan sukses admin]
+
+        isiJadwal[Isi penugasan:<br/>petugas, tanggal, jam dan jenis kunjungan]
+        validasiJadwal{Laporan masih dapat dijadwalkan,<br/>petugas dan jadwal valid,<br/>tanggal tidak di masa lalu?}
+        errorJadwal[Tampilkan kesalahan validasi]
+        konflikJadwal{Petugas sudah dijadwalkan<br/>pada waktu tersebut?}
+        errorKonflik[Tampilkan konflik jadwal]
+        simpanJadwalLaporan[Simpan jadwal dan ubah status laporan<br/>menjadi Dijadwalkan]
+        suksesJadwalLaporan[Tampilkan pesan jadwal berhasil dibuat]
+
+        terimaForm[Jalur detail alternatif:<br/>pilih petugas, paket alat,<br/>tanggal dan jenis kunjungan]
+        validasiTerima{Data penerimaan dan jadwal valid?}
+        simpanTerima[Ubah status menjadi Diterima<br/>dan buat jadwal kunjungan]
+        errorTerima[Tampilkan kesalahan validasi]
+
+        rekapIKL[Tab Rekap IKL:<br/>filter risiko / petugas / rentang tanggal,<br/>pagination dan ekspor CSV]
+        analitik[Tampilkan ringkasan laporan<br/>dan distribusi kategori risiko IKL]
+        selesaiLaporan[Kembali dari proses laporan]
+
+        bukaLaporan --> muatLaporan --> filterLaporan
+        filterLaporan -->|Baca laporan dan hasil IKL| dbLaporan[(Database MySQL)]
+        dbLaporan --> tampilLaporan --> aksiLaporan
+        aksiLaporan -->|Tinjau detail| detailLaporan --> statusDibaca
+        statusDibaca -->|Ya| tandaiDibaca -->|Perbarui status| dbLaporan
+        dbLaporan --> keputusanLaporan
+        statusDibaca -->|Tidak| keputusanLaporan
+
+        aksiLaporan -->|Buka tab rekap IKL| rekapIKL
+        rekapIKL -->|Baca hasil inspeksi| dbLaporan
+        rekapIKL --> analitik
+        analitik -->|Baca ringkasan| dbLaporan
+        analitik --> selesaiLaporan
+
+        keputusanLaporan -->|Tolak| alasanTolak --> validasiTolak
+        validasiTolak -->|Tidak| errorTolak --> alasanTolak
+        validasiTolak -->|Valid| simpanTolak -->|Simpan status dan alasan| dbLaporan
+        dbLaporan --> suksesTolak --> selesaiLaporan
+
+        keputusanLaporan -->|Jadwalkan langsung dari daftar| isiJadwal
+        isiJadwal --> validasiJadwal
+        validasiJadwal -->|Tidak valid| errorJadwal --> isiJadwal
+        validasiJadwal -->|Valid| konflikJadwal
+        konflikJadwal -->|Ya| errorKonflik --> isiJadwal
+        konflikJadwal -->|Tidak| simpanJadwalLaporan -->|Simpan jadwal dan status| dbLaporan
+        dbLaporan --> suksesJadwalLaporan --> selesaiLaporan
+
+        keputusanLaporan -->|Terima dari halaman detail alternatif| terimaForm --> validasiTerima
+        validasiTerima -->|Tidak valid| errorTerima --> terimaForm
+        validasiTerima -->|Valid| simpanTerima -->|Simpan status dan jadwal| dbLaporan
+        dbLaporan --> suksesJadwalLaporan
+        selesaiLaporan --> menuAdmin
+    end
+
+    menuAdmin -->|Laporan / Analitik| bukaLaporan
+
+    subgraph IKL["Kelola Jadwal & Inspeksi Kesehatan Lingkungan (IKL)"]
+        bukaJadwal[Buka Kelola Jadwal]
+        muatJadwal[Muat daftar jadwal, ringkasan status,<br/>filter tanggal / status, pagination]
+        daftarJadwal[Tampilkan jadwal, laporan terkait,<br/>petugas, status dan hasil IKL]
+        aksiJadwal{Pilih aksi jadwal}
+
+        tambahJadwal[Tambah jadwal IKL rutin:<br/>petugas, tanggal, jam dan jenis kunjungan]
+        validasiJadwalRutin{Input jadwal valid?}
+        konflikJadwalRutin{Petugas sudah memiliki<br/>jadwal pada waktu tersebut?}
+        errorJadwalRutin[Tampilkan kesalahan validasi<br/>atau konflik jadwal]
+        simpanJadwalRutin[Simpan jadwal rutin<br/>tanpa laporan warga]
+
+        ubahJadwalAktif[Ubah petugas / tanggal / jam<br/>pada jadwal aktif]
+        validasiUbahJadwal{Penugasan dan tanggal valid?}
+        konflikUbahJadwal{Jadwal petugas bentrok?}
+        errorUbahJadwal[Tampilkan kesalahan validasi<br/>atau konflik jadwal]
+        simpanUbahJadwal[Simpan perubahan jadwal aktif]
+        ubahRiwayatJadwal[Perbarui petugas, tanggal atau jam<br/>pada riwayat Selesai / Batal]
+        validasiRiwayat{Data riwayat valid?}
+        errorRiwayat[Tampilkan kesalahan validasi riwayat]
+        simpanRiwayat[Simpan perubahan riwayat]
+
+        batalJadwal[Batalkan jadwal aktif]
+        terkaitLaporan{Jadwal terkait laporan warga?}
+        statusJadwalBatal[Ubah status jadwal menjadi Batal]
+        statusLaporanMenunggu[Kembalikan status laporan<br/>ke Menunggu]
+        hapusJadwalBatal[Hapus hanya jadwal Batal<br/>yang belum memiliki hasil IKL]
+
+        pilihJadwalInspeksi[Pilih jadwal aktif yang ditugaskan]
+        aksesInspeksi{Jadwal aktif dan<br/>pengguna berwenang?}
+        isiFormIKL[Isi form IKL:<br/>jenis sarana air, jarak sumber pencemar,<br/>5 parameter Ya / Tidak,<br/>tanggal inspeksi dan rekomendasi]
+        validasiIKL{Data form valid<br/>dan hasil belum pernah diinput?}
+        errorValidasiIKL[Tampilkan kesalahan validasi<br/>dan minta perbaikan input]
+        hitungSkor[Hitung jumlah jawaban Ya<br/>dari 5 parameter risiko]
+        kategoriRisiko{Tentukan kategori risiko}
+        risikoAman[Skor 0: Aman]
+        risikoSedang[Skor 1–2: Risiko Sedang]
+        risikoTinggi[Skor 3–5: Risiko Tinggi]
+        simpanHasilIKL[Simpan jawaban, skor,<br/>kategori risiko dan rekomendasi]
+        tutupJadwal[Ubah status jadwal menjadi Selesai;<br/>laporan terkait menjadi Selesai]
+        suksesIKL[Tampilkan hasil inspeksi tersimpan]
+
+        rekapHasilIKL[Admin melihat rekap hasil:<br/>filter risiko / petugas,<br/>statistik dan pagination]
+        detailHasilIKL[Lihat detail hasil inspeksi]
+        selesaiIKL[Kembali dari proses IKL]
+
+        bukaJadwal --> muatJadwal -->|Baca jadwal| dbIKL[(Database MySQL)]
+        dbIKL -->|Jadwal dan hasil inspeksi| daftarJadwal --> aksiJadwal
+
+        aksiJadwal -->|Tambah jadwal rutin| tambahJadwal --> validasiJadwalRutin
+        validasiJadwalRutin -->|Tidak valid| errorJadwalRutin --> tambahJadwal
+        validasiJadwalRutin -->|Valid| konflikJadwalRutin
+        konflikJadwalRutin -->|Ya| errorJadwalRutin
+        konflikJadwalRutin -->|Tidak| simpanJadwalRutin -->|Simpan jadwal| dbIKL
+        dbIKL --> selesaiIKL
+
+        aksiJadwal -->|Ubah penugasan aktif| ubahJadwalAktif --> validasiUbahJadwal
+        validasiUbahJadwal -->|Tidak valid| errorUbahJadwal --> ubahJadwalAktif
+        validasiUbahJadwal -->|Valid| konflikUbahJadwal
+        konflikUbahJadwal -->|Ya| errorUbahJadwal
+        konflikUbahJadwal -->|Tidak| simpanUbahJadwal -->|Perbarui jadwal| dbIKL
+        aksiJadwal -->|Ubah riwayat selesai / batal| ubahRiwayatJadwal --> validasiRiwayat
+        validasiRiwayat -->|Tidak valid| errorRiwayat --> ubahRiwayatJadwal
+        validasiRiwayat -->|Valid| simpanRiwayat -->|Perbarui riwayat| dbIKL
+
+        aksiJadwal -->|Batalkan jadwal| batalJadwal --> terkaitLaporan
+        terkaitLaporan -->|Ya| statusJadwalBatal --> statusLaporanMenunggu
+        statusLaporanMenunggu -->|Perbarui jadwal dan laporan| dbIKL
+        terkaitLaporan -->|Tidak| statusJadwalBatal
+        statusJadwalBatal -->|Perbarui jadwal| dbIKL
+        aksiJadwal -->|Hapus jadwal batal| hapusJadwalBatal -->|Hapus jadwal yang memenuhi syarat| dbIKL
+
+        aksiJadwal -->|Isi / lihat hasil IKL| pilihJadwalInspeksi --> aksesInspeksi
+        aksesInspeksi -->|Tidak| selesaiIKL
+        aksesInspeksi -->|Ya| isiFormIKL --> validasiIKL
+        validasiIKL -->|Tidak valid / sudah ada hasil| errorValidasiIKL --> isiFormIKL
+        validasiIKL -->|Valid| hitungSkor --> kategoriRisiko
+        kategoriRisiko -->|Skor 0| risikoAman --> simpanHasilIKL
+        kategoriRisiko -->|Skor 1–2| risikoSedang --> simpanHasilIKL
+        kategoriRisiko -->|Skor 3–5| risikoTinggi --> simpanHasilIKL
+        simpanHasilIKL --> tutupJadwal -->|Simpan hasil dan status| dbIKL
+        dbIKL --> suksesIKL --> selesaiIKL
+
+        aksiJadwal -->|Rekap hasil IKL admin| rekapHasilIKL
+        rekapHasilIKL -->|Baca hasil| dbIKL
+        rekapHasilIKL --> detailHasilIKL
+        detailHasilIKL -->|Baca detail| dbIKL
+        dbIKL --> selesaiIKL
+    end
+
+    menuAdmin -->|Jadwal / IKL| bukaJadwal
+    menuPetugas -->|Jadwal saya / isi hasil IKL| bukaJadwal
+    menuPetugas -->|Logout| logout
+
+    subgraph EDU["Manajemen Edukasi Sanitasi (STBM)"]
+        bukaEdukasi[Buka Manajemen Edukasi]
+        muatArtikel[Muat daftar artikel;<br/>pagination 10 artikel per halaman]
+        daftarArtikel[Tampilkan judul, kategori,<br/>tanggal dan aksi Edit / Hapus]
+        aksiArtikel{Pilih aksi artikel}
+
+        formTambahArtikel[Isi form artikel:<br/>judul, kategori STBM,<br/>gambar banner opsional dan konten]
+        validasiArtikelBaru{Judul minimal 5 karakter,<br/>konten minimal 50 karakter,<br/>kategori dan input lainnya valid?}
+        errorArtikelBaru[Tampilkan kesalahan validasi]
+        simpanArtikelBaru[Simpan artikel baru]
+
+        muatArtikelEdit[Muat data artikel terpilih]
+        ubahArtikel[Perbarui data artikel]
+        validasiArtikelEdit{Data valid dan<br/>judul tetap unik?}
+        errorArtikelEdit[Tampilkan kesalahan validasi]
+        simpanArtikelEdit[Simpan perubahan artikel]
+
+        konfirmasiHapusArtikel{Konfirmasi hapus<br/>pada dialog browser?}
+        hapusArtikel[Hapus artikel dan file gambar<br/>jika tersedia]
+        batalHapusArtikel[Batalkan penghapusan]
+        suksesArtikel[Tampilkan pesan sukses]
+        selesaiEdukasi[Kembali dari proses edukasi]
+
+        bukaEdukasi --> muatArtikel -->|Baca artikel| dbEdukasi[(Database MySQL)]
+        dbEdukasi --> daftarArtikel --> aksiArtikel
+        aksiArtikel -->|Tambah| formTambahArtikel --> validasiArtikelBaru
+        validasiArtikelBaru -->|Tidak valid| errorArtikelBaru --> formTambahArtikel
+        validasiArtikelBaru -->|Valid| simpanArtikelBaru -->|Simpan artikel| dbEdukasi
+        aksiArtikel -->|Edit| muatArtikelEdit -->|Baca artikel| dbEdukasi
+        dbEdukasi --> ubahArtikel --> validasiArtikelEdit
+        validasiArtikelEdit -->|Tidak valid| errorArtikelEdit --> ubahArtikel
+        validasiArtikelEdit -->|Valid| simpanArtikelEdit -->|Perbarui artikel| dbEdukasi
+        aksiArtikel -->|Hapus| konfirmasiHapusArtikel
+        konfirmasiHapusArtikel -->|Batal| batalHapusArtikel --> daftarArtikel
+        konfirmasiHapusArtikel -->|Yakin| hapusArtikel -->|Hapus artikel| dbEdukasi
+        dbEdukasi --> suksesArtikel --> muatArtikel
+        suksesArtikel --> selesaiEdukasi
+    end
+
+    menuAdmin -->|Manajemen Edukasi| bukaEdukasi
+
+    subgraph USERS["Manajemen User — Petugas dan Warga"]
+        bukaUser[Buka Manajemen User]
+        pilihJenisUser{Pilih jenis akun}
+
+        muatPetugas[Muat daftar Admin / Petugas Kesling]
+        filterPetugas[Cari nama, ID atau username;<br/>filter peran / status aktif;<br/>pilih ukuran halaman; ekspor CSV]
+        daftarPetugas[Tampilkan profil, kontak,<br/>wilayah, peran dan status akun]
+        aksiPetugas{Pilih aksi petugas}
+        tambahPetugas[Isi data akun, kredensial<br/>dan peran petugas / admin]
+        editPetugas[Edit profil, hak akses,<br/>status aktif dan kata sandi opsional]
+        validasiPetugas{Data akun valid?}
+        errorPetugas[Tampilkan kesalahan validasi]
+        simpanPetugas[Simpan akun / perubahan petugas]
+        resetPetugas[Konfirmasi reset kata sandi petugas]
+        hapusPetugas[Konfirmasi hapus permanen akun]
+        selesaiPetugas[Kembali ke daftar petugas]
+
+        muatWarga[Muat daftar akun warga]
+        filterWarga[Cari nama, username, kontak atau desa;<br/>filter status aktif / nonaktif;<br/>pagination]
+        daftarWarga[Tampilkan profil, kontak,<br/>desa dan status keaktifan akun]
+        aksiWarga{Pilih aksi warga}
+        detailWarga[Lihat detail akun warga]
+        resetWarga[Konfirmasi reset kata sandi warga]
+        selesaiWarga[Kembali ke daftar warga]
+
+        bukaUser --> pilihJenisUser
+        pilihJenisUser -->|Petugas / Admin| muatPetugas --> filterPetugas
+        filterPetugas -->|Baca akun| dbPetugas[(Database MySQL)]
+        dbPetugas --> daftarPetugas --> aksiPetugas
+        aksiPetugas -->|Tambah| tambahPetugas --> validasiPetugas
+        aksiPetugas -->|Edit| editPetugas --> validasiPetugas
+        validasiPetugas -->|Tidak valid| errorPetugas --> perbaikiPetugas
+        perbaikiPetugas[Perbaiki form sesuai aksi tambah / edit]
+        perbaikiPetugas --> validasiPetugas
+        validasiPetugas -->|Valid| simpanPetugas -->|Simpan akun dan hak akses| dbPetugas
+        aksiPetugas -->|Reset kata sandi| resetPetugas -->|Perbarui kredensial| dbPetugas
+        aksiPetugas -->|Hapus| hapusPetugas -->|Hapus akun| dbPetugas
+        aksiPetugas -->|Kembali| selesaiPetugas
+        dbPetugas --> selesaiPetugas
+
+        pilihJenisUser -->|Warga| muatWarga --> filterWarga
+        filterWarga -->|Baca akun warga| dbWarga[(Database MySQL)]
+        dbWarga --> daftarWarga --> aksiWarga
+        aksiWarga -->|Lihat| detailWarga --> selesaiWarga
+        aksiWarga -->|Reset kata sandi| resetWarga -->|Perbarui kredensial| dbWarga
+        aksiWarga -->|Kembali| selesaiWarga
+        dbWarga --> selesaiWarga
+    end
+
+    menuAdmin -->|Manajemen User| bukaUser
+    menuAdmin -->|Logout| logout
+    menuDashboard -->|Admin| menuAdmin
+    menuDashboard -->|Petugas| menuPetugas
+    hapusSesi --> selesai([Selesai])

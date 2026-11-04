@@ -1,0 +1,45 @@
+flowchart TD
+    mulai([Mulai]) --> login[Admin login ke Portal Web]
+    login --> auth{Login berhasil?}
+    auth -->|Tidak| loginError[Tampilkan pesan gagal login]
+    loginError --> login
+    auth -->|Ya| dashboard[Dashboard Utama]
+    dashboard --> menu[Menu Manajemen Artikel Edukasi]
+    menu --> tabel[Tampilkan Tabel Data Artikel<br/>Pencarian, Filter Kategori, Pagination Admin]
+
+    tabel --> aksi{Pilih aksi admin}
+    aksi -->|Tambah artikel| tambah[Klik Tambah Artikel Baru]
+    aksi -->|Edit artikel| pilihEdit[Pilih artikel dan klik Edit]
+    aksi -->|Hapus artikel| pilihHapus[Pilih artikel dan klik Hapus]
+    aksi -->|Cari, filter, atau pindah halaman| kelolaTabel[Terapkan pencarian, filter kategori, atau pagination]
+    aksi -->|Logout| selesai([Selesai])
+
+    kelolaTabel --> tabel
+
+    tambah --> formTambah[Isi form artikel baru:<br/>Judul, Kategori STBM,<br/>File Gambar Banner, Isi Konten]
+    formTambah --> validasiTambah{Judul >= 5 karakter<br/>DAN Isi Konten >= 50 karakter?}
+    validasiTambah -->|Tidak| errorTambah[Tampilkan pesan error validasi<br/>pada form]
+    errorTambah --> formTambah
+    validasiTambah -->|Ya| simpanBaru[(Database MySQL)]
+    simpanBaru --> suksesTambah[Tampilkan notifikasi sukses]
+    suksesTambah --> refreshTambah[Refresh Tabel Data Artikel]
+    refreshTambah --> tabel
+
+    pilihEdit --> formEdit[Form edit terisi otomatis<br/>dengan data artikel lama]
+    formEdit --> ubah[Admin memperbarui data artikel]
+    ubah --> validasiEdit{Judul >= 5 karakter<br/>DAN Isi Konten >= 50 karakter?}
+    validasiEdit -->|Tidak| errorEdit[Tampilkan pesan error validasi<br/>pada form]
+    errorEdit --> ubah
+    validasiEdit -->|Ya| simpanPerubahan[(Database MySQL)]
+    simpanPerubahan --> suksesEdit[Tampilkan notifikasi sukses]
+    suksesEdit --> refreshEdit[Refresh Tabel Data Artikel]
+    refreshEdit --> tabel
+
+    pilihHapus --> modal[Modal konfirmasi:<br/>Apakah Anda yakin ingin menghapus artikel ini?]
+    modal --> konfirmasi{Konfirmasi hapus?}
+    konfirmasi -->|Batal| tutupModal[Tutup modal]
+    tutupModal --> tabel
+    konfirmasi -->|Yakin| hapusData[(Database MySQL)]
+    hapusData --> suksesHapus[Tampilkan notifikasi sukses]
+    suksesHapus --> refreshHapus[Refresh Tabel Data Artikel]
+    refreshHapus --> tabel

@@ -9,11 +9,11 @@
     {{-- Summary Widget --}}
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
         @foreach([
-            ['label' => 'Total Laporan', 'value' => $summary['total'],       'icon' => 'fa-file-alt',       'color' => 'gray'],
-            ['label' => 'Menunggu',      'value' => $summary['menunggu'],    'icon' => 'fa-clock',          'color' => 'yellow'],
-            ['label' => 'Dijadwalkan',   'value' => $summary['dijadwalkan'], 'icon' => 'fa-calendar-check', 'color' => 'blue'],
-            ['label' => 'Selesai IKL',   'value' => $summary['selesai'],     'icon' => 'fa-check-circle',   'color' => 'green'],
-            ['label' => 'Ditolak',       'value' => $summary['ditolak'],     'icon' => 'fa-times-circle',   'color' => 'red'],
+            ['label' => 'Total Laporan', 'value' => $summary['total'],       'icon' => 'fa-file-alt',       'iconBg' => 'bg-sky-50',    'iconColor' => 'text-sky-600'],
+            ['label' => 'Menunggu',      'value' => $summary['menunggu'],    'icon' => 'fa-clock',          'iconBg' => 'bg-cyan-50',   'iconColor' => 'text-cyan-600'],
+            ['label' => 'Dijadwalkan',   'value' => $summary['dijadwalkan'], 'icon' => 'fa-calendar-check', 'iconBg' => 'bg-blue-50',   'iconColor' => 'text-blue-600'],
+            ['label' => 'Selesai IKL',   'value' => $summary['selesai'],     'icon' => 'fa-check-circle',   'iconBg' => 'bg-teal-50',   'iconColor' => 'text-teal-600'],
+            ['label' => 'Ditolak',       'value' => $summary['ditolak'],     'icon' => 'fa-times-circle',   'iconBg' => 'bg-rose-50',   'iconColor' => 'text-rose-500'],
         ] as $stat)
         <div class="card p-4">
             <div class="flex items-start justify-between gap-2">
@@ -21,8 +21,8 @@
                     <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 truncate">{{ $stat['label'] }}</p>
                     <p class="mt-1 text-2xl font-bold text-gray-800">{{ $stat['value'] }}</p>
                 </div>
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-{{ $stat['color'] }}-50">
-                    <i class="fas {{ $stat['icon'] }} text-{{ $stat['color'] }}-500 text-lg"></i>
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $stat['iconBg'] }}">
+                    <i class="fas {{ $stat['icon'] }} {{ $stat['iconColor'] }} text-lg"></i>
                 </div>
             </div>
         </div>
@@ -46,9 +46,9 @@
                 @php
                     $totalIkl = $summary['selesai']; // laporan yang sudah IKL
                     $risikoMap = [
-                        'aman'          => ['label' => '✅ Aman', 'color' => 'green'],
-                        'risiko_sedang' => ['label' => '⚠️ Risiko Sedang', 'color' => 'yellow'],
-                        'risiko_tinggi' => ['label' => '🔴 Risiko Tinggi', 'color' => 'red'],
+                        'aman'          => ['label' => '✅ Aman', 'barClass' => 'bg-emerald-500'],
+                        'risiko_sedang' => ['label' => '⚠️ Risiko Sedang', 'barClass' => 'bg-amber-500'],
+                        'risiko_tinggi' => ['label' => '🔴 Risiko Tinggi', 'barClass' => 'bg-rose-500'],
                     ];
                 @endphp
 
@@ -64,7 +64,7 @@
                             <span class="font-bold text-gray-800">{{ $count }} <span class="text-xs text-gray-400 font-normal">({{ $percentage }}%)</span></span>
                         </div>
                         <div class="h-3 overflow-hidden rounded-full bg-gray-100">
-                            <div class="h-full rounded-full bg-{{ $ui['color'] }}-500" style="width: {{ $percentage }}%"></div>
+                            <div class="h-full rounded-full {{ $ui['barClass'] }}" style="width: {{ $percentage }}%"></div>
                         </div>
                     </div>
                     @endforeach

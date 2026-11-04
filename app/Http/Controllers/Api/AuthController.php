@@ -69,6 +69,7 @@ class AuthController extends Controller
         return DB::transaction(function () use ($validated): JsonResponse {
             $user = User::query()->create([
                 'nama_lengkap' => trim($validated['nama_lengkap']),
+                'name' => trim($validated['username']),
                 'username' => trim($validated['username']),
                 'email' => strtolower(trim($validated['email'])),
                 'password' => $validated['password'],
@@ -94,6 +95,66 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Logout berhasil.',
             'data' => null,
+        ]);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (is_string($request->input('username'))) {
+            $request->merge(['username' => trim($request->input('username'))]);
+        }
+
+        if (is_string($request->input('email'))) {
+            $request->merge(['email' => strtolower(trim($request->input('email')))]);
+        }
+
+        $validated = $request->validate([
+            'nama_lengkap' => ['required', 'string', 'max:150'],
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'alpha_dash',
+                Rule::unique('app_users', 'username')->ignore($user->id_user, 'id_user'),
+            ],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user'),
+            ],
+            'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
+        ]);
+
+        $profile = [
+            'nama_lengkap' => trim($validated['nama_lengkap']),
+            'name' => $validated['username'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+        ];
+
+        if (array_key_exists('no_telepon', $validated)) {
+            $profile['no_telepon'] = $validated['no_telepon'];
+        }
+
+        $user->fill($profile)->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => [
+                'user' => [
+                    'id' => $user->id_user,
+                    'nama_lengkap' => $user->nama_lengkap,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'no_telepon' => $user->no_telepon,
+                ],
+            ],
         ]);
     }
 

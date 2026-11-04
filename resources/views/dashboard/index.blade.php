@@ -19,8 +19,8 @@
                         <i class=></i> Dalam Bulan ini
                     </p>
                 </div>
-                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-file-alt text-red-500 text-lg"></i>
+                <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-file-alt text-sky-600 text-lg"></i>
                 </div>
             </div>
         </div>

@@ -12,43 +12,23 @@
       ::-webkit-scrollbar { display: none; }
     </style>
 
-    <!-- Tailwind CSS (Gunakan CDN untuk development, pindahkan config ke tailwind.config.js untuk production) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "on-surface": "#1e1b19",
-              background: "#fff8f5",
-              primary: "#760009",
-              // ... (warna lain dari tema Anda)
-            },
-            fontFamily: {
-              "body-md": ["Plus Jakarta Sans"],
-            },
-          },
-        },
-      };
-    </script>
-
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Poppins:wght@500;600;700&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-[#FBFBFB] font-body-md text-on-surface antialiased min-h-screen">
+<body class="antialiased min-h-screen">
     <main class="w-full min-h-screen">
       <div class="flex flex-col w-full">
-        <div class="relative w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden bg-[#FBFBFB]">
+        <div class="relative w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden bg-[#F0F9FF]">
 
           <!-- LEFT PANEL: Gambar & Branding -->
-          <aside class="relative hidden lg:flex flex-col justify-between p-12 xl:p-16 text-white overflow-hidden shadow-2xl select-none">
+          <aside class="water-hero relative hidden lg:flex flex-col justify-between p-12 xl:p-16 text-white overflow-hidden shadow-2xl select-none">
             <img alt="Laboratorium Pengujian Kualitas Air Sanitasi Puskesmas" class="absolute inset-0 w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida/AEtjO1WndaQXC4TLZJ62dQceNesMNDHZXWSvFvajkXhLBuvJeNLO_QPQTtZczssNFiwx2NViNZyMRGzDyBkw2kuyqeRKtfJ0J5-5Xzi-v9Pqa_ONyXsNVpc2W5zFHebJapj0mX9k_9lXarvXLTFzLClzVvQnUB5kzoAszHbQn_7-pUQK2uW6yEwi_cNrTCMrIQAbefEp7QxyFp3e4OvbyXeOkCXbCFsTG1UmJAokwZ7X4_9AELP7ui5y5qJT6bwd" />
-            <div class="absolute inset-0 bg-gradient-to-br from-[#420b0d]/95 via-[#760009]/90 to-[#991b1b]/85 mix-blend-multiply"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-[#2b0005]/95 via-transparent to-[#420b0d]/70"></div>
+            <div class="absolute inset-0 bg-linear-to-br from-[#053b5c]/95 via-[#075985]/90 to-[#0284c7]/85 mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-linear-to-t from-[#06263a]/95 via-transparent to-[#053b5c]/70"></div>
 
             <!-- Top Branding -->
             <div class="relative z-10">
@@ -68,7 +48,7 @@
             <!-- Middle Editorial Content -->
             <div class="relative z-10 my-auto py-10 max-w-lg space-y-6">
               <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-semibold tracking-wider uppercase border border-white/15">
-                <span class="w-2 h-2 rounded-full bg-red-300 animate-pulse"></span>
+                <span class="w-2 h-2 rounded-full bg-cyan-300 animate-pulse"></span>
                 Surveilans Digital Lingkungan
               </div>
               <h1 class="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.18]">
@@ -79,7 +59,7 @@
               </p>
               <div class="pt-2">
                 <div class="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-left">
-                  <span class="material-symbols-outlined text-xl text-red-200">verified_user</span>
+                  <span class="material-symbols-outlined text-xl text-sky-200">verified_user</span>
                   <div>
                     <p class="text-sm font-semibold text-white leading-snug">Akses Terenkripsi &amp; Terintegrasi PKAM</p>
                     <p class="text-xs text-white/75 font-normal">Kemenkes RI &amp; Dinas Kesehatan Kabupaten Jember</p>
@@ -96,18 +76,18 @@
           </aside>
 
           <!-- RIGHT PANEL: Form Login -->
-          <section class="flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 bg-[#FBFBFB] min-h-screen">
+          <section class="flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 bg-[#F0F9FF] min-h-screen">
             <!-- Top bar mobile -->
             <div class="w-full flex items-center justify-between">
               <div class="flex lg:hidden items-center gap-2">
-                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-[#760009] text-white">
+                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0284c7] text-white">
                   <span class="material-symbols-outlined text-lg">water_drop</span>
                 </div>
-                <span class="font-bold text-[#760009] text-base">E-Klinik Sanitasi</span>
+                <span class="font-bold text-[#075985] text-base">E-Klinik Sanitasi</span>
               </div>
               <div class="ml-auto flex items-center gap-2">
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-semibold shadow-xs">
-                  <span class="w-2 h-2 rounded-full bg-[#991b1b] animate-pulse"></span>
+                  <span class="w-2 h-2 rounded-full bg-[#06b6d4] animate-pulse"></span>
                   Server PKAM Online
                 </span>
               </div>
@@ -152,7 +132,7 @@
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
                       <span class="material-symbols-outlined text-lg">person</span>
                     </div>
-                    <input class="block w-full pl-11 pr-4 py-3.5 bg-white text-stone-900 placeholder:text-stone-400 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991b1b]/20 border border-stone-200 focus:border-[#991b1b] shadow-xs transition"
+                    <input class="block w-full pl-11 pr-4 py-3.5 bg-white text-stone-900 placeholder:text-stone-400 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#06b6d4]/20 border border-stone-200 focus:border-[#0284c7] shadow-xs transition"
                            id="usernameInput"
                            name="username"
                            placeholder="Masukkan username atau email"
@@ -172,7 +152,7 @@
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
                       <span class="material-symbols-outlined text-lg">lock</span>
                     </div>
-                    <input class="block w-full pl-11 pr-11 py-3.5 bg-white text-stone-900 placeholder:text-stone-400 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#991b1b]/20 border border-stone-200 focus:border-[#991b1b] shadow-xs transition"
+                    <input class="block w-full pl-11 pr-11 py-3.5 bg-white text-stone-900 placeholder:text-stone-400 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#06b6d4]/20 border border-stone-200 focus:border-[#0284c7] shadow-xs transition"
                            id="passwordInput"
                            name="password"
                            placeholder="Masukkan kata sandi..."
@@ -187,16 +167,16 @@
                 <!-- Utilities row -->
                 <div class="flex items-center justify-between pt-1 text-sm">
                   <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-                    {{-- <input class="w-4 h-4 rounded text-[#991b1b] accent-[#991b1b] cursor-pointer border-stone-300" id="rememberMe" name="remember" type="checkbox" /> --}}
+                    {{-- <input class="w-4 h-4 rounded text-[#0284c7] accent-[#0284c7] cursor-pointer border-stone-300" id="rememberMe" name="remember" type="checkbox" /> --}}
                     {{-- <span class="text-stone-600 font-medium text-xs sm:text-sm">Ingat Saya</span> --}}
                   </label>
 
                   @if (Route::has('password.request'))
-                  <a class="text-[#991b1b] hover:text-[#7f1d1d] font-semibold text-xs sm:text-sm hover:underline transition" href="{{ route('password.request') }}">
+                  <a class="text-[#0284c7] hover:text-[#075985] font-semibold text-xs sm:text-sm hover:underline transition" href="{{ route('password.request') }}">
                     Lupa Kata Sandi?
                   </a>
                   @else
-                  {{-- <a class="text-[#991b1b] hover:text-[#7f1d1d] font-semibold text-xs sm:text-sm hover:underline transition" href="javascript:void(0)" onclick="handleForgotPassword()">
+                  {{-- <a class="text-[#0284c7] hover:text-[#075985] font-semibold text-xs sm:text-sm hover:underline transition" href="javascript:void(0)" onclick="handleForgotPassword()">
                     Lupa Kata Sandi?
                   </a> --}}
                   @endif
@@ -204,7 +184,7 @@
 
                 <!-- Submit Button -->
                 <div class="pt-2">
-                  <button class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#760009] to-[#991b1b] hover:from-[#5c0007] hover:to-[#7f1d1d] text-white text-sm font-semibold tracking-wide shadow-md hover:shadow-lg active:scale-[0.99] transition" id="submitBtn" type="submit">
+                  <button class="login-submit w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-linear-to-r from-[#0284c7] to-[#06b6d4] hover:from-[#0369a1] hover:to-[#0e7490] text-white text-sm font-semibold tracking-wide shadow-md hover:shadow-lg active:scale-[0.99] transition" id="submitBtn" type="submit">
                     <span>Login</span>
                     <span class="material-symbols-outlined text-lg">arrow_forward</span>
                   </button>
@@ -213,7 +193,7 @@
 
               <!-- Security trust note -->
               <div class="pt-6 mt-6 border-t border-stone-200/80 flex items-center justify-center gap-2 text-stone-500 text-xs">
-                <span class="material-symbols-outlined text-[#991b1b] text-base">shield</span>
+                <span class="material-symbols-outlined text-[#0284c7] text-base">shield</span>
                 <span>Sistem Resmi UPTD Puskesmas • Akses Terotentikasi</span>
               </div>
             </div>
@@ -222,9 +202,9 @@
             <div class="w-full pt-4 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between text-stone-500 text-xs gap-3">
               <span>© 2026 E-Klinik Sanitasi Puskesmas. Terintegrasi SISDMK &amp; PKAM.</span>
               <div class="flex items-center gap-3">
-                {{-- <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Panduan SOP IKL</a>
+                {{-- <a class="hover:text-[#0284c7] transition" href="javascript:void(0)">Panduan SOP IKL</a>
                 <span>|</span>
-                <a class="hover:text-[#991b1b] transition" href="javascript:void(0)">Helpdesk Dinkes Jember</a> --}}
+                <a class="hover:text-[#0284c7] transition" href="javascript:void(0)">Helpdesk Dinkes Jember</a> --}}
               </div>
             </div>
           </section>
@@ -252,7 +232,7 @@
           if (!btn || !form) return;
 
           btn.disabled = true;
-          btn.innerHTML = '<span class="material-symbols-outlined text-body-lg animate-spin">progress_activity</span><span>Memverifikasi Kredensial...</span>';
+          btn.innerHTML = '<span class="material-symbols-outlined text-lg animate-spin">progress_activity</span><span>Memverifikasi Kredensial...</span>';
 
           // Jeda sebentar untuk menampilkan animasi sebelum mengirim POST request
           setTimeout(() => {

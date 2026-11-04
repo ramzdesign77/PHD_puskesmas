@@ -7,138 +7,16 @@
     <title>@yield('title', 'Dashboard') — SIMKES Puskesmas Sumbersari</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400..600,0..1,-25..0" rel="stylesheet" />
-
-<style>
-  .material-symbols-outlined {
-    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 22;
-  }
-</style>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { inter: ['Inter', 'sans-serif'] },
-                    colors: {
-                        'medical-red':   '#E63946',
-                        'medical-dark':  '#C1121F',
-                        'medical-light': '#FFE8EA',
-
-                        'primary':   '#29B6F6',
-                        'primary-dark':  '#0288D1',
-                        'primary-light': '#E1F5FE',
-                    },
-                    transitionProperty: {
-                        'width': 'width',
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400..600,0..1,-25..0&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        .sidebar-link {
-            display: flex; align-items: center; gap: 12px;
-            padding: 10px 16px; border-radius: 12px;
-            color: #64748B; font-weight: 500; font-size: 14px;
-            transition: all 0.2s ease; text-decoration: none;
-        }
-        .sidebar-link:hover { background: #FFF0F1; color: #E63946; }
-        .sidebar-link.active { background: linear-gradient(135deg, #E63946 0%, #C1121F 100%); color: white; box-shadow: 0 4px 15px rgba(230,57,70,0.35); }
-        .sidebar-link.active .sidebar-icon { color: white; }
-        .sidebar-icon { width: 20px; text-align: center; font-size: 16px; }
-
-        .navbar-glass {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(229,231,235,0.8);
-        }
-        .medical-gradient { background: linear-gradient(135deg, #E63946 0%, #C1121F 100%); }
-
-        /* Buttons */
-        .btn-primary {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: linear-gradient(135deg, #E63946 0%, #C1121F 100%);
-            color: white; border: none; cursor: pointer;
-            padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 14px;
-            transition: all 0.2s ease; text-decoration: none; box-shadow: 0 2px 4px rgba(230,57,70,0.2);
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(230,57,70,0.35); }
-        .btn-secondary {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0;
-            cursor: pointer; padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 14px;
-            transition: all 0.2s ease; text-decoration: none;
-        }
-        .btn-secondary:hover { background: #F1F5F9; color: #1E293B; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
-
-        /* Cards */
-        .card {
-            background: white;
-            border-radius: 0.75rem; /* rounded-xl */
-            border: 1px solid #F3F4F6; /* gray-100 */
-            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
-        }
-
-        /* Data Tables */
-        .data-table { width: 100%; text-align: left; border-collapse: collapse; }
-        .data-table th {
-            padding: 16px 24px; font-size: 12px; font-weight: 600;
-            color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;
-            border-bottom: 1px solid #F1F5F9; background: #F8FAFC;
-            text-align: left;
-        }
-        .data-table td {
-            padding: 16px 24px; font-size: 14px; color: #334155;
-            border-bottom: 1px solid #F1F5F9; vertical-align: middle;
-        }
-        .data-table tbody tr { transition: background-color 0.2s ease; }
-        .data-table tbody tr:hover { background-color: #F8FAFC; }
-
-        /* Badges */
-        .badge {
-            display: inline-flex; items-center; gap: 4px;
-            padding: 4px 12px; font-size: 12px; font-weight: 600;
-            border-radius: 9999px; /* rounded-full */
-            border: 1px solid transparent;
-        }
-        .badge-pending { background: #FEF3C7; color: #B45309; border-color: #FDE68A; } /* yellow */
-        .badge-assigned, .badge-progress { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; } /* blue */
-        .badge-resolved { background: #ECFCCB; color: #4D7C0F; border-color: #D9F99D; } /* green */
-        .badge-rejected { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; } /* red */
-
-        .fade-in { animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .sidebar-enter { transition: transform 0.3s ease, opacity 0.3s ease; }
-        .inactive-account-modal-overlay {
-            z-index: 100;
-            pointer-events: auto;
-        }
-        .notification-dot {
-            width: 8px; height: 8px; background: #E63946;
-            border-radius: 50%; position: absolute; top: -2px; right: -2px;
-            border: 2px solid white;
-        }
-        .role-badge-citizen  { background: #EFF6FF; color: #1D4ED8; }
-        .role-badge-officer  { background: #F0FDF4; color: #16A34A; }
-        .role-badge-admin    { background: #FFF7ED; color: #C2410C; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 22; }
     </style>
     @yield('styles')
 </head>
-<body class="bg-gray-50 h-full" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
+<body class="h-full" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
 
 <div class="flex h-screen overflow-hidden">
 
@@ -146,11 +24,11 @@
     {{--  SIDEBAR                                    --}}
     {{-- ═══════════════════════════════════════════ --}}
     {{-- Desktop Sidebar --}}
-    <aside class="hidden md:flex flex-col bg-white shadow-lg transition-all duration-300 z-30"
+    <aside class="water-sidebar hidden md:flex flex-col bg-white shadow-lg transition-all duration-300 z-30"
            :class="sidebarOpen ? 'w-64' : 'w-20'">
 
         {{-- Logo --}}
-        <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
+        <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
             <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md">
                 <i class="fas fa-clinic-medical text-white text-lg"></i>
             </div>
@@ -267,9 +145,9 @@
            x-transition:leave="transition transform duration-300"
            x-transition:leave-start="translate-x-0"
            x-transition:leave-end="-translate-x-full"
-           class="fixed left-0 top-0 bottom-0 w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col">
+           class="water-sidebar fixed left-0 top-0 bottom-0 w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col">
 
-        <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
+        <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
             <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
                 <i class="fas fa-clinic-medical text-white text-lg"></i>
             </div>
@@ -370,7 +248,7 @@
         @if(session('success'))
         <div class="mx-4 md:mx-6 mt-4" x-data="{ show: true }" x-show="show" x-transition
              x-init="setTimeout(() => show = false, 5000)">
-            <div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl">
+            <div class="water-alert flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl">
                 <i class="fas fa-check-circle text-green-500"></i>
                 <p class="text-sm font-medium flex-1">{{ session('success') }}</p>
                 <button @click="show = false" class="text-green-400 hover:text-green-600"><i class="fas fa-times"></i></button>
@@ -380,7 +258,7 @@
 
         @if(session('error'))
         <div class="mx-4 md:mx-6 mt-4" x-data="{ show: true }" x-show="show" x-transition>
-            <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
+            <div class="water-alert flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
                 <i class="fas fa-exclamation-circle text-red-500"></i>
                 <p class="text-sm font-medium flex-1">{{ session('error') }}</p>
                 <button @click="show = false" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button>
