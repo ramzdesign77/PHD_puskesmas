@@ -28,6 +28,10 @@
                         'medical-red':   '#E63946',
                         'medical-dark':  '#C1121F',
                         'medical-light': '#FFE8EA',
+
+                        'primary':   '#29B6F6',
+                        'primary-dark':  '#0288D1',
+                        'primary-light': '#E1F5FE',
                     },
                     transitionProperty: {
                         'width': 'width',

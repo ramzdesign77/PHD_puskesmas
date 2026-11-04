@@ -6,9 +6,14 @@
 ═══════════════════════════════════════════ */
 
 @theme {
-    --color-medical-red: #e63946;
+    --color-primary:       #29B6F6;
+    --color-primary-dark:  #0288D1;
+    --color-primary-light: #E1F5FE;
+
+    /* --color-medical-red: #e63946;
     --color-medical-dark: #c1121f;
-    --color-medical-light: #ffe8ea;
+    --color-medical-light: #ffe8ea; */
+
     --font-inter: "Inter", sans-serif;
 }
 
