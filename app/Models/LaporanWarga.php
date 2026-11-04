@@ -66,6 +66,14 @@ class LaporanWarga extends Model
             ->latestOfMany('id_jadwal');
     }
 
+    /**
+     * Alias kompatibel untuk nama relasi jadwal yang digunakan klien mobile.
+     */
+    public function jadwalInspeksi(): HasOne
+    {
+        return $this->jadwal();
+    }
+
     public function notifikasiWa(): HasMany
     {
         return $this->hasMany(LogNotifikasiWa::class, 'id_laporan', 'id_laporan');

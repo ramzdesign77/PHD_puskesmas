@@ -313,6 +313,87 @@ class LaporanWargaApiController extends Controller
         ]);
     }
 
+    /**
+     * GET /api/v1/laporan/history
+     * GET /api/laporan/history
+     *
+     * Mengembalikan laporan milik pengguna login dan laporan lokal yang kode tiketnya dikirim klien.
+     */
+    public function myReports(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tickets' => ['nullable', 'array'],
+            'tickets.*' => ['string', 'max:100'],
+        ]);
+
+        $user = $this->resolveAuthenticatedMobileUser($request);
+        $localTickets = collect($validated['tickets'] ?? [])
+            ->filter(fn (mixed $ticket): bool => is_string($ticket) && trim($ticket) !== '')
+            ->map(fn (string $ticket): string => trim($ticket))
+            ->unique()
+            ->values();
+
+        $query = LaporanWarga::query()->with([
+            'desa:id_desa,nama_desa',
+            'jadwalInspeksi.operator:id_user,nama_lengkap',
+            'jadwalInspeksi.inspeksiIkl',
+        ]);
+
+        if ($user !== null && $localTickets->isNotEmpty()) {
+            $query->where(function ($builder) use ($user, $localTickets): void {
+                $builder->where('id_user', $user->getKey())
+                    ->orWhereIn('kode_tiket', $localTickets->all());
+            });
+        } elseif ($user !== null) {
+            $query->where('id_user', $user->getKey());
+        } elseif ($localTickets->isNotEmpty()) {
+            $query->whereIn('kode_tiket', $localTickets->all());
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $laporanList = $query
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $laporanList->map(function (LaporanWarga $laporan): array {
+                $jadwal = $laporan->jadwalInspeksi;
+                $hasilIkl = $jadwal?->inspeksiIkl;
+
+                return [
+                    'kode_tiket' => $laporan->kode_tiket,
+                    'status_laporan' => $laporan->status_laporan,
+                    'status_step' => $this->statusStep($laporan->status_laporan),
+                    'nama_desa' => $laporan->desa?->nama_desa,
+                    'rt' => $laporan->rt,
+                    'rw' => $laporan->rw,
+                    'kategori_laporan' => $laporan->kategori_laporan,
+                    'deskripsi' => $laporan->deskripsi,
+                    'created_at' => $laporan->created_at?->format('d M Y H:i'),
+                    'jadwal' => $jadwal ? [
+                        'tanggal_kunjungan' => $jadwal->tanggal_kunjungan?->toDateString(),
+                        'waktu_kunjungan' => $jadwal->jam_mulai
+                            ? Carbon::parse($jadwal->jam_mulai)->format('H:i')
+                            : null,
+                        'status_kunjungan' => $jadwal->status_kunjungan,
+                        'nama_petugas' => $jadwal->operator?->nama_lengkap,
+                        'petugas' => $jadwal->operator?->nama_lengkap,
+                    ] : null,
+                    'hasil_ikl' => $hasilIkl ? [
+                        'kategori_risiko' => $hasilIkl->kategori_risiko,
+                        'total_skor_ya' => $hasilIkl->total_skor_ya,
+                        'rekomendasi_sanitarian' => $hasilIkl->rekomendasi_sanitarian,
+                        'intervensi_fisik' => $hasilIkl->intervensi_fisik,
+                        'tanggal_inspeksi' => $hasilIkl->tanggal_inspeksi?->toDateString(),
+                    ] : null,
+                    'desa' => $laporan->desa?->nama_desa,
+                ];
+            })->values(),
+        ]);
+    }
+
     private function statusStep(?string $statusLaporan): string
     {
         return match ($statusLaporan) {

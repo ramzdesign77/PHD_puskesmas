@@ -145,6 +145,80 @@ class MobileApiTest extends TestCase
         ]);
     }
 
+    public function test_report_history_merges_account_and_local_tickets_and_excludes_other_reports(): void
+    {
+        $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
+        $user = User::query()->create([
+            'nama_lengkap' => 'Warga Riwayat',
+            'username' => 'warga-riwayat',
+            'email' => 'warga-riwayat@example.test',
+            'password' => 'secret123',
+            'role' => 'warga',
+            'is_active' => true,
+        ]);
+        $plainToken = 'warga-history-token-'.$user->id_user;
+        MobileAccessToken::query()->create([
+            'id_user' => $user->id_user,
+            'name' => 'flutter-mobile',
+            'token_hash' => hash('sha256', $plainToken),
+        ]);
+
+        $accountReport = LaporanWarga::query()->forceCreate([
+            'kode_tiket' => 'IKL-HISTORY-ACCOUNT',
+            'id_user' => $user->id_user,
+            'nama_pelapor' => 'Warga Riwayat',
+            'id_desa' => $village->id_desa,
+            'rt' => '01',
+            'rw' => '02',
+            'kategori_laporan' => 'tumpukan_sampah',
+            'deskripsi' => 'Laporan terkait akun.',
+            'status_laporan' => 'menunggu',
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ]);
+        $localReport = LaporanWarga::query()->forceCreate([
+            'kode_tiket' => 'IKL-HISTORY-LOCAL',
+            'nama_pelapor' => 'Warga Sebelum Login',
+            'id_desa' => $village->id_desa,
+            'rt' => '03',
+            'rw' => '04',
+            'kategori_laporan' => 'air_masalah',
+            'deskripsi' => 'Laporan tersimpan lokal.',
+            'status_laporan' => 'diproses',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        LaporanWarga::query()->forceCreate([
+            'kode_tiket' => 'IKL-HISTORY-OTHER',
+            'nama_pelapor' => 'Warga Lain',
+            'id_desa' => $village->id_desa,
+            'rt' => '05',
+            'rw' => '06',
+            'kategori_laporan' => 'sanitasi_lingkungan',
+            'deskripsi' => 'Tidak boleh masuk riwayat.',
+            'status_laporan' => 'menunggu',
+            'created_at' => now()->subHours(1),
+            'updated_at' => now()->subHours(1),
+        ]);
+
+        $response = $this->withToken($plainToken)->getJson(
+            '/api/v1/laporan/history?tickets[]=IKL-HISTORY-LOCAL'
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.kode_tiket', 'IKL-HISTORY-LOCAL')
+            ->assertJsonPath('data.0.status_step', 'diproses')
+            ->assertJsonPath('data.0.nama_desa', 'Sumbersari')
+            ->assertJsonPath('data.1.kode_tiket', $accountReport->kode_tiket);
+
+        $this->assertSame('IKL-HISTORY-LOCAL', $localReport->kode_tiket);
+        $this->getJson('/api/laporan/history?tickets[]=IKL-HISTORY-LOCAL')
+            ->assertOk()
+            ->assertJsonPath('data.0.kode_tiket', 'IKL-HISTORY-LOCAL');
+    }
+
     public function test_mobile_report_can_be_submitted_and_tracked_by_ticket(): void
     {
         $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
