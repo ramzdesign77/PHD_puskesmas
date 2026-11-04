@@ -2,6 +2,9 @@
 @source "../views";
 
 @theme {
+    --color-primary: #29B6F6;
+    --color-primary-dark: #0288D1;
+    --color-primary-light: #E1F5FE;
     --color-ocean-50: #f0f9ff;
     --color-ocean-100: #e0f2fe;
     --color-ocean-200: #bae6fd;

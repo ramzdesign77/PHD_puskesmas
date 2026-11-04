@@ -42,7 +42,7 @@
             <button type="button" id="tab-btn-laporan"
                 @click="tab = 'laporan'"
                 :class="tab === 'laporan'
-                    ? 'border-b-2 border-red-500 text-red-600 font-semibold'
+                    ? 'border-b-2 border-medical-red text-medical-red font-semibold'
                     : 'text-gray-500 hover:text-gray-700'"
                 class="flex items-center gap-2 pb-3 px-1 text-sm transition-colors">
                 <i class="fas fa-inbox"></i>
@@ -56,7 +56,7 @@
             <button type="button" id="tab-btn-rekap"
                 @click="tab = 'rekap'"
                 :class="tab === 'rekap'
-                    ? 'border-b-2 border-red-500 text-red-600 font-semibold'
+                    ? 'border-b-2  border-medical-dark text-medical-red font-semibold'
                     : 'text-gray-500 hover:text-gray-700'"
                 class="flex items-center gap-2 pb-3 px-1 text-sm transition-colors">
                 <i class="fas fa-flask"></i>
