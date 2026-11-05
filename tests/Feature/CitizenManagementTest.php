@@ -77,6 +77,39 @@ class CitizenManagementTest extends TestCase
             ->assertDontSee($activeWarga->username);
     }
 
+    public function test_admin_can_choose_citizen_page_size_and_keep_filters_in_pagination(): void
+    {
+        $admin = $this->createUser('admin', 'admin');
+
+        foreach (range(1, 12) as $number) {
+            $this->createUser('warga', "warga-ajung-{$number}", [
+                'nama_lengkap' => "Warga Ajung {$number}",
+            ]);
+        }
+
+        $response = $this->actingAs($admin)->get(route('warga.index', [
+            'q' => 'Ajung',
+            'status' => 'active',
+            'per_page' => '10',
+        ]));
+
+        $response->assertOk()
+            ->assertSee('<option value="10" selected>10 data</option>', false)
+            ->assertSee('per_page=10', false)
+            ->assertSee('q=Ajung', false);
+
+        $wargas = $response->viewData('wargas');
+        $this->assertSame(10, $wargas->perPage());
+        $this->assertSame(12, $wargas->total());
+        parse_str((string) parse_url($wargas->url(2), PHP_URL_QUERY), $paginationQuery);
+        $this->assertSame([
+            'q' => 'Ajung',
+            'status' => 'active',
+            'per_page' => '10',
+            'page' => '2',
+        ], $paginationQuery);
+    }
+
     public function test_admin_can_view_citizen_details_without_edit_or_delete_actions(): void
     {
         $admin = $this->createUser('admin', 'admin');

@@ -13,26 +13,32 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('warga.index') }}" class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+    <form method="GET" action="{{ route('warga.index') }}" class="card flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
         <div class="relative flex-1">
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true"></i>
             <input
+                type="search"
                 name="q"
                 value="{{ request('q') }}"
-                placeholder="Cari nama, username, kontak, atau desa..."
-                class="form-input pl-9"
+                placeholder="Cari nama, username, kontak, atau desa"
+                class="filter-search-input form-input w-full pr-4 text-sm"
                 aria-label="Cari akun warga"
             >
         </div>
-        <select name="status" class="form-input sm:w-44" aria-label="Filter status akun">
+        <select name="status" class="form-input lg:w-40" aria-label="Filter status akun">
             <option value="">Semua status</option>
             <option value="active" @selected(request('status') === 'active')>Aktif</option>
             <option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option>
         </select>
+        <select name="per_page" class="form-input lg:w-32" aria-label="Jumlah akun per halaman">
+            <option value="10" @selected(request('per_page', '10') === '10')>10 data</option>
+            <option value="25" @selected(request('per_page') === '25')>25 data</option>
+            <option value="50" @selected(request('per_page') === '50')>50 data</option>
+        </select>
         <button class="btn-primary justify-center" type="submit">
             <i class="fas fa-filter"></i> Terapkan
         </button>
-        @if(request()->hasAny(['q', 'status']))
+        @if(request()->hasAny(['q', 'status', 'per_page']))
             <a href="{{ route('warga.index') }}" class="btn-secondary justify-center">Reset</a>
         @endif
     </form>

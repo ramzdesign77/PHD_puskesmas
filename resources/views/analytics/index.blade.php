@@ -15,7 +15,7 @@
             ['label' => 'Selesai IKL',   'value' => $summary['selesai'],     'icon' => 'fa-check-circle',   'iconBg' => 'bg-teal-50',   'iconColor' => 'text-teal-600'],
             ['label' => 'Ditolak',       'value' => $summary['ditolak'],     'icon' => 'fa-times-circle',   'iconBg' => 'bg-rose-50',   'iconColor' => 'text-rose-500'],
         ] as $stat)
-        <div class="card p-4">
+        <div class="card relative overflow-hidden p-4">
             <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 truncate">{{ $stat['label'] }}</p>

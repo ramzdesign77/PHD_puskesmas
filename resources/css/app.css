@@ -207,8 +207,67 @@ a {
     pointer-events: none;
 }
 
+.water-hero--dashboard::before,
+.water-hero--dashboard::after {
+    position: absolute;
+    right: auto;
+    left: 0;
+    width: 200%;
+    background-repeat: repeat-x;
+    background-size: 50% 100%;
+    content: "";
+    pointer-events: none;
+}
+
+.water-hero--dashboard::before {
+    z-index: 0;
+    bottom: -5%;
+    height: 155px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 180' preserveAspectRatio='none'%3E%3Cpath d='M0 92 C100 52 200 52 300 92 C400 132 500 132 600 92 C700 52 800 52 900 92 C1000 132 1100 132 1200 92' fill='none' stroke='%23a5f3fc' stroke-opacity='.24' stroke-width='2'/%3E%3C/svg%3E");
+    animation: dashboardWaveDrift 34s linear infinite reverse;
+}
+
+.water-hero--dashboard::after {
+    bottom: 8%;
+    height: 140px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 180' preserveAspectRatio='none'%3E%3Cpath d='M0 82 C100 42 200 42 300 82 C400 122 500 122 600 82 C700 42 800 42 900 82 C1000 122 1100 122 1200 82 M0 116 C100 76 200 76 300 116 C400 156 500 156 600 116 C700 76 800 76 900 116 C1000 156 1100 156 1200 116' fill='none' stroke='%23a5f3fc' stroke-opacity='.32' stroke-width='2'/%3E%3C/svg%3E");
+    animation: dashboardWaveDrift 26s linear infinite;
+}
+
+@keyframes dashboardWaveDrift {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
 .water-hero :is(h1, h2, h3, h4, h5, h6) {
     color: white;
+}
+
+.mascot-float {
+    animation: mascotFloat 5s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@keyframes mascotFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-9px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mascot-float {
+        animation: none;
+    }
 }
 
 .water-sidebar {
@@ -279,26 +338,12 @@ a {
     border: 1px solid var(--glass-border);
     border-radius: 22px;
     background:
+        radial-gradient(circle, transparent 50px, rgba(56, 189, 248, 0.2) 51px 52px, transparent 53px) right top / 104px 104px no-repeat,
         radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.08) 0, transparent 112px),
         rgba(255, 255, 255, 0.82);
     box-shadow: var(--ocean-shadow);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-}
-
-.card::after,
-.stat-card::after {
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    right: 0;
-    width: 104px;
-    height: 104px;
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.78), rgba(56, 189, 248, 0.04) 66%);
-    content: "";
-    pointer-events: none;
 }
 
 .stat-card {
@@ -319,6 +364,13 @@ textarea,
     background-color: rgba(255, 255, 255, 0.9);
     color: var(--deep-navy);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+input.filter-search-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]) {
+    min-height: 48px;
+    border-color: #dbeafe;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.92);
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,
