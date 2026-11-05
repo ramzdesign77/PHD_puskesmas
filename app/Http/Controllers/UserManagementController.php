@@ -115,7 +115,9 @@ class UserManagementController extends Controller
             $query->where('is_active', false);
         }
 
-        $wargas = $query->orderBy('nama_lengkap')->paginate(15)->withQueryString();
+        $perPage = in_array((int) $request->query('per_page'), [10, 25, 50], true)
+            ? (int) $request->query('per_page') : 10;
+        $wargas = $query->orderBy('nama_lengkap')->paginate($perPage)->withQueryString();
 
         return view('warga.index', compact('wargas'));
     }

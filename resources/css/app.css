@@ -2,9 +2,6 @@
 @source "../views";
 
 @theme {
-    --color-primary: #29B6F6;
-    --color-primary-dark: #0288D1;
-    --color-primary-light: #E1F5FE;
     --color-ocean-50: #f0f9ff;
     --color-ocean-100: #e0f2fe;
     --color-ocean-200: #bae6fd;
@@ -210,8 +207,67 @@ a {
     pointer-events: none;
 }
 
+.water-hero--dashboard::before,
+.water-hero--dashboard::after {
+    position: absolute;
+    right: auto;
+    left: 0;
+    width: 200%;
+    background-repeat: repeat-x;
+    background-size: 50% 100%;
+    content: "";
+    pointer-events: none;
+}
+
+.water-hero--dashboard::before {
+    z-index: 0;
+    bottom: -5%;
+    height: 155px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 180' preserveAspectRatio='none'%3E%3Cpath d='M0 92 C100 52 200 52 300 92 C400 132 500 132 600 92 C700 52 800 52 900 92 C1000 132 1100 132 1200 92' fill='none' stroke='%23a5f3fc' stroke-opacity='.24' stroke-width='2'/%3E%3C/svg%3E");
+    animation: dashboardWaveDrift 34s linear infinite reverse;
+}
+
+.water-hero--dashboard::after {
+    bottom: 8%;
+    height: 140px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 180' preserveAspectRatio='none'%3E%3Cpath d='M0 82 C100 42 200 42 300 82 C400 122 500 122 600 82 C700 42 800 42 900 82 C1000 122 1100 122 1200 82 M0 116 C100 76 200 76 300 116 C400 156 500 156 600 116 C700 76 800 76 900 116 C1000 156 1100 156 1200 116' fill='none' stroke='%23a5f3fc' stroke-opacity='.32' stroke-width='2'/%3E%3C/svg%3E");
+    animation: dashboardWaveDrift 26s linear infinite;
+}
+
+@keyframes dashboardWaveDrift {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
 .water-hero :is(h1, h2, h3, h4, h5, h6) {
     color: white;
+}
+
+.mascot-float {
+    animation: mascotFloat 5s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+@keyframes mascotFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-9px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mascot-float {
+        animation: none;
+    }
 }
 
 .water-sidebar {
@@ -279,106 +335,15 @@ a {
 .stat-card {
     position: relative;
     isolation: isolate;
-    overflow: hidden;
     border: 1px solid var(--glass-border);
     border-radius: 22px;
     background:
+        radial-gradient(circle, transparent 50px, rgba(56, 189, 248, 0.2) 51px 52px, transparent 53px) right top / 104px 104px no-repeat,
         radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.08) 0, transparent 112px),
         rgba(255, 255, 255, 0.82);
     box-shadow: var(--ocean-shadow);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-}
-
-/* blob air */
-/* genangan air */
-.card::before,
-.stat-card::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: -45px;
-    right: -45px;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.8),
-        rgba(56, 189, 248, 0.22) 45%,
-        rgba(6, 182, 212, 0.08) 70%,
-        transparent 100%
-    );
-    border: 1.5px solid rgba(56, 189, 248, 0.4);          /* garis tepi genangan */
-    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
-    box-shadow:
-        inset 0 0 18px rgba(255, 255, 255, 0.7),           /* kilau tepi dalam */
-        0 0 0 10px rgba(56, 189, 248, 0.10),               /* cincin riak 1 */
-        0 0 0 22px rgba(56, 189, 248, 0.06),               /* cincin riak 2 */
-        0 0 0 36px rgba(56, 189, 248, 0.03);               /* cincin riak 3 */
-    animation: water-morph 8s ease-in-out infinite;
-    pointer-events: none;
-}
-
-/*
-.card::before,
-.stat-card::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: -45px;
-    right: -45px;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.8),
-        rgba(56, 189, 248, 0.22) 45%,
-        rgba(6, 182, 212, 0.08) 70%,
-        transparent 100%
-    );
-    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
-    animation: water-morph 8s ease-in-out infinite;
-    pointer-events: none;
-}
-*/
-
-/* riak air */
-.card::after,
-.stat-card::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: -45px;
-    right: -45px;
-    width: 140px;
-    height: 140px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 50%;
-    animation: water-ripple 4s ease-out infinite;
-    pointer-events: none;
-}
-
-@keyframes water-morph {
-    0%, 100% {
-        border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
-        transform: rotate(0deg) scale(1);
-    }
-    50% {
-        border-radius: 40% 60% 45% 55% / 60% 40% 60% 40%;
-        transform: rotate(20deg) scale(1.06);
-    }
-}
-
-@keyframes water-ripple {
-    0%   { transform: scale(0.4); opacity: 0.8; }
-    100% { transform: scale(1.4); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .card::before,
-    .card::after,
-    .stat-card::before,
-    .stat-card::after { animation: none; }
 }
 
 .stat-card {
@@ -399,6 +364,13 @@ textarea,
     background-color: rgba(255, 255, 255, 0.9);
     color: var(--deep-navy);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+input.filter-search-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]) {
+    min-height: 48px;
+    border-color: #dbeafe;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.92);
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,

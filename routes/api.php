@@ -34,7 +34,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         ->name('register-warga');
 
     Route::middleware('auth.mobile')->group(function (): void {
+        Route::get('/profile', [AuthController::class, 'profile'])->name('profile.show');
         Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile/password', [AuthController::class, 'changePassword'])
+            ->middleware('throttle:5,1')
+            ->name('profile.password');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 

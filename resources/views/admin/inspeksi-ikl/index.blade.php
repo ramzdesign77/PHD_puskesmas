@@ -10,19 +10,19 @@
 
     {{-- ── Statistik Ringkasan ──────────────────────────────────────────── --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="card p-5">
+        <div class="card relative overflow-hidden p-5">
             <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Inspeksi</p>
             <p class="text-3xl font-bold text-gray-800 mt-1">{{ $rekapStatistik->total_inspeksi ?? 0 }}</p>
         </div>
-        <div class="card p-5 border-l-4 border-emerald-400">
+        <div class="card relative overflow-hidden p-5 border-l-4 border-emerald-400">
             <p class="text-xs text-emerald-600 font-medium uppercase tracking-wider">Aman</p>
             <p class="text-3xl font-bold text-emerald-700 mt-1">{{ $rekapStatistik->jumlah_aman ?? 0 }}</p>
         </div>
-        <div class="card p-5 border-l-4 border-amber-400">
+        <div class="card relative overflow-hidden p-5 border-l-4 border-amber-400">
             <p class="text-xs text-amber-600 font-medium uppercase tracking-wider">Risiko Sedang</p>
             <p class="text-3xl font-bold text-amber-700 mt-1">{{ $rekapStatistik->jumlah_sedang ?? 0 }}</p>
         </div>
-        <div class="card p-5 border-l-4 border-red-400">
+        <div class="card relative overflow-hidden p-5 border-l-4 border-red-400">
             <p class="text-xs text-red-600 font-medium uppercase tracking-wider">Risiko Tinggi</p>
             <p class="text-3xl font-bold text-red-700 mt-1">{{ $rekapStatistik->jumlah_tinggi ?? 0 }}</p>
         </div>

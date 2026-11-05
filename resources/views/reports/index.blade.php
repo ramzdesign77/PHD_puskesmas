@@ -18,7 +18,7 @@
             ['label' => 'Selesai',     'value' => $summary['selesai'],     'bg' => 'bg-green-50',   'text' => 'text-green-600',  'icon' => 'fa-check-circle'],
             ['label' => 'Ditolak',     'value' => $summary['ditolak'],     'bg' => 'bg-red-50',     'text' => 'text-red-600',    'icon' => 'fa-times-circle'],
         ] as $s)
-        <div class="card p-4">
+        <div class="card relative overflow-hidden p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 {{ $s['bg'] }} rounded-xl flex items-center justify-center shrink-0">
                     <i class="fas {{ $s['icon'] }} {{ $s['text'] }}"></i>

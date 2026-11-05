@@ -6,14 +6,14 @@
 
 @section('content')
 <div class="space-y-6 fade-in">
-
+    
     <!-- Bagian Header & Tombol Tambah -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Daftar Artikel</h1>
             <p class="mt-1 text-sm text-gray-500">{{ $articles->total() }} artikel tersimpan</p>
         </div>
-        <a href="{{ route('education.create') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-medical-red hover:bg-medical-red text-white px-5 py-3.5 text-sm font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5">
+        <a href="{{ route('education.create') }}" class="btn-primary">
             <i class="fas fa-plus text-xs"></i> Tambah Artikel Baru
         </a>
     </div>
