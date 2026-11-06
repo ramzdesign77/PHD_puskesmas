@@ -44,6 +44,8 @@ class LaporanWarga extends Model
         'longitude' => 'decimal:8',
     ];
 
+    protected $appends = ['kategori_label'];
+
     // ─── Relations ────────────────────────────────────────────────────────────
 
     public function desa(): BelongsTo
@@ -125,9 +127,12 @@ class LaporanWarga extends Model
             'sarang_nyamuk_dbd' => 'Sarang Nyamuk / Indikasi DBD',
             'jamban_limbah_stbm' => 'Masalah Jamban & Limbah STBM',
             'tumpukan_sampah' => 'Tumpukan Sampah',
-            'air_masalah' => 'Masalah Air',
+            'air_masalah' => 'Masalah Air Bersih',
             'sanitasi_lingkungan' => 'Sanitasi Lingkungan',
-            default => (string) $this->kategori_laporan,
+            default => str($this->kategori_laporan)
+                ->replace(['_', '-'], ' ')
+                ->title()
+                ->toString(),
         };
     }
 }

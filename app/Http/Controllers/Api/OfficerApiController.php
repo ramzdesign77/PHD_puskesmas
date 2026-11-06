@@ -22,10 +22,13 @@ class OfficerApiController extends Controller
         $officer = $this->authorizeOfficer($request);
         $operatorIds = $this->operatorIds($officer);
         $today = now()->toDateString();
+        $newReportStatuses = ['menunggu', 'dikirim', 'diproses'];
+        $waitingReportStatuses = ['menunggu', 'dikirim', 'diproses'];
+        $activeScheduleStatuses = ['terjadwal', 'dijadwalkan', 'ditindaklanjuti', 'diproses'];
 
         $recentReports = LaporanWarga::query()
             ->with('desa:id_desa,nama_desa')
-            ->where('status_laporan', 'menunggu')
+            ->whereIn('status_laporan', $waitingReportStatuses)
             ->latest('created_at')
             ->limit(5)
             ->get([
@@ -33,23 +36,33 @@ class OfficerApiController extends Controller
                 'kode_tiket',
                 'kategori_laporan',
                 'nama_pelapor',
+                'no_wa',
                 'id_desa',
                 'rt',
                 'rw',
+                'alamat_detail',
+                'patokan_alamat',
                 'deskripsi',
                 'foto_bukti',
+                'status_laporan',
                 'created_at',
             ])
             ->map(fn (LaporanWarga $report): array => $this->reportTask($report));
 
         $todaySchedules = JadwalInspeksi::query()
             ->with([
-                'laporan:id_laporan,nama_pelapor,id_desa,rt,rw',
+                'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
                 'laporan.desa:id_desa,nama_desa',
                 'paketAlat:id_paket,nama_paket',
+                'operator:id_user,nama_lengkap,username',
+                'inspeksiIkl',
             ])
-            ->whereIn('id_operator', $operatorIds)
+            ->where(function (Builder $query) use ($operatorIds): void {
+                $query->whereIn('id_operator', $operatorIds)
+                    ->orWhereNull('id_operator');
+            })
             ->whereDate('tanggal_kunjungan', $today)
+            ->whereIn('status_kunjungan', $activeScheduleStatuses)
             ->orderBy('tanggal_kunjungan')
             ->orderBy('jam_mulai')
             ->limit(5)
@@ -63,10 +76,14 @@ class OfficerApiController extends Controller
                 'jam_mulai',
                 'waktu_kunjungan',
                 'status_kunjungan',
+                'catatan',
             ])
             ->map(fn (JadwalInspeksi $schedule): array => $this->scheduleTask($schedule));
 
-        $assignedSchedules = JadwalInspeksi::query()->whereIn('id_operator', $operatorIds);
+        $assignedSchedules = JadwalInspeksi::query()->where(function (Builder $query) use ($operatorIds): void {
+            $query->whereIn('id_operator', $operatorIds)
+                ->orWhereNull('id_operator');
+        });
 
         return response()->json([
             'success' => true,
@@ -75,18 +92,31 @@ class OfficerApiController extends Controller
                 'officer' => $this->officerData($officer),
                 'summary' => [
                     'aduan_baru_count' => LaporanWarga::query()
-                        ->where('status_laporan', 'menunggu')
+                        ->whereIn('status_laporan', $newReportStatuses)
                         ->count(),
                     'jadwal_ikl_hari_ini_count' => (clone $assignedSchedules)
                         ->whereDate('tanggal_kunjungan', $today)
                         ->count(),
                     'tugas_aktif_count' => (clone $assignedSchedules)
-                        ->where('status_kunjungan', 'terjadwal')
-                        ->count(),
+                        ->whereIn('status_kunjungan', $activeScheduleStatuses)
+                        ->count()
+                        + LaporanWarga::query()->whereIn('status_laporan', ['menunggu', 'dikirim', 'diproses'])->count(),
                     'selesai_count' => (clone $assignedSchedules)
                         ->where('status_kunjungan', 'selesai')
                         ->count(),
                 ],
+                'recent_reports' => $recentReports
+                    ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                    ->values(),
+                'laporan_menunggu' => $recentReports
+                    ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                    ->values(),
+                'today_schedules' => $todaySchedules
+                    ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                    ->values(),
+                'jadwal_hari_ini' => $todaySchedules
+                    ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
+                    ->values(),
                 'recent_tasks' => [
                     'laporan_menunggu' => $recentReports
                         ->map(fn (array $task): array => collect($task)->except('_sort_at')->all())
@@ -112,11 +142,13 @@ class OfficerApiController extends Controller
         $operatorIds = $this->operatorIds($officer);
         $tasks = collect();
         $hasMore = false;
+        $newReportStatuses = ['menunggu', 'dikirim', 'diproses'];
+        $activeScheduleStatuses = ['terjadwal', 'dijadwalkan', 'ditindaklanjuti', 'diproses'];
 
         if (in_array($filter, ['semua', 'aduan_baru'], true)) {
             $reports = LaporanWarga::query()
                 ->with('desa:id_desa,nama_desa')
-                ->where('status_laporan', 'menunggu')
+                ->whereIn('status_laporan', $newReportStatuses)
                 ->when($search !== '', fn (Builder $query) => $this->searchReports($query, $search))
                 ->latest('created_at')
                 ->limit(101)
@@ -125,11 +157,15 @@ class OfficerApiController extends Controller
                     'kode_tiket',
                     'kategori_laporan',
                     'nama_pelapor',
+                    'no_wa',
                     'id_desa',
                     'rt',
                     'rw',
+                    'alamat_detail',
+                    'patokan_alamat',
                     'deskripsi',
                     'foto_bukti',
+                    'status_laporan',
                     'created_at',
                 ]);
 
@@ -139,16 +175,43 @@ class OfficerApiController extends Controller
             ));
         }
 
+        if (in_array($filter, ['semua', 'selesai'], true)) {
+            $completedReports = LaporanWarga::query()
+                ->with('desa:id_desa,nama_desa')
+                ->where('status_laporan', 'selesai')
+                ->whereDoesntHave('jadwal', function (Builder $query): void {
+                    $query->where('status_kunjungan', 'selesai');
+                })
+                ->when($search !== '', fn (Builder $query) => $this->searchReports($query, $search))
+                ->latest('created_at')
+                ->limit(101)
+                ->get();
+
+            $hasMore = $hasMore || $completedReports->count() > 100;
+            $tasks = $tasks->concat($completedReports->take(100)->map(
+                fn (LaporanWarga $report): array => $this->reportTask($report, true),
+            ));
+        }
+
         if (in_array($filter, ['semua', 'jadwal_ikl', 'selesai'], true)) {
-            $scheduleStatus = $filter === 'selesai' ? 'selesai' : 'terjadwal';
             $schedules = JadwalInspeksi::query()
                 ->with([
-                    'laporan:id_laporan,kode_tiket,nama_pelapor,id_desa,rt,rw',
+                    'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
                     'laporan.desa:id_desa,nama_desa',
                     'paketAlat:id_paket,nama_paket',
+                    'operator:id_user,nama_lengkap,username',
+                    'inspeksiIkl',
                 ])
-                ->whereIn('id_operator', $operatorIds)
-                ->where('status_kunjungan', $scheduleStatus)
+                ->where(function (Builder $query) use ($operatorIds): void {
+                    $query->whereIn('id_operator', $operatorIds)
+                        ->orWhereNull('id_operator');
+                })
+                ->whereIn(
+                    'status_kunjungan',
+                    $filter === 'selesai' ? ['selesai'] : (
+                        $filter === 'jadwal_ikl' ? $activeScheduleStatuses : array_merge($activeScheduleStatuses, ['selesai'])
+                    ),
+                )
                 ->when($search !== '', fn (Builder $query) => $this->searchSchedules($query, $search))
                 ->orderByDesc('tanggal_kunjungan')
                 ->orderByDesc('jam_mulai')
@@ -163,37 +226,12 @@ class OfficerApiController extends Controller
                     'jam_mulai',
                     'waktu_kunjungan',
                     'status_kunjungan',
+                    'catatan',
                 ]);
 
             $hasMore = $hasMore || $schedules->count() > 100;
             $tasks = $tasks->concat($schedules->take(100)->map(
                 fn (JadwalInspeksi $schedule): array => $this->scheduleTask($schedule),
-            ));
-        }
-
-        if ($filter === 'selesai') {
-            $completedReports = LaporanWarga::query()
-                ->with('desa:id_desa,nama_desa')
-                ->where('status_laporan', 'selesai')
-                ->when($search !== '', fn (Builder $query) => $this->searchReports($query, $search))
-                ->latest('created_at')
-                ->limit(101)
-                ->get([
-                    'id_laporan',
-                    'kode_tiket',
-                    'kategori_laporan',
-                    'nama_pelapor',
-                    'id_desa',
-                    'rt',
-                    'rw',
-                    'deskripsi',
-                    'foto_bukti',
-                    'created_at',
-                ]);
-
-            $hasMore = $hasMore || $completedReports->count() > 100;
-            $tasks = $tasks->concat($completedReports->take(100)->map(
-                fn (LaporanWarga $report): array => $this->reportTask($report),
             ));
         }
 
@@ -225,6 +263,8 @@ class OfficerApiController extends Controller
             'action' => match ($request->input('action')) {
                 'terima' => 'approve',
                 'tolak' => 'reject',
+                null => 'approve',
+                '' => 'approve',
                 default => $request->input('action'),
             },
         ]);
@@ -239,7 +279,7 @@ class OfficerApiController extends Controller
         $result = DB::transaction(function () use ($id_laporan, $officer, $validated): array|JsonResponse {
             $report = LaporanWarga::query()->lockForUpdate()->findOrFail($id_laporan);
 
-            if ($report->status_laporan !== 'menunggu') {
+            if (! in_array($report->status_laporan, ['menunggu', 'dikirim', 'dibaca', 'diterima', 'diproses'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Aduan ini sudah diverifikasi sebelumnya.',
@@ -258,14 +298,20 @@ class OfficerApiController extends Controller
                 ];
             }
 
-            $schedule = JadwalInspeksi::query()->create([
-                'id_laporan' => $report->id_laporan,
-                'id_operator' => $officer->id_user,
-                'tanggal_kunjungan' => $validated['tanggal_kunjungan'] ?? now()->toDateString(),
-                'jam_mulai' => $validated['waktu_kunjungan'] ?? null,
-                'jenis_kunjungan' => 'ikl_laporan_warga',
-                'status_kunjungan' => 'terjadwal',
-            ]);
+            $schedule = JadwalInspeksi::query()
+                ->where('id_laporan', $report->id_laporan)
+                ->first();
+
+            if ($schedule === null) {
+                $schedule = JadwalInspeksi::query()->create([
+                    'id_laporan' => $report->id_laporan,
+                    'id_operator' => $officer->id_user,
+                    'tanggal_kunjungan' => $validated['tanggal_kunjungan'] ?? now()->toDateString(),
+                    'jam_mulai' => $validated['waktu_kunjungan'] ?? null,
+                    'jenis_kunjungan' => 'ikl_laporan_warga',
+                    'status_kunjungan' => 'terjadwal',
+                ]);
+            }
 
             $report->update([
                 'status_laporan' => 'dijadwalkan',
@@ -327,7 +373,6 @@ class OfficerApiController extends Controller
                 'required',
                 'integer',
                 Rule::exists('trx_jadwal_inspeksi', 'id_jadwal'),
-                Rule::unique('trx_inspeksi_ikl', 'id_jadwal'),
             ],
             'jenis_sarana_air' => ['required', Rule::in(['sumur_bor', 'sumur_terlindung', 'pdam', 'mata_air', 'lainnya'])],
             'jarak_sumber_pencemar' => ['required', 'integer', 'min:0', 'max:99999'],
@@ -336,6 +381,7 @@ class OfficerApiController extends Controller
             'p3_lantai_becek_retak' => ['required', 'boolean'],
             'p4_spal_tersumbat' => ['required', 'boolean'],
             'p5_air_keruh_berbau' => ['required', 'boolean'],
+            'tanggal_inspeksi' => ['required', 'date', 'before_or_equal:today'],
             'rekomendasi_sanitarian' => ['required', 'string', 'min:5', 'max:2000'],
             'intervensi_fisik' => ['nullable', 'string', 'max:150'],
             'catatan_intervensi' => ['nullable', 'string', 'max:10000'],
@@ -373,11 +419,15 @@ class OfficerApiController extends Controller
                     ->with('laporan')
                     ->whereKey($validated['id_jadwal'])
                     ->whereIn('id_operator', $this->operatorIds($officer))
-                    ->where('status_kunjungan', 'terjadwal')
                     ->lockForUpdate()
                     ->first();
 
                 abort_if($schedule === null, 404, 'Jadwal inspeksi tidak ditemukan atau tidak ditugaskan kepada akun Anda.');
+                abort_if(
+                    $schedule->status_kunjungan !== 'terjadwal',
+                    409,
+                    'Jadwal inspeksi tidak aktif.',
+                );
                 abort_if(
                     InspeksiIkl::query()->where('id_jadwal', $schedule->id_jadwal)->exists(),
                     409,
@@ -396,7 +446,7 @@ class OfficerApiController extends Controller
                     'total_skor_ya' => $totalSkorYa,
                     'kategori_risiko' => $kategoriRisiko,
                     'rekomendasi_sanitarian' => $validated['rekomendasi_sanitarian'],
-                    'tanggal_inspeksi' => now()->toDateString(),
+                    'tanggal_inspeksi' => $validated['tanggal_inspeksi'],
                     'intervensi_fisik' => $validated['intervensi_fisik'] ?? null,
                     'catatan_intervensi' => $validated['catatan_intervensi'] ?? null,
                     'catatan_petugas' => $validated['catatan_petugas'] ?? null,
@@ -428,6 +478,14 @@ class OfficerApiController extends Controller
                 'id_jadwal' => $result['inspection']->id_jadwal,
                 'total_skor_ya' => $result['inspection']->total_skor_ya,
                 'kategori_risiko' => $result['inspection']->kategori_risiko,
+                'label_kategori_risiko' => match ($result['inspection']->kategori_risiko) {
+                    'aman' => 'Aman',
+                    'risiko_sedang' => 'Sedang',
+                    'risiko_tinggi' => 'Tinggi',
+                    default => '-',
+                },
+                'tanggal_inspeksi' => $result['inspection']->tanggal_inspeksi?->toDateString(),
+                'intervensi_fisik' => $result['inspection']->intervensi_fisik,
                 'foto_inspeksi' => $result['inspection']->foto_inspeksi,
                 'status_kunjungan' => $result['schedule']->status_kunjungan,
                 'status_laporan' => $result['schedule']->laporan?->fresh()->status_laporan,
@@ -512,19 +570,30 @@ class OfficerApiController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function reportTask(LaporanWarga $report): array
+    private function reportTask(LaporanWarga $report, bool $completed = false): array
     {
         return [
             'type' => 'aduan_baru',
+            'task_type' => $completed ? 'jadwal_ikl' : 'aduan_baru',
+            'id' => 'laporan-'.$report->id_laporan,
             'id_laporan' => $report->id_laporan,
+            'id_jadwal' => null,
             'kode_tiket' => $report->kode_tiket,
             'kategori_laporan' => $report->kategori_laporan,
+            'kategori_label' => $report->kategori_label,
             'nama_pelapor' => $report->nama_pelapor,
+            'no_wa' => $report->no_wa,
+            'id_desa' => $report->id_desa,
             'nama_desa' => $report->desa?->nama_desa,
             'rt' => $report->rt,
             'rw' => $report->rw,
+            'alamat_detail' => $report->alamat_detail ?: $report->patokan_alamat,
             'deskripsi' => $report->deskripsi,
             'foto_bukti' => $report->foto_bukti,
+            'foto_bukti_url' => $this->fotoBuktiUrl($report->foto_bukti),
+            'status_laporan' => $report->status_laporan,
+            'status_kunjungan' => $completed ? 'selesai' : 'menunggu_verifikasi',
+            'tanggal_kunjungan' => $report->created_at?->toDateString(),
             'created_at' => $report->created_at?->toIso8601String(),
             '_sort_at' => $report->created_at?->toIso8601String(),
         ];
@@ -535,24 +604,63 @@ class OfficerApiController extends Controller
      */
     private function scheduleTask(JadwalInspeksi $schedule): array
     {
-        $schedule->loadMissing(['laporan.desa', 'paketAlat']);
+        $schedule->loadMissing(['laporan.desa', 'paketAlat', 'operator', 'inspeksiIkl']);
+        $inspection = $schedule->inspeksiIkl;
 
         return [
             'type' => 'jadwal_ikl',
+            'task_type' => 'jadwal_ikl',
+            'id' => 'jadwal-'.$schedule->id_jadwal,
             'id_jadwal' => $schedule->id_jadwal,
+            'id_laporan' => $schedule->id_laporan,
+            'id_operator' => $schedule->id_operator,
+            'id_paket' => $schedule->id_paket,
             'jenis_kunjungan' => $schedule->jenis_kunjungan,
             'tanggal_kunjungan' => $schedule->tanggal_kunjungan?->toDateString(),
             'waktu_kunjungan' => $schedule->jam_mulai ?: $schedule->waktu_kunjungan,
             'status_kunjungan' => $schedule->status_kunjungan,
+            'catatan' => $schedule->catatan,
             'nama_pelapor' => $schedule->laporan?->nama_pelapor,
+            'kode_tiket' => $schedule->laporan?->kode_tiket,
+            'no_wa' => $schedule->laporan?->no_wa,
+            'kategori_laporan' => $schedule->laporan?->kategori_laporan,
+            'kategori_label' => $schedule->laporan?->kategori_label,
+            'id_desa' => $schedule->laporan?->id_desa,
             'nama_desa' => $schedule->laporan?->desa?->nama_desa,
             'rt' => $schedule->laporan?->rt,
             'rw' => $schedule->laporan?->rw,
+            'alamat_detail' => $schedule->laporan?->alamat_detail ?: $schedule->laporan?->patokan_alamat,
+            'deskripsi' => $schedule->laporan?->deskripsi,
+            'status_laporan' => $schedule->laporan?->status_laporan,
+            'foto_bukti' => $schedule->laporan?->foto_bukti,
+            'foto_bukti_url' => $this->fotoBuktiUrl($schedule->laporan?->foto_bukti),
             'paket_alat' => $schedule->paketAlat?->nama_paket,
+            'nama_operator' => $schedule->operator?->nama_lengkap ?: $schedule->operator?->name,
+            'inspeksi' => $inspection === null ? null : [
+                'id_inspeksi' => $inspection->id_inspeksi,
+                'kategori_risiko' => $inspection->kategori_risiko,
+                'total_skor_ya' => $inspection->total_skor_ya,
+                'tanggal_inspeksi' => $inspection->tanggal_inspeksi?->toDateString(),
+            ],
+            'kategori_risiko' => $inspection?->kategori_risiko,
+            'total_skor_ya' => $inspection?->total_skor_ya,
             '_sort_at' => $schedule->tanggal_kunjungan?->toDateString().' '.(
                 $schedule->jam_mulai ?: $schedule->waktu_kunjungan ?: '00:00:00'
             ),
         ];
+    }
+
+    private function fotoBuktiUrl(?string $path): ?string
+    {
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     private function searchReports(Builder $query, string $search): Builder

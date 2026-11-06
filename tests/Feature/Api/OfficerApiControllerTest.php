@@ -68,8 +68,12 @@ class OfficerApiControllerTest extends TestCase
             ->assertJsonPath('data.officer.jabatan', 'Petugas Kesling')
             ->assertJsonPath('data.summary.aduan_baru_count', 1)
             ->assertJsonPath('data.summary.jadwal_ikl_hari_ini_count', 2)
-            ->assertJsonPath('data.summary.tugas_aktif_count', 1)
+            ->assertJsonPath('data.summary.tugas_aktif_count', 2)
             ->assertJsonPath('data.summary.selesai_count', 1)
+            ->assertJsonPath('data.recent_reports.0.kategori_label', 'Masalah Air Bersih')
+            ->assertJsonPath('data.laporan_menunggu.0.kategori_label', 'Masalah Air Bersih')
+            ->assertJsonPath('data.today_schedules.0.id_laporan', $scheduledReport->id_laporan)
+            ->assertJsonPath('data.jadwal_hari_ini.0.nama_desa', 'Sumbersari')
             ->assertJsonFragment([
                 'type' => 'aduan_baru',
                 'id_laporan' => $pendingReport->id_laporan,
@@ -82,6 +86,30 @@ class OfficerApiControllerTest extends TestCase
                 'nama_desa' => 'Sumbersari',
                 'paket_alat' => 'Paket Inspeksi Air',
             ]);
+    }
+
+    #[DataProvider('categoryLabels')]
+    public function test_laporan_category_labels_are_human_readable(
+        string $category,
+        string $expectedLabel,
+    ): void {
+        $village = Desa::query()->create(['nama_desa' => 'Sumbersari']);
+        $report = $this->createReport($village, 'IKL-LABEL-'.uniqid(), 'menunggu');
+        $report->kategori_laporan = $category;
+
+        $this->assertSame($expectedLabel, $report->kategori_label);
+    }
+
+    public static function categoryLabels(): array
+    {
+        return [
+            'air problem' => ['air_masalah', 'Masalah Air Bersih'],
+            'environment sanitation' => ['sanitasi_lingkungan', 'Sanitasi Lingkungan'],
+            'cloudy well water' => ['air_sumur_keruh_berbau', 'Air Sumur Keruh / Berbau'],
+            'mosquito nests' => ['sarang_nyamuk_dbd', 'Sarang Nyamuk / Indikasi DBD'],
+            'toilet waste' => ['jamban_limbah_stbm', 'Masalah Jamban & Limbah STBM'],
+            'garbage' => ['tumpukan_sampah', 'Tumpukan Sampah'],
+        ];
     }
 
     public function test_tasks_filter_and_search_return_only_matching_officer_work(): void
@@ -104,6 +132,12 @@ class OfficerApiControllerTest extends TestCase
             ->assertJsonPath('meta.filter', 'aduan_baru')
             ->assertJsonPath('data.0.id_laporan', $report->id_laporan)
             ->assertJsonPath('data.0.kode_tiket', 'IKL-SEARCH-001')
+            ->assertJsonPath('data.0.id', 'laporan-'.$report->id_laporan)
+            ->assertJsonPath('data.0.id_jadwal', null)
+            ->assertJsonPath('data.0.task_type', 'aduan_baru')
+            ->assertJsonPath('data.0.kategori_label', 'Masalah Air Bersih')
+            ->assertJsonPath('data.0.status_kunjungan', 'menunggu_verifikasi')
+            ->assertJsonPath('data.0.tanggal_kunjungan', now()->toDateString())
             ->assertJsonCount(1, 'data');
 
         $this->withToken($token)
