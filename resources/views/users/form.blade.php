@@ -86,6 +86,7 @@
                     class="font-normal text-gray-400">(opsional)</span></label><input id="foto" type="file"
                 name="foto" accept="image/*"
                 class="w-full rounded-lg border-2 border-gray-300 bg-gray-50 p-2 text-sm text-gray-600 focus:border-red-400 focus:outline-none">
+            <p class="mt-1 text-xs text-gray-500">Ukuran maksimal 2048 KB (2 MB).</p>
         </div>
         @if ($user)
             <div><label for="is_active" class="mb-1 block text-sm font-semibold text-gray-700">Status

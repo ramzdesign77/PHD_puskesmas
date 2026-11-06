@@ -337,10 +337,7 @@ a {
     isolation: isolate;
     border: 1px solid var(--glass-border);
     border-radius: 22px;
-    background:
-        radial-gradient(circle, transparent 50px, rgba(56, 189, 248, 0.2) 51px 52px, transparent 53px) right top / 104px 104px no-repeat,
-        radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.08) 0, transparent 112px),
-        rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.82);
     box-shadow: var(--ocean-shadow);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
