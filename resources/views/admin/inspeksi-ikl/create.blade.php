@@ -49,6 +49,14 @@
     <form method="POST" action="{{ route('admin.inspeksi-ikl.store') }}" class="space-y-6">
         @csrf
         <input type="hidden" name="id_jadwal" value="{{ $jadwal->id_jadwal }}">
+        <label class="card p-4 flex flex-col gap-2 text-sm font-medium text-gray-700">
+            Kategori Standar IKL
+            <select name="kategori_ikl" id="kategori_ikl" class="form-input w-full" onchange="gantiKategori()">
+                @foreach(['sumur_gali' => '1A Sumur Gali', 'sumur_bor' => '1B Sumur Bor', 'sarang_nyamuk_dbd' => '2 Sarang Nyamuk / DBD', 'jamban_limbah_stbm' => '3 Jamban & Limbah STBM', 'tumpukan_sampah' => '4 Tumpukan Sampah'] as $category => $label)
+                    <option value="{{ $category }}" @selected(old('kategori_ikl', $kategoriIkl) === $category)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </label>
 
         {{-- ── A. Data Sarana Air ──────────────────────────────────────── --}}
         <div class="card p-6 space-y-5">
@@ -96,7 +104,9 @@
             </h3>
 
             <div class="space-y-3" id="checklist-container">
-                @foreach($labelParameter as $field => $label)
+                @foreach($pertanyaan as $index => $label)
+                @php($number = $index + 1)
+                @php($field = $number < 6 ? 'p'.$number : 'p'.$number.'_indikator_'.$number)
                 <label class="flex items-center gap-3 p-4 border border-gray-100 rounded-xl cursor-pointer
                               hover:border-red-200 hover:bg-red-50 transition-colors group
                               has-[:checked]:border-red-300 has-[:checked]:bg-red-50"
@@ -105,7 +115,7 @@
                            value="1" class="w-4 h-4 accent-red-500 cursor-pointer"
                            {{ old($field) ? 'checked' : '' }}
                            onchange="hitungSkor()">
-                    <span class="text-sm text-gray-700 group-has-[:checked]:text-red-700 group-has-[:checked]:font-medium">
+                    <span class="text-sm text-gray-700 group-has-[:checked]:text-red-700 group-has-[:checked]:font-medium" data-question-number="{{ $number }}">
                         {{ $label }}
                     </span>
                     <i class="fas fa-times-circle text-red-400 ml-auto opacity-0 group-has-[:checked]:opacity-100 transition-opacity"></i>
@@ -117,10 +127,10 @@
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-2">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Skor Risiko Sementara</span>
-                    <span id="skor-display" class="text-lg font-bold text-gray-800">0/5</span>
+                <span id="skor-display" class="text-lg font-bold text-gray-800">0/7</span>
                 </div>
                 <div class="flex gap-1.5" id="skor-bar">
-                    @for($i = 0; $i < 5; $i++)
+                    @for($i = 0; $i < 7; $i++)
                         <div class="skor-block flex-1 h-3 rounded bg-gray-200 transition-colors duration-200"></div>
                     @endfor
                 </div>
@@ -179,7 +189,7 @@ function hitungSkor() {
     let skor = 0;
     checkboxes.forEach(cb => { if (cb.checked) skor++; });
 
-    document.getElementById('skor-display').textContent = skor + '/5';
+    document.getElementById('skor-display').textContent = skor + '/7';
 
     const blocks = document.querySelectorAll('.skor-block');
     blocks.forEach((b, i) => {
@@ -192,17 +202,26 @@ function hitungSkor() {
     });
 
     const preview = document.getElementById('kategori-preview');
-    if (skor === 0) {
-        preview.textContent = '✅ Prakiraan: AMAN (tidak ditemukan masalah)';
-        preview.className = 'text-xs text-emerald-600 mt-2 font-medium';
-    } else if (skor <= 2) {
-        preview.textContent = '⚠️ Prakiraan: RISIKO SEDANG (' + skor + ' parameter bermasalah)';
-        preview.className = 'text-xs text-amber-600 mt-2 font-medium';
-    } else {
-        preview.textContent = '🔴 Prakiraan: RISIKO TINGGI (' + skor + ' parameter bermasalah)';
-        preview.className = 'text-xs text-red-600 mt-2 font-medium';
-    }
+    const category = document.getElementById('kategori_ikl').value;
+    const seventhIsYes = document.querySelector('#checklist-container input[name="p7_indikator_7"]')?.checked;
+    const risk = category === 'sumur_bor' && seventhIsYes || skor >= 6
+        ? ['Risiko Amat Tinggi', 'text-red-700']
+        : skor >= 4 ? ['Risiko Tinggi', 'text-red-600']
+        : skor >= 2 ? ['Risiko Sedang', 'text-amber-600']
+        : ['Risiko Rendah (Aman)', 'text-emerald-600'];
+    preview.textContent = risk[0] + ' (' + skor + ' indikator berisiko)';
+    preview.className = 'text-xs ' + risk[1] + ' mt-2 font-medium';
 }
+
+const questionBank = {{ Illuminate\Support\Js::from($bankPertanyaan) }};
+function gantiKategori() {
+    const category = document.getElementById('kategori_ikl').value;
+    document.querySelectorAll('[data-question-number]').forEach((element, index) => {
+        element.textContent = (index + 1) + '. ' + questionBank[category][index];
+    });
+    hitungSkor();
+}
+gantiKategori();
 
 // Character counter untuk textarea
 const textarea = document.getElementById('rekomendasi_sanitarian');

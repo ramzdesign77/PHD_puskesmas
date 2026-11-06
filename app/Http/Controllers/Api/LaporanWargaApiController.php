@@ -246,8 +246,10 @@ class LaporanWargaApiController extends Controller
                 ] : null,
                 'hasil_inspeksi' => $inspeksi ? [
                     'id_inspeksi' => $inspeksi->id_inspeksi,
+                    'kategori_ikl' => $inspeksi->kategori_ikl,
                     'total_skor_ya' => $inspeksi->total_skor_ya,
                     'kategori_risiko' => $inspeksi->kategori_risiko,
+                    'detail_indikator' => $inspeksi->detail_indikator,
                     'label_kategori_risiko' => $inspeksi->label_kategori_risiko,
                     'tanggal_inspeksi' => $inspeksi->tanggal_inspeksi?->toDateString(),
                     'rekomendasi_sanitarian' => $inspeksi->rekomendasi_sanitarian,
@@ -302,7 +304,9 @@ class LaporanWargaApiController extends Controller
                     'petugas' => $jadwal->operator?->nama_lengkap,
                 ] : null,
                 'hasil_ikl' => $hasilIkl ? [
+                    'kategori_ikl' => $hasilIkl->kategori_ikl,
                     'kategori_risiko' => $hasilIkl->kategori_risiko,
+                    'detail_indikator' => $hasilIkl->detail_indikator,
                     'total_skor_ya' => $hasilIkl->total_skor_ya,
                     'rekomendasi_sanitarian' => $hasilIkl->rekomendasi_sanitarian,
                     'intervensi_fisik' => $hasilIkl->intervensi_fisik,
@@ -382,7 +386,9 @@ class LaporanWargaApiController extends Controller
                         'petugas' => $jadwal->operator?->nama_lengkap,
                     ] : null,
                     'hasil_ikl' => $hasilIkl ? [
+                        'kategori_ikl' => $hasilIkl->kategori_ikl,
                         'kategori_risiko' => $hasilIkl->kategori_risiko,
+                        'detail_indikator' => $hasilIkl->detail_indikator,
                         'total_skor_ya' => $hasilIkl->total_skor_ya,
                         'rekomendasi_sanitarian' => $hasilIkl->rekomendasi_sanitarian,
                         'intervensi_fisik' => $hasilIkl->intervensi_fisik,

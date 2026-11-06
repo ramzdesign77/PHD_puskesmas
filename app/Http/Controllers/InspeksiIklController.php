@@ -36,7 +36,19 @@ class InspeksiIklController extends Controller
             abort(403, 'Anda tidak berwenang mengisi inspeksi ini.');
         }
 
-        return view('inspeksi.form', compact('jadwal'));
+        $kategoriIkl = $jadwal->laporan?->kategori_laporan === 'sarang_nyamuk_dbd'
+            ? 'sarang_nyamuk_dbd'
+            : ($jadwal->laporan?->kategori_laporan === 'jamban_limbah_stbm'
+                ? 'jamban_limbah_stbm'
+                : ($jadwal->laporan?->kategori_laporan === 'tumpukan_sampah'
+                    ? 'tumpukan_sampah'
+                    : ($jadwal->laporan?->kategori_laporan === 'air_sumur_keruh_berbau' ? 'sumur_bor' : 'sumur_gali')));
+        $pertanyaan = InspeksiIkl::getQuestionsByCategory($kategoriIkl);
+        $bankPertanyaan = collect(['sumur_gali', 'sumur_bor', 'sarang_nyamuk_dbd', 'jamban_limbah_stbm', 'tumpukan_sampah'])
+            ->mapWithKeys(fn (string $category): array => [$category => InspeksiIkl::getQuestionsByCategory($category)])
+            ->all();
+
+        return view('inspeksi.form', compact('jadwal', 'kategoriIkl', 'pertanyaan', 'bankPertanyaan'));
     }
 
     /**
@@ -61,45 +73,60 @@ class InspeksiIklController extends Controller
             abort(403, 'Anda tidak berwenang mengirim inspeksi ini.');
         }
 
+        $request->merge([
+            'kategori_ikl' => $request->input('kategori_ikl', $request->input('jenis_sarana_air') === 'sumur_bor' ? 'sumur_bor' : 'sumur_gali'),
+            'p1' => $request->boolean('p1') || $request->boolean('p1_dinding_sumur_retak'),
+            'p2' => $request->boolean('p2') || $request->boolean('p2_penutup_tidak_rapat'),
+            'p3' => $request->boolean('p3') || $request->boolean('p3_lantai_becek_retak'),
+            'p4' => $request->boolean('p4') || $request->boolean('p4_spal_tersumbat'),
+            'p5' => $request->boolean('p5') || $request->boolean('p5_air_keruh_berbau'),
+            'p6_indikator_6' => $request->boolean('p6_indikator_6') || $request->boolean('p6') || $request->boolean('indikator_6'),
+            'p7_indikator_7' => $request->boolean('p7_indikator_7') || $request->boolean('p7') || $request->boolean('indikator_7'),
+        ]);
+
         $validated = $request->validate([
             'jenis_sarana_air' => 'required|in:sumur_bor,sumur_terlindung,pdam,mata_air,lainnya',
+            'kategori_ikl' => 'required|in:sumur_gali,sumur_bor,sarang_nyamuk_dbd,jamban_limbah_stbm,tumpukan_sampah',
             'jarak_sumber_pencemar' => 'required|integer|min:0|max:99999',
-            'p1_dinding_sumur_retak' => 'nullable|boolean',
-            'p2_penutup_tidak_rapat' => 'nullable|boolean',
-            'p3_lantai_becek_retak' => 'nullable|boolean',
-            'p4_spal_tersumbat' => 'nullable|boolean',
-            'p5_air_keruh_berbau' => 'nullable|boolean',
+            'p1' => 'nullable|boolean',
+            'p2' => 'nullable|boolean',
+            'p3' => 'nullable|boolean',
+            'p4' => 'nullable|boolean',
+            'p5' => 'nullable|boolean',
+            'p6_indikator_6' => 'nullable|boolean',
+            'p7_indikator_7' => 'nullable|boolean',
             'rekomendasi_sanitarian' => 'required|string|min:5|max:2000',
             'tanggal_inspeksi' => 'required|date|before_or_equal:today',
         ]);
 
         // Hitung skor: jumlah kondisi berbahaya yang dicentang (true)
-        $checklist = [
-            'p1_dinding_sumur_retak',
-            'p2_penutup_tidak_rapat',
-            'p3_lantai_becek_retak',
-            'p4_spal_tersumbat',
-            'p5_air_keruh_berbau',
-        ];
-
-        $totalSkor = collect($checklist)
-            ->filter(fn (string $key) => (bool) ($validated[$key] ?? false))
-            ->count();
-
-        $kategoriRisiko = InspeksiIkl::hitungKategoriRisiko($totalSkor);
+        $answers = collect(range(1, 7))->mapWithKeys(fn (int $number): array => [
+            'p'.$number => (bool) ($validated[$number < 6 ? 'p'.$number : 'p'.$number.'_indikator_'.$number] ?? false),
+        ])->all();
+        $totalSkor = count(array_filter($answers));
+        $kategoriRisiko = InspeksiIkl::calculateRiskCategory($totalSkor, $validated['kategori_ikl'], $answers)['code'];
 
         // ── Database transaction: insert inspeksi + update dua status ──────
-        DB::transaction(function () use ($jadwal, $validated, $totalSkor, $kategoriRisiko): void {
+        DB::transaction(function () use ($jadwal, $validated, $totalSkor, $kategoriRisiko, $answers): void {
             // 1. Simpan data inspeksi IKL
             InspeksiIkl::create([
                 'id_jadwal' => $jadwal->id_jadwal,
                 'jenis_sarana_air' => $validated['jenis_sarana_air'],
+                'kategori_ikl' => $validated['kategori_ikl'],
                 'jarak_sumber_pencemar' => $validated['jarak_sumber_pencemar'],
-                'p1_dinding_sumur_retak' => (bool) ($validated['p1_dinding_sumur_retak'] ?? false),
-                'p2_penutup_tidak_rapat' => (bool) ($validated['p2_penutup_tidak_rapat'] ?? false),
-                'p3_lantai_becek_retak' => (bool) ($validated['p3_lantai_becek_retak'] ?? false),
-                'p4_spal_tersumbat' => (bool) ($validated['p4_spal_tersumbat'] ?? false),
-                'p5_air_keruh_berbau' => (bool) ($validated['p5_air_keruh_berbau'] ?? false),
+                'p1_dinding_sumur_retak' => $answers['p1'],
+                'p2_penutup_tidak_rapat' => $answers['p2'],
+                'p3_lantai_becek_retak' => $answers['p3'],
+                'p4_spal_tersumbat' => $answers['p4'],
+                'p5_air_keruh_berbau' => $answers['p5'],
+                'p1' => $answers['p1'],
+                'p2' => $answers['p2'],
+                'p3' => $answers['p3'],
+                'p4' => $answers['p4'],
+                'p5' => $answers['p5'],
+                'p6_indikator_6' => $answers['p6'],
+                'p7_indikator_7' => $answers['p7'],
+                'detail_indikator' => InspeksiIkl::buildIndicatorDetails($validated['kategori_ikl'], $answers),
                 'total_skor_ya' => $totalSkor,
                 'kategori_risiko' => $kategoriRisiko,
                 'rekomendasi_sanitarian' => $validated['rekomendasi_sanitarian'],

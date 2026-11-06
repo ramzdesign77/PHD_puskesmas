@@ -21,6 +21,7 @@
     @php
         $risikoMap = [
             'aman'          => ['bg-green-100 border-green-200 text-green-800', '✅ AMAN (Risiko Rendah)', 'Sarana air bersih aman dari risiko pencemaran secara fisik.'],
+            'risiko_amat_tinggi' => ['bg-red-200 border-red-300 text-red-900', 'RISIKO AMAT TINGGI', 'Diperlukan tindak lanjut segera.'],
             'risiko_sedang' => ['bg-yellow-100 border-yellow-200 text-yellow-800', '⚠️ RISIKO SEDANG', 'Terdapat beberapa kondisi fisik yang berisiko mencemari sarana air.'],
             'risiko_tinggi' => ['bg-red-100 border-red-200 text-red-800', '🔴 RISIKO TINGGI', 'Banyak ditemukan kondisi berbahaya! Sarana air sangat rawan pencemaran.'],
         ];
@@ -36,7 +37,7 @@
         <div class="text-center bg-white/50 rounded-xl p-3 min-w-32">
             <p class="text-xs font-semibold uppercase">Total Skor Risiko</p>
             <p class="text-4xl font-black {{ $inspeksi->total_skor_ya >= 3 ? 'text-red-600' : ($inspeksi->total_skor_ya >= 1 ? 'text-yellow-600' : 'text-green-600') }}">
-                {{ $inspeksi->total_skor_ya }} <span class="text-xl text-gray-400 font-medium">/ 5</span>
+                {{ $inspeksi->total_skor_ya }} <span class="text-xl text-gray-400 font-medium">/ 7</span>
             </p>
         </div>
     </div>
@@ -107,7 +108,7 @@
                 </div>
             </div>
 
-            {{-- Detail Checklist (5 Poin) --}}
+            {{-- Detail Checklist --}}
             <div class="card p-0 overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
                     <h3 class="font-bold text-gray-800 text-sm">Rincian Hasil Checklist Fisik</h3>
@@ -115,7 +116,7 @@
                 
                 <ul class="divide-y divide-gray-100 text-sm">
                     @php
-                        $checklists = [
+                        $checklists = $inspeksi->detail_indikator ?? [
                             ['1. Dinding sumur/bangunan retak atau bocor?', $inspeksi->p1_dinding_sumur_retak],
                             ['2. Penutup sarana air tidak ada atau tidak rapat?', $inspeksi->p2_penutup_tidak_rapat],
                             ['3. Lantai di sekitar sarana becek, retak, atau kotor?', $inspeksi->p3_lantai_becek_retak],
@@ -124,7 +125,9 @@
                         ];
                     @endphp
 
-                    @foreach($checklists as [$pertanyaan, $jawabanYa])
+                    @foreach($checklists as $item)
+                    @php($pertanyaan = $item['pertanyaan'] ?? $item[0])
+                    @php($jawabanYa = $item['jawaban'] ?? $item[1])
                     <li class="flex items-start gap-4 p-4 {{ $jawabanYa ? 'bg-red-50/30' : '' }}">
                         <div class="flex-shrink-0 mt-0.5">
                             @if($jawabanYa)

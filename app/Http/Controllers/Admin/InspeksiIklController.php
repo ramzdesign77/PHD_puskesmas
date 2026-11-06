@@ -66,8 +66,13 @@ class InspeksiIklController extends Controller
         abort_if(is_null($jadwal->inspeksiIkl), 404, 'Hasil inspeksi belum tersedia.');
 
         $labelParameter = InspeksiIkl::labelParameter();
+        $indikatorList = $jadwal->inspeksiIkl->detail_indikator
+            ?? InspeksiIkl::buildIndicatorDetails(
+                $jadwal->inspeksiIkl->kategori_ikl ?? 'sumur_gali',
+                collect(range(1, 7))->mapWithKeys(fn (int $number): array => ['p'.$number => (bool) ($jadwal->inspeksiIkl->{'p'.$number} ?? false)])->all(),
+            );
 
-        return view('admin.inspeksi-ikl.show', compact('jadwal', 'labelParameter'));
+        return view('admin.inspeksi-ikl.show', compact('jadwal', 'labelParameter', 'indikatorList'));
     }
 
     /**
@@ -90,9 +95,17 @@ class InspeksiIklController extends Controller
             'Jadwal ini tidak dalam status aktif.'
         );
 
-        $labelParameter = InspeksiIkl::labelParameter();
+        $kategoriIkl = $jadwal->laporan?->kategori_laporan === 'sarang_nyamuk_dbd'
+            ? 'sarang_nyamuk_dbd'
+            : ($jadwal->laporan?->kategori_laporan === 'jamban_limbah_stbm'
+                ? 'jamban_limbah_stbm'
+                : ($jadwal->laporan?->kategori_laporan === 'tumpukan_sampah' ? 'tumpukan_sampah' : 'sumur_gali'));
+        $pertanyaan = InspeksiIkl::getQuestionsByCategory($kategoriIkl);
+        $bankPertanyaan = collect(['sumur_gali', 'sumur_bor', 'sarang_nyamuk_dbd', 'jamban_limbah_stbm', 'tumpukan_sampah'])
+            ->mapWithKeys(fn (string $category): array => [$category => InspeksiIkl::getQuestionsByCategory($category)])
+            ->all();
 
-        return view('admin.inspeksi-ikl.create', compact('jadwal', 'labelParameter'));
+        return view('admin.inspeksi-ikl.create', compact('jadwal', 'kategoriIkl', 'pertanyaan', 'bankPertanyaan'));
     }
 
     /**
@@ -103,25 +116,31 @@ class InspeksiIklController extends Controller
         $validated = $request->validated();
 
         // Hitung total skor dari jawaban "Ya" (true)
-        $totalSkorYa = collect([
-            $validated['p1_dinding_sumur_retak'],
-            $validated['p2_penutup_tidak_rapat'],
-            $validated['p3_lantai_becek_retak'],
-            $validated['p4_spal_tersumbat'],
-            $validated['p5_air_keruh_berbau'],
-        ])->filter()->count();
-
-        $kategoriRisiko = InspeksiIkl::hitungKategoriRisiko($totalSkorYa);
+        $answers = collect(range(1, 7))->mapWithKeys(fn (int $number): array => [
+            'p'.$number => $number < 6 ? (bool) $validated['p'.$number] : (bool) $validated['p'.$number.'_indikator_'.$number],
+        ])->all();
+        $totalSkorYa = count(array_filter($answers));
+        $risk = InspeksiIkl::calculateRiskCategory($totalSkorYa, $validated['kategori_ikl'], $answers);
+        $kategoriRisiko = $risk['code'];
 
         $inspeksi = InspeksiIkl::create([
             'id_jadwal' => $validated['id_jadwal'],
             'jenis_sarana_air' => $validated['jenis_sarana_air'],
+            'kategori_ikl' => $validated['kategori_ikl'],
             'jarak_sumber_pencemar' => $validated['jarak_sumber_pencemar'],
-            'p1_dinding_sumur_retak' => $validated['p1_dinding_sumur_retak'],
-            'p2_penutup_tidak_rapat' => $validated['p2_penutup_tidak_rapat'],
-            'p3_lantai_becek_retak' => $validated['p3_lantai_becek_retak'],
-            'p4_spal_tersumbat' => $validated['p4_spal_tersumbat'],
-            'p5_air_keruh_berbau' => $validated['p5_air_keruh_berbau'],
+            'p1_dinding_sumur_retak' => $answers['p1'],
+            'p2_penutup_tidak_rapat' => $answers['p2'],
+            'p3_lantai_becek_retak' => $answers['p3'],
+            'p4_spal_tersumbat' => $answers['p4'],
+            'p5_air_keruh_berbau' => $answers['p5'],
+            'p1' => $answers['p1'],
+            'p2' => $answers['p2'],
+            'p3' => $answers['p3'],
+            'p4' => $answers['p4'],
+            'p5' => $answers['p5'],
+            'p6_indikator_6' => $answers['p6'],
+            'p7_indikator_7' => $answers['p7'],
+            'detail_indikator' => InspeksiIkl::buildIndicatorDetails($validated['kategori_ikl'], $answers),
             'total_skor_ya' => $totalSkorYa,
             'kategori_risiko' => $kategoriRisiko,
             'rekomendasi_sanitarian' => $validated['rekomendasi_sanitarian'],
@@ -140,10 +159,11 @@ class InspeksiIklController extends Controller
             'aman' => 'Aman',
             'risiko_sedang' => 'Risiko Sedang',
             'risiko_tinggi' => 'Risiko Tinggi',
+            'risiko_amat_tinggi' => 'Risiko Amat Tinggi',
             default => $inspeksi->kategori_risiko,
         };
 
         return redirect()->route('admin.inspeksi-ikl.index')
-            ->with('success', "Hasil IKL berhasil disimpan. Kategori Risiko: {$labelKategori} (Skor: {$totalSkorYa}/5).");
+            ->with('success', "Hasil IKL berhasil disimpan. Kategori Risiko: {$labelKategori} (Skor: {$totalSkorYa}/7).");
     }
 }

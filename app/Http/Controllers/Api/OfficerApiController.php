@@ -357,6 +357,8 @@ class OfficerApiController extends Controller
             'p3_lantai_becek_retak' => ['p3', 'p3_bibir_sumur_tidak_ada', 'p3_lantai_becek_retak'],
             'p4_spal_tersumbat' => ['p4', 'p4_saluran_pembuangan_rusak', 'p4_spal_tersumbat'],
             'p5_air_keruh_berbau' => ['p5', 'p5_air_keruh_berbau'],
+            'p6_indikator_6' => ['p6', 'indikator_6', 'p6_indikator_6'],
+            'p7_indikator_7' => ['p7', 'indikator_7', 'p7_indikator_7'],
         ];
 
         foreach ($parameterAliases as $canonicalName => $aliases) {
@@ -366,6 +368,10 @@ class OfficerApiController extends Controller
                     break;
                 }
             }
+        }
+
+        if (! $request->exists('kategori_ikl')) {
+            $request->merge(['kategori_ikl' => $request->input('jenis_sarana_air') === 'sumur_bor' ? 'sumur_bor' : 'sumur_gali']);
         }
 
         $validated = $request->validate([
@@ -381,6 +387,9 @@ class OfficerApiController extends Controller
             'p3_lantai_becek_retak' => ['required', 'boolean'],
             'p4_spal_tersumbat' => ['required', 'boolean'],
             'p5_air_keruh_berbau' => ['required', 'boolean'],
+            'p6_indikator_6' => ['sometimes', 'boolean'],
+            'p7_indikator_7' => ['sometimes', 'boolean'],
+            'kategori_ikl' => ['required', Rule::in(['sumur_gali', 'sumur_bor', 'sarang_nyamuk_dbd', 'jamban_limbah_stbm', 'tumpukan_sampah'])],
             'tanggal_inspeksi' => ['required', 'date', 'before_or_equal:today'],
             'rekomendasi_sanitarian' => ['required', 'string', 'min:5', 'max:2000'],
             'intervensi_fisik' => ['nullable', 'string', 'max:150'],
@@ -390,17 +399,19 @@ class OfficerApiController extends Controller
             'foto_inspeksi' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $checklist = [
-            'p1_dinding_sumur_retak',
-            'p2_penutup_tidak_rapat',
-            'p3_lantai_becek_retak',
-            'p4_spal_tersumbat',
-            'p5_air_keruh_berbau',
+        $answers = [
+            'p1' => (bool) $validated['p1_dinding_sumur_retak'],
+            'p2' => (bool) $validated['p2_penutup_tidak_rapat'],
+            'p3' => (bool) $validated['p3_lantai_becek_retak'],
+            'p4' => (bool) $validated['p4_spal_tersumbat'],
+            'p5' => (bool) $validated['p5_air_keruh_berbau'],
+            'p6' => (bool) ($validated['p6_indikator_6'] ?? false),
+            'p7' => (bool) ($validated['p7_indikator_7'] ?? false),
         ];
-        $totalSkorYa = collect($checklist)
-            ->filter(fn (string $field): bool => (bool) $validated[$field])
-            ->count();
-        $kategoriRisiko = InspeksiIkl::hitungKategoriRisiko($totalSkorYa);
+        $totalSkorYa = count(array_filter($answers));
+        $risk = InspeksiIkl::calculateRiskCategory($totalSkorYa, $validated['kategori_ikl'], $answers);
+        $kategoriRisiko = $risk['code'];
+        $detailIndikator = InspeksiIkl::buildIndicatorDetails($validated['kategori_ikl'], $answers);
         $fotoBukti = $request->file('foto_bukti');
         $fotoDisk = $fotoBukti !== null ? 'local' : 'public';
         $fotoPath = $fotoBukti !== null
@@ -412,6 +423,8 @@ class OfficerApiController extends Controller
                 $validated,
                 $totalSkorYa,
                 $kategoriRisiko,
+                $answers,
+                $detailIndikator,
                 $fotoPath,
                 $officer,
             ): array {
@@ -436,6 +449,7 @@ class OfficerApiController extends Controller
 
                 $inspection = InspeksiIkl::query()->create([
                     'id_jadwal' => $schedule->id_jadwal,
+                    'kategori_ikl' => $validated['kategori_ikl'],
                     'jenis_sarana_air' => $validated['jenis_sarana_air'],
                     'jarak_sumber_pencemar' => $validated['jarak_sumber_pencemar'],
                     'p1_dinding_sumur_retak' => (bool) $validated['p1_dinding_sumur_retak'],
@@ -443,6 +457,14 @@ class OfficerApiController extends Controller
                     'p3_lantai_becek_retak' => (bool) $validated['p3_lantai_becek_retak'],
                     'p4_spal_tersumbat' => (bool) $validated['p4_spal_tersumbat'],
                     'p5_air_keruh_berbau' => (bool) $validated['p5_air_keruh_berbau'],
+                    'p1' => $answers['p1'],
+                    'p2' => $answers['p2'],
+                    'p3' => $answers['p3'],
+                    'p4' => $answers['p4'],
+                    'p5' => $answers['p5'],
+                    'p6_indikator_6' => $answers['p6'],
+                    'p7_indikator_7' => $answers['p7'],
+                    'detail_indikator' => $detailIndikator,
                     'total_skor_ya' => $totalSkorYa,
                     'kategori_risiko' => $kategoriRisiko,
                     'rekomendasi_sanitarian' => $validated['rekomendasi_sanitarian'],
@@ -477,11 +499,14 @@ class OfficerApiController extends Controller
                 'id_inspeksi' => $result['inspection']->id_inspeksi,
                 'id_jadwal' => $result['inspection']->id_jadwal,
                 'total_skor_ya' => $result['inspection']->total_skor_ya,
+                'detail_indikator' => $result['inspection']->detail_indikator,
+                'kategori_ikl' => $result['inspection']->kategori_ikl,
                 'kategori_risiko' => $result['inspection']->kategori_risiko,
                 'label_kategori_risiko' => match ($result['inspection']->kategori_risiko) {
-                    'aman' => 'Aman',
-                    'risiko_sedang' => 'Sedang',
-                    'risiko_tinggi' => 'Tinggi',
+                    'aman' => 'Risiko Rendah (Aman)',
+                    'risiko_sedang' => 'Risiko Sedang',
+                    'risiko_tinggi' => 'Risiko Tinggi',
+                    'risiko_amat_tinggi' => 'Risiko Amat Tinggi',
                     default => '-',
                 },
                 'tanggal_inspeksi' => $result['inspection']->tanggal_inspeksi?->toDateString(),
@@ -638,8 +663,10 @@ class OfficerApiController extends Controller
             'nama_operator' => $schedule->operator?->nama_lengkap ?: $schedule->operator?->name,
             'inspeksi' => $inspection === null ? null : [
                 'id_inspeksi' => $inspection->id_inspeksi,
+                'kategori_ikl' => $inspection->kategori_ikl,
                 'kategori_risiko' => $inspection->kategori_risiko,
                 'total_skor_ya' => $inspection->total_skor_ya,
+                'detail_indikator' => $inspection->detail_indikator,
                 'tanggal_inspeksi' => $inspection->tanggal_inspeksi?->toDateString(),
             ],
             'kategori_risiko' => $inspection?->kategori_risiko,

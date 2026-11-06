@@ -238,13 +238,7 @@ class OfficerApiControllerTest extends TestCase
         $village = Desa::query()->create(['nama_desa' => 'Tegal Gede']);
         $report = $this->createReport($village, 'IKL-INSPECT-'.str_pad((string) $score, 3, '0', STR_PAD_LEFT), 'dijadwalkan');
         $schedule = $this->createSchedule($officer, $report, 'terjadwal', now()->toDateString());
-        $answers = [
-            'p1_dinding_sumur_retak',
-            'p2_penutup_tidak_rapat',
-            'p3_lantai_becek_retak',
-            'p4_spal_tersumbat',
-            'p5_air_keruh_berbau',
-        ];
+        $answers = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
         $payload = [
             'id_jadwal' => $schedule->id_jadwal,
             'jenis_sarana_air' => 'sumur_bor',
@@ -289,12 +283,42 @@ class OfficerApiControllerTest extends TestCase
     {
         return [
             'zero risks' => [0, 'aman'],
-            'one risk' => [1, 'risiko_sedang'],
+            'one risk' => [1, 'aman'],
             'two risks' => [2, 'risiko_sedang'],
-            'three risks' => [3, 'risiko_tinggi'],
+            'three risks' => [3, 'risiko_sedang'],
             'four risks' => [4, 'risiko_tinggi'],
             'five risks' => [5, 'risiko_tinggi'],
+            'six risks' => [6, 'risiko_amat_tinggi'],
+            'seven risks' => [7, 'risiko_amat_tinggi'],
         ];
+    }
+
+    public function test_cloudy_bore_water_on_seventh_indicator_is_always_very_high_risk(): void
+    {
+        $this->travelTo(now()->startOfDay());
+        Storage::fake('local');
+        $officer = $this->createUser('petugas');
+        $token = $this->createToken($officer);
+        $schedule = $this->createSchedule($officer, null, 'terjadwal', now()->toDateString());
+
+        $this->withToken($token)->postJson('/api/v1/officer/inspections', [
+            'id_jadwal' => $schedule->id_jadwal,
+            'jenis_sarana_air' => 'sumur_bor',
+            'kategori_ikl' => 'sumur_bor',
+            'jarak_sumber_pencemar' => 10,
+            'tanggal_inspeksi' => now()->toDateString(),
+            'p1' => false,
+            'p2' => false,
+            'p3' => false,
+            'p4' => false,
+            'p5' => false,
+            'p6' => false,
+            'p7' => true,
+            'rekomendasi_sanitarian' => 'Periksa dan tindak lanjuti kondisi air sumur bor.',
+        ])->assertCreated()
+            ->assertJsonPath('data.total_skor_ya', 1)
+            ->assertJsonPath('data.kategori_risiko', 'risiko_amat_tinggi')
+            ->assertJsonPath('data.detail_indikator.6.jawaban', true);
     }
 
     public function test_inspection_cannot_be_submitted_for_another_officers_schedule(): void
