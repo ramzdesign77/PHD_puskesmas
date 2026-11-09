@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="SIMKES Puskesmas Sumbersari - Sistem Informasi Manajemen Kesehatan Lingkungan">
     <title>@yield('title', 'Dashboard') — SIMKES Puskesmas Sumbersari</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-puskesmas.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400..600,0..1,-25..0&display=swap" rel="stylesheet">
@@ -29,8 +31,8 @@
 
         {{-- Logo --}}
         <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-            <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md">
-                <i class="fas fa-clinic-medical text-white text-lg"></i>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-md">
+                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-full w-full object-contain">
             </div>
             <div x-show="sidebarOpen" x-transition.opacity class="overflow-hidden">
                 <p class="font-bold text-gray-800 text-sm leading-tight">SIMKES</p>
@@ -148,8 +150,8 @@
            class="water-sidebar fixed left-0 top-0 bottom-0 w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col">
 
         <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-            <div class="medical-gradient w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
-                <i class="fas fa-clinic-medical text-white text-lg"></i>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-md">
+                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-full w-full object-contain">
             </div>
             <div>
                 <p class="font-bold text-gray-800 text-sm">SIMKES</p>
