@@ -19,14 +19,17 @@ class StoreInspeksiIklRequest extends FormRequest
         return [
             'id_jadwal' => ['required', 'exists:trx_jadwal_inspeksi,id_jadwal', 'unique:trx_inspeksi_ikl,id_jadwal'],
             'jenis_sarana_air' => ['required', 'in:sumur_bor,sumur_terlindung,pdam,mata_air,lainnya'],
+            'kategori_ikl' => ['required', 'in:sumur_gali,sumur_bor,sarang_nyamuk_dbd,jamban_limbah_stbm,tumpukan_sampah'],
             'jarak_sumber_pencemar' => ['required', 'integer', 'min:0', 'max:999'],
 
             // Checklist parameter fisik (p1–p5): boolean, wajib diisi
-            'p1_dinding_sumur_retak' => ['required', 'boolean'],
-            'p2_penutup_tidak_rapat' => ['required', 'boolean'],
-            'p3_lantai_becek_retak' => ['required', 'boolean'],
-            'p4_spal_tersumbat' => ['required', 'boolean'],
-            'p5_air_keruh_berbau' => ['required', 'boolean'],
+            'p1' => ['required', 'boolean'],
+            'p2' => ['required', 'boolean'],
+            'p3' => ['required', 'boolean'],
+            'p4' => ['required', 'boolean'],
+            'p5' => ['required', 'boolean'],
+            'p6_indikator_6' => ['required', 'boolean'],
+            'p7_indikator_7' => ['required', 'boolean'],
 
             'rekomendasi_sanitarian' => ['required', 'string', 'min:20', 'max:2000'],
             'tanggal_inspeksi' => ['required', 'date', 'before_or_equal:today'],
@@ -51,11 +54,14 @@ class StoreInspeksiIklRequest extends FormRequest
     {
         // Normalisasi checkbox: nilai string '1'/'0' dari form HTML → boolean
         $this->merge([
-            'p1_dinding_sumur_retak' => $this->boolean('p1_dinding_sumur_retak'),
-            'p2_penutup_tidak_rapat' => $this->boolean('p2_penutup_tidak_rapat'),
-            'p3_lantai_becek_retak' => $this->boolean('p3_lantai_becek_retak'),
-            'p4_spal_tersumbat' => $this->boolean('p4_spal_tersumbat'),
-            'p5_air_keruh_berbau' => $this->boolean('p5_air_keruh_berbau'),
+            'p1' => $this->boolean('p1') || $this->boolean('p1_dinding_sumur_retak'),
+            'p2' => $this->boolean('p2') || $this->boolean('p2_penutup_tidak_rapat'),
+            'p3' => $this->boolean('p3') || $this->boolean('p3_lantai_becek_retak'),
+            'p4' => $this->boolean('p4') || $this->boolean('p4_spal_tersumbat'),
+            'p5' => $this->boolean('p5') || $this->boolean('p5_air_keruh_berbau'),
+            'p6_indikator_6' => $this->boolean('p6_indikator_6'),
+            'p7_indikator_7' => $this->boolean('p7_indikator_7'),
+            'kategori_ikl' => $this->input('kategori_ikl', $this->input('jenis_sarana_air') === 'sumur_bor' ? 'sumur_bor' : 'sumur_gali'),
         ]);
     }
 }

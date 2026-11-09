@@ -19,18 +19,22 @@
             'aman'          => 'bg-emerald-50 border-emerald-200 text-emerald-800',
             'risiko_sedang' => 'bg-amber-50 border-amber-200 text-amber-800',
             'risiko_tinggi' => 'bg-red-50 border-red-200 text-red-800',
+            'risiko_amat_tinggi' => 'bg-rose-100 border-rose-300 text-rose-900',
             default         => 'bg-gray-50 border-gray-200 text-gray-800',
         };
         $risikoIcon = match($ikl->kategori_risiko) {
             'aman'          => 'fa-check-circle text-emerald-500',
             'risiko_sedang' => 'fa-exclamation-triangle text-amber-500',
             'risiko_tinggi' => 'fa-times-circle text-red-500',
+            'risiko_amat_tinggi' => 'fa-radiation text-rose-600',
             default         => 'fa-question-circle',
         };
         $risikoLabel = match($ikl->kategori_risiko) {
             'aman'          => 'AMAN',
             'risiko_sedang' => 'RISIKO SEDANG',
             'risiko_tinggi' => 'RISIKO TINGGI',
+            'risiko_amat_tinggi' => 'RISIKO AMAT TINGGI',
+            'aman' => 'RISIKO RENDAH (AMAN)',
             default         => strtoupper($ikl->kategori_risiko),
         };
     @endphp
@@ -41,7 +45,7 @@
         <div>
             <p class="text-xs font-semibold uppercase tracking-wider opacity-70">Hasil Penilaian IKL</p>
             <p class="text-2xl font-bold">{{ $risikoLabel }}</p>
-            <p class="text-sm opacity-80">Skor: {{ $ikl->total_skor_ya }}/5 parameter bermasalah</p>
+            <p class="text-sm opacity-80">Skor: {{ $ikl->total_skor_ya }}/7 indikator berisiko</p>
         </div>
     </div>
 
@@ -105,8 +109,9 @@
             <i class="fas fa-clipboard-check text-medical-red"></i> Checklist Parameter Sanitasi
         </h3>
         <div class="space-y-3">
-            @foreach($labelParameter as $field => $label)
-            @php $nilai = $ikl->$field; @endphp
+            @foreach($indikatorList as $indicator)
+            @php($label = $indicator['pertanyaan'] ?? '-')
+            @php($nilai = $indicator['jawaban'] ?? false)
             <div class="flex items-center justify-between p-3 rounded-xl border
                 {{ $nilai ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100' }}">
                 <span class="text-sm {{ $nilai ? 'text-red-700 font-medium' : 'text-gray-600' }}">

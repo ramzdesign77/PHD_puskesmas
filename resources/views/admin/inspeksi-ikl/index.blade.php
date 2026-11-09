@@ -38,6 +38,7 @@
                     <option value="aman"          {{ request('kategori_risiko') === 'aman'          ? 'selected' : '' }}>Aman</option>
                     <option value="risiko_sedang"  {{ request('kategori_risiko') === 'risiko_sedang'  ? 'selected' : '' }}>Risiko Sedang</option>
                     <option value="risiko_tinggi"  {{ request('kategori_risiko') === 'risiko_tinggi'  ? 'selected' : '' }}>Risiko Tinggi</option>
+                    <option value="risiko_amat_tinggi" {{ request('kategori_risiko') === 'risiko_amat_tinggi' ? 'selected' : '' }}>Risiko Amat Tinggi</option>
                 </select>
             </div>
             <div>
@@ -109,7 +110,7 @@
                                         <div class="w-3 h-3 rounded-sm {{ $i <= ($ikl->total_skor_ya ?? 0) ? 'bg-red-400' : 'bg-gray-200' }}"></div>
                                     @endfor
                                 </div>
-                                <span class="text-xs font-bold text-gray-700">{{ $ikl->total_skor_ya ?? 0 }}/5</span>
+                                <span class="text-xs font-bold text-gray-700">{{ $ikl->total_skor_ya ?? 0 }}/7</span>
                             </div>
                         </td>
                         <td>

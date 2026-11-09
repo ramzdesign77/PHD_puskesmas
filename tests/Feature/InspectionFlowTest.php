@@ -45,7 +45,7 @@ class InspectionFlowTest extends TestCase
             ->assertJsonPath('data.id_jadwal', $schedule->id_jadwal)
             ->assertJsonPath('data.total_skor_ya', 2)
             ->assertJsonPath('data.kategori_risiko', 'risiko_sedang')
-            ->assertJsonPath('data.label_kategori_risiko', 'Sedang')
+            ->assertJsonPath('data.label_kategori_risiko', 'Risiko Sedang')
             ->assertJsonPath('data.tanggal_inspeksi', now()->toDateString())
             ->assertJsonPath('data.intervensi_fisik', 'Perbaikan lantai')
             ->assertJsonPath('data.status_kunjungan', 'selesai')

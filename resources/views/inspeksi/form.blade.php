@@ -78,6 +78,15 @@
             {{-- Data Umum Sarana --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori Standar IKL <span class="text-red-500">*</span></label>
+                    <select name="kategori_ikl" id="kategori_ikl" required onchange="gantiKategori()"
+                        class="w-full text-sm border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        @foreach(['sumur_gali' => '1A Sumur Gali', 'sumur_bor' => '1B Sumur Bor', 'sarang_nyamuk_dbd' => '2 Sarang Nyamuk / DBD', 'jamban_limbah_stbm' => '3 Jamban & Limbah STBM', 'tumpukan_sampah' => '4 Tumpukan Sampah'] as $category => $label)
+                            <option value="{{ $category }}" @selected($kategoriIkl === $category)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Inspeksi Aktual <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_inspeksi" required max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}"
                         class="w-full text-sm border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -111,59 +120,22 @@
             <div>
                 <div class="mb-4">
                     <h4 class="font-bold text-gray-800">Kondisi Fisik Sarana (Faktor Risiko)</h4>
-                    <p class="text-xs text-gray-500">Centang kotak jika jawaban dari pertanyaan ini adalah <strong>YA</strong> (mengindikasikan risiko).</p>
+                    <p class="text-xs text-gray-500">Tujuh indikator kategori {{ str_replace('_', ' ', $kategoriIkl) }}. Centang “Ya” bila ditemukan faktor risiko.</p>
                 </div>
 
-                <div class="space-y-3 bg-white border border-gray-200 rounded-xl p-4 divide-y divide-gray-100">
+                <div class="space-y-3 bg-white border border-gray-200 rounded-xl p-4 divide-y divide-gray-100" id="checklist-container">
+                    @foreach($pertanyaan as $index => $pertanyaanItem)
+                    @php($number = $index + 1)
+                    @php($field = $number < 6 ? 'p'.$number : 'p'.$number.'_indikator_'.$number)
                     <label class="flex items-start gap-3 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors group">
-                        <div class="flex-shrink-0 mt-0.5">
-                            <input type="checkbox" name="p1_dinding_sumur_retak" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800 group-hover:text-red-800">1. Apakah dinding sumur/bangunan retak atau bocor?</p>
-                            <p class="text-xs text-gray-500">Memungkinkan air kotor merembes masuk ke dalam sumber air.</p>
-                        </div>
+                        <input type="checkbox" name="{{ $field }}" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" onchange="hitungSkor()">
+                        <span class="text-sm font-medium text-gray-800 group-hover:text-red-800" data-question-number="{{ $number }}">{{ $number }}. {{ $pertanyaanItem }}</span>
                     </label>
-
-                    <label class="flex items-start gap-3 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors group pt-3">
-                        <div class="flex-shrink-0 mt-0.5">
-                            <input type="checkbox" name="p2_penutup_tidak_rapat" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800 group-hover:text-red-800">2. Apakah penutup sarana air tidak ada atau tidak rapat?</p>
-                            <p class="text-xs text-gray-500">Bisa dimasuki debu, kotoran, atau hewan.</p>
-                        </div>
-                    </label>
-
-                    <label class="flex items-start gap-3 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors group pt-3">
-                        <div class="flex-shrink-0 mt-0.5">
-                            <input type="checkbox" name="p3_lantai_becek_retak" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800 group-hover:text-red-800">3. Apakah lantai di sekitar sarana becek, retak, atau kotor?</p>
-                            <p class="text-xs text-gray-500">Lantai yang tidak kedap air (radius minimal 1m) menyebabkan genangan.</p>
-                        </div>
-                    </label>
-
-                    <label class="flex items-start gap-3 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors group pt-3">
-                        <div class="flex-shrink-0 mt-0.5">
-                            <input type="checkbox" name="p4_spal_tersumbat" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800 group-hover:text-red-800">4. Apakah Saluran Pembuangan Air Limbah (SPAL) tersumbat atau tidak ada?</p>
-                            <p class="text-xs text-gray-500">Air sisa cipratan menggenang dan bisa merembes kembali ke sumber.</p>
-                        </div>
-                    </label>
-
-                    <label class="flex items-start gap-3 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors group pt-3">
-                        <div class="flex-shrink-0 mt-0.5">
-                            <input type="checkbox" name="p5_air_keruh_berbau" value="1" class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer">
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-800 group-hover:text-red-800">5. Secara fisik, apakah air terlihat keruh, berwarna, atau berbau?</p>
-                            <p class="text-xs text-gray-500">Indikator langsung pencemaran kualitas air secara fisik.</p>
-                        </div>
-                    </label>
+                    @endforeach
+                </div>
+                <div class="rounded-xl bg-gray-50 p-4 mt-4">
+                    <div class="flex justify-between text-sm"><span>Skor sementara</span><strong id="skor-display">0/7</strong></div>
+                    <p id="kategori-preview" class="text-sm mt-2 text-emerald-700">Risiko Rendah (Aman)</p>
                 </div>
             </div>
 
@@ -188,4 +160,23 @@
         </div>
     </form>
 </div>
+<script>
+function hitungSkor() {
+    const score = document.querySelectorAll('#checklist-container input:checked').length;
+    const sumurBor = document.getElementById('kategori_ikl').value === 'sumur_bor';
+    const p7 = document.querySelector('input[name="p7_indikator_7"]')?.checked;
+    const label = sumurBor && p7 || score >= 6 ? 'Risiko Amat Tinggi' : score >= 4 ? 'Risiko Tinggi' : score >= 2 ? 'Risiko Sedang' : 'Risiko Rendah (Aman)';
+    document.getElementById('skor-display').textContent = score + '/7';
+    document.getElementById('kategori-preview').textContent = label;
+}
+const questionBank = {{ Illuminate\Support\Js::from($bankPertanyaan) }};
+function gantiKategori() {
+    const category = document.getElementById('kategori_ikl').value;
+    document.querySelectorAll('[data-question-number]').forEach((element, index) => {
+        element.textContent = (index + 1) + '. ' + questionBank[category][index];
+    });
+    hitungSkor();
+}
+gantiKategori();
+</script>
 @endsection

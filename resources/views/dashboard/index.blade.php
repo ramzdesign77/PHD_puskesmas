@@ -44,7 +44,7 @@
         <img
             src="{{ asset('images/maskot_berangberang.png') }}"
             alt="Maskot berang-berang membawa ikan"
-            class="mascot-float pointer-events-none absolute bottom-[-1.5rem] right-[-0.5rem] z-10 h-52 w-auto max-w-[42%] object-contain drop-shadow-[0_22px_20px_rgba(8,47,73,0.28)] sm:bottom-[-2rem] sm:right-[-0.75rem] sm:h-72 lg:bottom-[-3rem] lg:right-[-1rem] lg:h-[24rem] lg:max-w-[54%]"
+            class="mascot-float pointer-events-none absolute bottom-[-1.5rem] right-[-0.5rem] z-10 h-52 w-auto max-w-[42%] object-contain drop-shadow-[0_22px_20px_rgba(8,47,73,0.28)] sm:bottom-[-2rem] sm:right-[-0.75rem] sm:h-72 lg:bottom-[-3rem] lg:right-[-1rem] lg:h-[22rem] lg:max-w-[54%]"
         >
     </section>
 
