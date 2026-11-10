@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Login - E-Klinik Sanitasi Puskesmas</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-puskesmas.png') }}" />
 
     <style>
       @layer base {
@@ -33,9 +34,7 @@
             <!-- Top Branding -->
             <div class="relative z-10">
               <div class="inline-flex items-center gap-3.5">
-                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md text-white border border-white/20 shadow-sm">
-                  <span class="material-symbols-outlined text-2xl">water_drop</span>
-                </div>
+                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-12 w-12 rounded-xl bg-white p-1 object-contain shadow-sm" />
                 <div>
                   <div class="flex items-center gap-2">
                     <span class="text-xl font-bold tracking-tight text-white">E-Klinik Sanitasi</span>
@@ -80,9 +79,7 @@
             <!-- Top bar mobile -->
             <div class="w-full flex items-center justify-between">
               <div class="flex lg:hidden items-center gap-2">
-                <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0284c7] text-white">
-                  <span class="material-symbols-outlined text-lg">water_drop</span>
-                </div>
+                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-8 w-8 rounded-lg bg-white p-0.5 object-contain" />
                 <span class="font-bold text-[#075985] text-base">E-Klinik Sanitasi</span>
               </div>
               <div class="ml-auto flex items-center gap-2">
