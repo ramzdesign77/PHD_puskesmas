@@ -233,7 +233,7 @@
                                     Skor: {{ $jadwal->inspeksiIkl->total_skor_ya }}/5
                                 </span>
                             @elseif($jadwal->status_kunjungan === 'terjadwal')
-                                <span class="text-xs text-gray-400 italic">Belum diisi</span>
+                                <span class="text-xs text-gray-400 italic">Menunggu hasil dari aplikasi mobile</span>
                             @else
                                 <span class="text-xs text-gray-400">—</span>
                             @endif
@@ -242,14 +242,6 @@
                         {{-- Aksi --}}
                         <td class="text-center">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
-
-                                {{-- Form IKL (jika terjadwal & petugas yang login) --}}
-                                @if($jadwal->status_kunjungan === 'terjadwal' && !$jadwal->inspeksiIkl)
-                                <a href="{{ route('inspeksi.form', $jadwal->id_jadwal) }}"
-                                    class="btn-secondary btn-sm text-green-600" title="Isi Form IKL">
-                                    <i class="fas fa-clipboard-check"></i>
-                                </a>
-                                @endif
 
                                 {{-- Lihat Hasil IKL --}}
                                 @if($jadwal->inspeksiIkl)
