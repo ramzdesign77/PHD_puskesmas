@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SIMKES Puskesmas Sumbersari - Sistem Informasi Manajemen Kesehatan Lingkungan">
-    <title>@yield('title', 'Dashboard') — SIMKES Puskesmas Sumbersari</title>
+    <meta name="description" content="OtterSan - Sistem Informasi Manajemen Kesehatan Lingkungan Puskesmas Sumbersari">
+    <title>@yield('title', 'Dashboard') — OtterSan</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logo-puskesmas.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,11 +31,11 @@
 
         {{-- Logo --}}
         <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-md">
-                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-full w-full object-contain">
+            <div x-show="!sidebarOpen" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-md">
+                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo OtterSan" class="h-full w-full object-contain">
             </div>
             <div x-show="sidebarOpen" x-transition.opacity class="overflow-hidden">
-                <p class="font-bold text-gray-800 text-sm leading-tight">SIMKES</p>
+                <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-full max-w-[190px] object-contain">
                 <p class="text-gray-400 text-xs">Puskesmas Sumbersari</p>
             </div>
         </div>
@@ -149,14 +149,11 @@
            x-transition:leave-end="-translate-x-full"
            class="water-sidebar fixed left-0 top-0 bottom-0 w-72 bg-white shadow-2xl z-50 md:hidden flex flex-col">
 
-        <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-md">
-                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-full w-full object-contain">
-            </div>
-            <div>
-                <p class="font-bold text-gray-800 text-sm">SIMKES</p>
-                <p class="text-gray-400 text-xs">Puskesmas Sumbersari</p>
-            </div>
+           <div class="sidebar-brand flex items-center gap-3 px-5 py-5 border-b border-gray-100">
+               <div class="min-w-0 flex-1">
+                   <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-full max-w-[190px] object-contain">
+                   <p class="text-gray-400 text-xs">Puskesmas Sumbersari</p>
+               </div>
             <button @click="mobileMenuOpen = false" class="ml-auto text-gray-400 hover:text-red-500">
                 <i class="fas fa-times"></i>
             </button>
@@ -208,7 +205,7 @@
                 </button>
                 <div>
                     <h2 class="font-bold text-gray-800 text-base md:text-lg leading-tight">@yield('page-title', 'Dashboard')</h2>
-                    <p class="text-xs text-gray-400 hidden md:block">@yield('page-subtitle', 'Selamat datang di SIMKES Puskesmas Sumbersari')</p>
+                    <p class="text-xs text-gray-400 hidden md:block">@yield('page-subtitle', 'Selamat datang di OtterSan Puskesmas Sumbersari')</p>
                 </div>
             </div>
 
@@ -305,7 +302,7 @@
         {{-- Footer --}}
         <footer class="border-t border-gray-100 bg-white px-6 py-3">
             <p class="text-xs text-gray-400 text-center">
-                &copy; {{ date('Y') }} SIMKES Puskesmas Sumbersari — Dinas Kesehatan Kabupaten
+                &copy; {{ date('Y') }} OtterSan — Puskesmas Sumbersari, Dinas Kesehatan Kabupaten
             </p>
         </footer>
     </div>

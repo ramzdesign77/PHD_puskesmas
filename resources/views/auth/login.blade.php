@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Login - E-Klinik Sanitasi Puskesmas</title>
+    <title>Login - OtterSan</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-puskesmas.png') }}" />
 
     <style>
@@ -34,11 +34,8 @@
             <!-- Top Branding -->
             <div class="relative z-10">
               <div class="inline-flex items-center gap-3.5">
-                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-12 w-12 rounded-xl bg-white p-1 object-contain shadow-sm" />
+                <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-52 rounded-xl bg-white p-1 object-contain shadow-sm" />
                 <div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xl font-bold tracking-tight text-white">E-Klinik Sanitasi</span>
-                  </div>
                   <p class="text-xs text-white/80 tracking-wide font-medium">UPTD Puskesmas Sumbersari</p>
                 </div>
               </div>
@@ -79,8 +76,7 @@
             <!-- Top bar mobile -->
             <div class="w-full flex items-center justify-between">
               <div class="flex lg:hidden items-center gap-2">
-                <img src="{{ asset('images/logo-puskesmas.png') }}" alt="Logo Puskesmas Sumbersari" class="h-8 w-8 rounded-lg bg-white p-0.5 object-contain" />
-                <span class="font-bold text-[#075985] text-base">E-Klinik Sanitasi</span>
+                <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-36 rounded-lg bg-white p-0.5 object-contain" />
               </div>
               <div class="ml-auto flex items-center gap-2">
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-semibold shadow-xs">
@@ -94,7 +90,7 @@
             <div class="w-full max-w-md mx-auto my-auto py-8">
               <div class="space-y-2 mb-8 text-left">
                 <h2 class="text-3xl font-bold text-stone-900 tracking-tight">Masuk ke Akun</h2>
-                <p class="text-stone-500 text-sm">Portal Resmi E-Klinik Sanitasi Puskesmas</p>
+                <p class="text-stone-500 text-sm">Portal Resmi OtterSan Puskesmas</p>
               </div>
 
               <!-- FORM LARAVEL MULAI DI SINI -->
@@ -197,7 +193,7 @@
 
             <!-- Subtle Technical Footer -->
             <div class="w-full pt-4 border-t border-stone-200/70 flex flex-col sm:flex-row items-center justify-between text-stone-500 text-xs gap-3">
-              <span>© 2026 E-Klinik Sanitasi Puskesmas. Terintegrasi SISDMK &amp; PKAM.</span>
+              <span>© 2026 OtterSan Puskesmas. Terintegrasi SISDMK &amp; PKAM.</span>
               <div class="flex items-center gap-3">
                 {{-- <a class="hover:text-[#0284c7] transition" href="javascript:void(0)">Panduan SOP IKL</a>
                 <span>|</span>
