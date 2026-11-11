@@ -33,8 +33,8 @@
 
             <!-- Top Branding -->
             <div class="relative z-10">
-              <div class="inline-flex items-center gap-3.5">
-                <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-52 rounded-xl bg-white p-1 object-contain shadow-sm" />
+              <div class="inline-flex flex-col items-start gap-2">
+                <img src="{{ asset('images/logo-teks-ottersan-putih.png') }}" alt="OtterSan" class="h-auto w-52 object-contain" />
                 <div>
                   <p class="text-xs text-white/80 tracking-wide font-medium">UPTD Puskesmas Sumbersari</p>
                 </div>
@@ -47,7 +47,7 @@
                 <span class="w-2 h-2 rounded-full bg-cyan-300 animate-pulse"></span>
                 Surveilans Digital Lingkungan
               </div>
-              <h1 class="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.18]">
+              <h1 class="font-mont text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.18]">
                 Pengawasan Kualitas Air &amp; Sanitasi Lingkungan
               </h1>
               <p class="text-base text-white/85 leading-relaxed font-normal">
@@ -76,7 +76,7 @@
             <!-- Top bar mobile -->
             <div class="w-full flex items-center justify-between">
               <div class="flex lg:hidden items-center gap-2">
-                <img src="{{ asset('images/logo-teks-ottersan.png') }}" alt="OtterSan" class="h-auto w-36 rounded-lg bg-white p-0.5 object-contain" />
+                <img src="{{ asset('images/logo-teks-ottersan-putih.png') }}" alt="OtterSan" class="h-auto w-36 rounded-lg bg-[#075985] p-1 object-contain" />
               </div>
               <div class="ml-auto flex items-center gap-2">
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-semibold shadow-xs">
@@ -89,7 +89,7 @@
             <!-- Form Content -->
             <div class="w-full max-w-md mx-auto my-auto py-8">
               <div class="space-y-2 mb-8 text-left">
-                <h2 class="text-3xl font-bold text-stone-900 tracking-tight">Masuk ke Akun</h2>
+                <h2 class="font-mont text-3xl font-bold text-stone-900 tracking-tight">Masuk ke Akun</h2>
                 <p class="text-stone-500 text-sm">Portal Resmi OtterSan Puskesmas</p>
               </div>
 

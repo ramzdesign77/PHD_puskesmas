@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @source "../views";
 
+@font-face {
+    font-family: "Mont";
+    src: url("/fonts/Mont-HeavyDEMO.otf") format("opentype");
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
 @theme {
     --color-ocean-50: #f0f9ff;
     --color-ocean-100: #e0f2fe;
@@ -20,6 +28,7 @@
     --color-medical-light: #e0f2fe;
     --font-sans: "Montserrat", sans-serif;
     --font-heading: "Poppins", sans-serif;
+    --font-mont: "Mont", sans-serif;
 }
 
 :root {

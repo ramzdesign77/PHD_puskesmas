@@ -204,7 +204,7 @@
                     <i class="fas fa-bars text-lg"></i>
                 </button>
                 <div>
-                    <h2 class="font-bold text-gray-800 text-base md:text-lg leading-tight">@yield('page-title', 'Dashboard')</h2>
+                    <h2 class="font-mont font-bold text-gray-800 text-base md:text-lg leading-tight">@yield('page-title', 'Dashboard')</h2>
                     <p class="text-xs text-gray-400 hidden md:block">@yield('page-subtitle', 'Selamat datang di OtterSan Puskesmas Sumbersari')</p>
                 </div>
             </div>
