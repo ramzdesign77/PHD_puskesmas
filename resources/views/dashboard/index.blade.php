@@ -17,7 +17,7 @@
                 <span class="h-1.5 w-1.5 rounded-full bg-cyan-100 shadow-[0_0_10px_rgba(207,250,254,0.9)]"></span>
                 Pantauan sanitasi hari ini
             </p>
-            <h1 id="dashboard-welcome" class="max-w-2xl text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
+            <h1 id="dashboard-welcome" class="font-mont max-w-2xl text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
                 Selamat Datang,<br class="sm:hidden">
                 <span class="text-cyan-50">{{ session('user_name', 'Administrator Puskesmas') }}</span>
             </h1>
@@ -122,7 +122,7 @@
         <div class="card p-5 sm:p-6 lg:col-span-2">
             <div class="mb-5 flex items-center justify-between gap-3">
                 <div>
-                    <h2 class="font-bold text-slate-800">Aktivitas Terbaru</h2>
+                    <h2 class="font-mont font-bold text-slate-800">Aktivitas Terbaru</h2>
                     <p class="mt-1 text-xs text-slate-400">Pembaruan laporan dan kegiatan sanitasi</p>
                 </div>
                 <span class="shrink-0 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">{{ \Carbon\Carbon::now()->format('d M Y') }}</span>
@@ -146,7 +146,7 @@
 
         <div class="card p-5 sm:p-6">
             <div class="mb-5">
-                <h2 class="font-bold text-slate-800">Aksi Cepat</h2>
+                <h2 class="font-mont font-bold text-slate-800">Aksi Cepat</h2>
                 <p class="mt-1 text-xs text-slate-400">Akses menu yang sering digunakan</p>
             </div>
             <div class="flex flex-col gap-3">
