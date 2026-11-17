@@ -205,6 +205,94 @@ class AuthControllerTest extends TestCase
         ]);
     }
 
+    public function test_authenticated_user_can_save_and_read_their_default_address(): void
+    {
+        $user = $this->createUser([
+            'nama_lengkap' => 'Warga Alamat',
+            'username' => 'warga_alamat',
+            'email' => 'warga-alamat@example.test',
+        ]);
+        $otherUser = $this->createUser([
+            'username' => 'alamat_lain',
+            'email' => 'alamat-lain@example.test',
+        ]);
+        $village = Desa::query()->forceCreate(['nama_desa' => 'Karangrejo']);
+        $token = 'saved-address-token';
+        $this->createMobileToken($user, $token);
+
+        $payload = [
+            'id_user' => $otherUser->id_user,
+            'nama_lengkap' => $user->nama_lengkap,
+            'username' => $user->username,
+            'email' => $user->email,
+            'no_telepon' => '081234567890',
+            'id_desa' => $village->id_desa,
+            'rt' => '05',
+            'rw' => '03',
+            'alamat_detail' => 'Belakang balai desa',
+        ];
+
+        $this->withToken($token)->putJson('/api/v1/profile', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.user.id', $user->id_user)
+            ->assertJsonPath('data.user.id_desa', $village->id_desa)
+            ->assertJsonPath('data.user.nama_desa', 'Karangrejo')
+            ->assertJsonPath('data.user.rt', '05')
+            ->assertJsonPath('data.user.rw', '03')
+            ->assertJsonPath('data.user.alamat_detail', 'Belakang balai desa');
+
+        $this->assertDatabaseHas('app_users', [
+            'id_user' => $user->id_user,
+            'id_desa' => $village->id_desa,
+            'rt' => '05',
+            'rw' => '03',
+            'alamat_detail' => 'Belakang balai desa',
+        ]);
+        $this->assertDatabaseHas('app_users', [
+            'id_user' => $otherUser->id_user,
+            'id_desa' => null,
+            'rt' => null,
+            'rw' => null,
+            'alamat_detail' => null,
+        ]);
+
+        $this->withToken($token)->getJson('/api/v1/profile')
+            ->assertOk()
+            ->assertJsonPath('data.user.id_desa', $village->id_desa)
+            ->assertJsonPath('data.user.nama_desa', 'Karangrejo')
+            ->assertJsonPath('data.user.rt', '05')
+            ->assertJsonPath('data.user.rw', '03')
+            ->assertJsonPath('data.user.alamat_detail', 'Belakang balai desa');
+    }
+
+    public function test_saved_address_update_rejects_unknown_village_and_invalid_fields(): void
+    {
+        $user = $this->createUser([
+            'username' => 'alamat_invalid',
+            'email' => 'alamat-invalid@example.test',
+        ]);
+        $this->createMobileToken($user, 'invalid-saved-address-token');
+
+        $this->withToken('invalid-saved-address-token')->putJson('/api/v1/profile', [
+            'nama_lengkap' => $user->nama_lengkap,
+            'username' => $user->username,
+            'email' => $user->email,
+            'id_desa' => 999999,
+            'rt' => str_repeat('1', 11),
+            'rw' => '',
+            'alamat_detail' => str_repeat('a', 256),
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['id_desa', 'rt', 'rw', 'alamat_detail']);
+
+        $this->assertDatabaseHas('app_users', [
+            'id_user' => $user->id_user,
+            'id_desa' => null,
+            'rt' => null,
+            'rw' => null,
+            'alamat_detail' => null,
+        ]);
+    }
+
     public function test_profile_update_returns_401_without_a_valid_mobile_token(): void
     {
         $user = $this->createUser([

@@ -139,6 +139,10 @@ class AuthController extends Controller
                 Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user'),
             ],
             'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'id_desa' => ['sometimes', 'required', 'integer', 'exists:ref_desa,id_desa'],
+            'rt' => ['sometimes', 'required', 'string', 'max:10'],
+            'rw' => ['sometimes', 'required', 'string', 'max:10'],
+            'alamat_detail' => ['sometimes', 'required', 'string', 'max:255'],
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'hapus_foto' => ['sometimes', 'boolean'],
         ]);
@@ -160,6 +164,14 @@ class AuthController extends Controller
 
         if (array_key_exists('no_telepon', $validated)) {
             $profile['no_telepon'] = $validated['no_telepon'];
+        }
+
+        foreach (['id_desa', 'rt', 'rw', 'alamat_detail'] as $addressField) {
+            if (array_key_exists($addressField, $validated)) {
+                $profile[$addressField] = $addressField === 'rt' || $addressField === 'rw'
+                    ? trim($validated[$addressField])
+                    : $validated[$addressField];
+            }
         }
 
         if ($removePhoto) {
@@ -251,6 +263,8 @@ class AuthController extends Controller
     /** @return array<string, mixed> */
     private function profileData(User $user): array
     {
+        $user->loadMissing('desa');
+
         return [
             'id' => $user->id_user,
             'nama_lengkap' => $user->nama_lengkap,
@@ -260,6 +274,11 @@ class AuthController extends Controller
             'roles' => $user->getRolesListAttribute(),
             'foto' => $user->foto,
             'foto_url' => filled($user->foto) ? Storage::disk('public')->url($user->foto) : null,
+            'id_desa' => $user->id_desa,
+            'nama_desa' => $user->desa?->nama_desa,
+            'rt' => $user->rt,
+            'rw' => $user->rw,
+            'alamat_detail' => $user->alamat_detail,
         ];
     }
 
