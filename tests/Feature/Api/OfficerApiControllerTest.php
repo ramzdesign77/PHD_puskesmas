@@ -88,6 +88,115 @@ class OfficerApiControllerTest extends TestCase
             ]);
     }
 
+    public function test_dashboard_and_tasks_include_report_coordinates_and_village_fallbacks(): void
+    {
+        $this->travelTo(now()->startOfDay());
+
+        $officer = $this->createUser('petugas');
+        $token = $this->createToken($officer);
+        $village = Desa::query()->create([
+            'nama_desa' => 'Sumbersari',
+            'latitude' => '-8.25000000',
+            'longitude' => '113.50000000',
+        ]);
+        $reportWithCoordinates = $this->createReport($village, 'IKL-LOCATION-001', 'menunggu');
+        $reportWithCoordinates->update([
+            'alamat_detail' => 'Gang Mawar',
+            'latitude' => '-8.50000000',
+            'longitude' => '113.75000000',
+        ]);
+        $reportUsingVillageCoordinates = $this->createReport($village, 'IKL-LOCATION-002', 'menunggu');
+        $reportWithPartialCoordinates = $this->createReport($village, 'IKL-LOCATION-003', 'menunggu');
+        $reportWithPartialCoordinates->update(['latitude' => '-8.75000000']);
+        $directCoordinateSchedule = $this->createSchedule(
+            $officer,
+            $reportWithCoordinates,
+            'terjadwal',
+            now()->toDateString(),
+        );
+        $villageCoordinateSchedule = $this->createSchedule(
+            $officer,
+            $reportUsingVillageCoordinates,
+            'terjadwal',
+            now()->toDateString(),
+        );
+        $partialCoordinateSchedule = $this->createSchedule(
+            $officer,
+            $reportWithPartialCoordinates,
+            'terjadwal',
+            now()->toDateString(),
+        );
+
+        $directReportLocation = [
+            'type' => 'aduan_baru',
+            'id_laporan' => $reportWithCoordinates->id_laporan,
+            'alamat_detail' => 'Gang Mawar',
+            'latitude' => -8.5,
+            'longitude' => 113.75,
+            'maps_url' => 'https://www.google.com/maps/dir/?api=1&destination=-8.50000000,113.75000000',
+        ];
+        $villageReportLocation = [
+            'type' => 'aduan_baru',
+            'id_laporan' => $reportUsingVillageCoordinates->id_laporan,
+            'alamat_detail' => '',
+            'latitude' => -8.25,
+            'longitude' => 113.5,
+            'maps_url' => null,
+        ];
+        $partialReportLocation = [
+            'type' => 'aduan_baru',
+            'id_laporan' => $reportWithPartialCoordinates->id_laporan,
+            'alamat_detail' => '',
+            'latitude' => -8.75,
+            'longitude' => 113.5,
+            'maps_url' => null,
+        ];
+        $directScheduleLocation = [
+            'type' => 'jadwal_ikl',
+            'id_jadwal' => $directCoordinateSchedule->id_jadwal,
+            'alamat_detail' => 'Gang Mawar',
+            'latitude' => -8.5,
+            'longitude' => 113.75,
+            'maps_url' => 'https://www.google.com/maps/dir/?api=1&destination=-8.50000000,113.75000000',
+        ];
+        $villageScheduleLocation = [
+            'type' => 'jadwal_ikl',
+            'id_jadwal' => $villageCoordinateSchedule->id_jadwal,
+            'alamat_detail' => null,
+            'latitude' => -8.25,
+            'longitude' => 113.5,
+            'maps_url' => null,
+        ];
+        $partialScheduleLocation = [
+            'type' => 'jadwal_ikl',
+            'id_jadwal' => $partialCoordinateSchedule->id_jadwal,
+            'alamat_detail' => null,
+            'latitude' => -8.75,
+            'longitude' => 113.5,
+            'maps_url' => null,
+        ];
+
+        $this->withToken($token)
+            ->getJson('/api/v1/officer/dashboard')
+            ->assertOk()
+            ->assertJsonFragment($directReportLocation)
+            ->assertJsonFragment($villageReportLocation)
+            ->assertJsonFragment($partialReportLocation)
+            ->assertJsonFragment($directScheduleLocation)
+            ->assertJsonFragment($villageScheduleLocation)
+            ->assertJsonFragment($partialScheduleLocation);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/officer/tasks')
+            ->assertOk()
+            ->assertJsonFragment($directReportLocation)
+            ->assertJsonFragment($villageReportLocation)
+            ->assertJsonFragment($partialReportLocation)
+            ->assertJsonFragment($directScheduleLocation)
+            ->assertJsonFragment($villageScheduleLocation)
+            ->assertJsonFragment($partialScheduleLocation);
+    }
+
     #[DataProvider('categoryLabels')]
     public function test_laporan_category_labels_are_human_readable(
         string $category,
@@ -268,7 +377,7 @@ class OfficerApiControllerTest extends TestCase
         $this->assertSame($riskCategory, $inspection->kategori_risiko);
         $this->assertSame('Pemberian Kaporit', $inspection->intervensi_fisik);
         $this->assertNotNull($inspection->foto_bukti);
-        Storage::disk('local')->assertExists($inspection->foto_bukti);
+        $this->assertTrue(Storage::disk('local')->exists($inspection->foto_bukti));
         $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'status_kunjungan' => 'selesai',
