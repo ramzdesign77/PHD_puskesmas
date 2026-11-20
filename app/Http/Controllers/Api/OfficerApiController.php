@@ -27,7 +27,7 @@ class OfficerApiController extends Controller
         $activeScheduleStatuses = ['terjadwal', 'dijadwalkan', 'ditindaklanjuti', 'diproses'];
 
         $recentReports = LaporanWarga::query()
-            ->with('desa:id_desa,nama_desa')
+            ->with('desa:id_desa,nama_desa,latitude,longitude')
             ->whereIn('status_laporan', $waitingReportStatuses)
             ->latest('created_at')
             ->limit(5)
@@ -42,6 +42,8 @@ class OfficerApiController extends Controller
                 'rw',
                 'alamat_detail',
                 'patokan_alamat',
+                'latitude',
+                'longitude',
                 'deskripsi',
                 'foto_bukti',
                 'status_laporan',
@@ -51,8 +53,8 @@ class OfficerApiController extends Controller
 
         $todaySchedules = JadwalInspeksi::query()
             ->with([
-                'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
-                'laporan.desa:id_desa,nama_desa',
+                'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,latitude,longitude,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
+                'laporan.desa:id_desa,nama_desa,latitude,longitude',
                 'paketAlat:id_paket,nama_paket',
                 'operator:id_user,nama_lengkap,username',
                 'inspeksiIkl',
@@ -147,7 +149,7 @@ class OfficerApiController extends Controller
 
         if (in_array($filter, ['semua', 'aduan_baru'], true)) {
             $reports = LaporanWarga::query()
-                ->with('desa:id_desa,nama_desa')
+                ->with('desa:id_desa,nama_desa,latitude,longitude')
                 ->whereIn('status_laporan', $newReportStatuses)
                 ->when($search !== '', fn (Builder $query) => $this->searchReports($query, $search))
                 ->latest('created_at')
@@ -163,6 +165,8 @@ class OfficerApiController extends Controller
                     'rw',
                     'alamat_detail',
                     'patokan_alamat',
+                    'latitude',
+                    'longitude',
                     'deskripsi',
                     'foto_bukti',
                     'status_laporan',
@@ -177,7 +181,7 @@ class OfficerApiController extends Controller
 
         if (in_array($filter, ['semua', 'selesai'], true)) {
             $completedReports = LaporanWarga::query()
-                ->with('desa:id_desa,nama_desa')
+                ->with('desa:id_desa,nama_desa,latitude,longitude')
                 ->where('status_laporan', 'selesai')
                 ->whereDoesntHave('jadwal', function (Builder $query): void {
                     $query->where('status_kunjungan', 'selesai');
@@ -196,8 +200,8 @@ class OfficerApiController extends Controller
         if (in_array($filter, ['semua', 'jadwal_ikl', 'selesai'], true)) {
             $schedules = JadwalInspeksi::query()
                 ->with([
-                    'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
-                    'laporan.desa:id_desa,nama_desa',
+                    'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,latitude,longitude,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
+                    'laporan.desa:id_desa,nama_desa,latitude,longitude',
                     'paketAlat:id_paket,nama_paket',
                     'operator:id_user,nama_lengkap,username',
                     'inspeksiIkl',
@@ -612,7 +616,16 @@ class OfficerApiController extends Controller
             'nama_desa' => $report->desa?->nama_desa,
             'rt' => $report->rt,
             'rw' => $report->rw,
-            'alamat_detail' => $report->alamat_detail ?: $report->patokan_alamat,
+            'alamat_detail' => $report->alamat_detail ?? '',
+            'latitude' => $report->latitude !== null
+                ? (float) $report->latitude
+                : ($report->desa?->latitude !== null ? (float) $report->desa->latitude : null),
+            'longitude' => $report->longitude !== null
+                ? (float) $report->longitude
+                : ($report->desa?->longitude !== null ? (float) $report->desa->longitude : null),
+            'maps_url' => $report->latitude !== null && $report->longitude !== null
+                ? "https://www.google.com/maps/dir/?api=1&destination={$report->latitude},{$report->longitude}"
+                : null,
             'deskripsi' => $report->deskripsi,
             'foto_bukti' => $report->foto_bukti,
             'foto_bukti_url' => $this->fotoBuktiUrl($report->foto_bukti),
@@ -630,6 +643,10 @@ class OfficerApiController extends Controller
     private function scheduleTask(JadwalInspeksi $schedule): array
     {
         $schedule->loadMissing(['laporan.desa', 'paketAlat', 'operator', 'inspeksiIkl']);
+        $tanggalKunjungan = $schedule->getAttribute('tanggal_kunjungan');
+        $tanggalKunjungan = $tanggalKunjungan instanceof \DateTimeInterface
+            ? $tanggalKunjungan->format('Y-m-d')
+            : null;
         $inspection = $schedule->inspeksiIkl;
 
         return [
@@ -641,7 +658,7 @@ class OfficerApiController extends Controller
             'id_operator' => $schedule->id_operator,
             'id_paket' => $schedule->id_paket,
             'jenis_kunjungan' => $schedule->jenis_kunjungan,
-            'tanggal_kunjungan' => $schedule->tanggal_kunjungan?->toDateString(),
+            'tanggal_kunjungan' => $tanggalKunjungan,
             'waktu_kunjungan' => $schedule->jam_mulai ?: $schedule->waktu_kunjungan,
             'status_kunjungan' => $schedule->status_kunjungan,
             'catatan' => $schedule->catatan,
@@ -654,7 +671,16 @@ class OfficerApiController extends Controller
             'nama_desa' => $schedule->laporan?->desa?->nama_desa,
             'rt' => $schedule->laporan?->rt,
             'rw' => $schedule->laporan?->rw,
-            'alamat_detail' => $schedule->laporan?->alamat_detail ?: $schedule->laporan?->patokan_alamat,
+            'alamat_detail' => $schedule->laporan?->alamat_detail,
+            'latitude' => $schedule->laporan?->latitude !== null
+                ? (float) $schedule->laporan->latitude
+                : ($schedule->laporan?->desa?->latitude !== null ? (float) $schedule->laporan->desa->latitude : null),
+            'longitude' => $schedule->laporan?->longitude !== null
+                ? (float) $schedule->laporan->longitude
+                : ($schedule->laporan?->desa?->longitude !== null ? (float) $schedule->laporan->desa->longitude : null),
+            'maps_url' => $schedule->laporan?->latitude !== null && $schedule->laporan?->longitude !== null
+                ? "https://www.google.com/maps/dir/?api=1&destination={$schedule->laporan->latitude},{$schedule->laporan->longitude}"
+                : null,
             'deskripsi' => $schedule->laporan?->deskripsi,
             'status_laporan' => $schedule->laporan?->status_laporan,
             'foto_bukti' => $schedule->laporan?->foto_bukti,
@@ -671,7 +697,7 @@ class OfficerApiController extends Controller
             ],
             'kategori_risiko' => $inspection?->kategori_risiko,
             'total_skor_ya' => $inspection?->total_skor_ya,
-            '_sort_at' => $schedule->tanggal_kunjungan?->toDateString().' '.(
+            '_sort_at' => $tanggalKunjungan.' '.(
                 $schedule->jam_mulai ?: $schedule->waktu_kunjungan ?: '00:00:00'
             ),
         ];

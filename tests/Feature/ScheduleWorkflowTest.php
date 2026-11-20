@@ -158,6 +158,41 @@ class ScheduleWorkflowTest extends TestCase
             ->assertSee($operator->nama_lengkap);
     }
 
+    public function test_admin_pages_show_mobile_pending_status_without_web_ikl_form_actions(): void
+    {
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('petugas');
+        $village = Desa::create(['nama_desa' => 'Mobile Inspection Village']);
+        $report = LaporanWarga::create([
+            'kode_tiket' => 'IKL-MOBILE-001',
+            'nama_pelapor' => 'Resident Test',
+            'id_desa' => $village->id_desa,
+            'rt' => '01',
+            'rw' => '02',
+            'kategori_laporan' => 'air_masalah',
+            'deskripsi' => 'Test report description.',
+            'status_laporan' => 'dijadwalkan',
+        ]);
+        $schedule = JadwalInspeksi::create([
+            'id_laporan' => $report->id_laporan,
+            'id_operator' => $operator->id_user,
+            'tanggal_kunjungan' => Carbon::tomorrow()->toDateString(),
+            'jenis_kunjungan' => 'ikl_laporan_warga',
+            'status_kunjungan' => 'terjadwal',
+        ]);
+
+        $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('reports.index'))
+            ->assertDontSee(route('inspeksi.form', $schedule->id_jadwal), false);
+
+        $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('schedules.index'))
+            ->assertDontSee(route('inspeksi.form', $schedule->id_jadwal), false)
+            ->assertSeeText('Menunggu hasil dari aplikasi mobile');
+    }
+
     private function createUser(string $role): User
     {
         return User::create([

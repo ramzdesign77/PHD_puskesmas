@@ -42,8 +42,8 @@
             <button type="button" id="tab-btn-laporan"
                 @click="tab = 'laporan'"
                 :class="tab === 'laporan'
-                    ? 'border-b-2 border-medical-red text-medical-red font-semibold'
-                    : 'text-gray-500 hover:text-blue-700'"
+                    ? 'border-b-2 border-ocean-600 text-ocean-700 font-semibold'
+                    : 'text-gray-500 hover:text-gray-700'"
                 class="flex items-center gap-2 pb-3 px-1 text-sm transition-colors">
                 <i class="fas fa-inbox"></i>
                 Laporan Masuk & Penjadwalan
@@ -56,8 +56,8 @@
             <button type="button" id="tab-btn-rekap"
                 @click="tab = 'rekap'"
                 :class="tab === 'rekap'
-                    ? 'border-b-2  border-medical-dark text-medical-red font-semibold'
-                    : 'text-gray-500 hover:text-blue-700'"
+                    ? 'border-b-2 border-ocean-600 text-ocean-700 font-semibold'
+                    : 'text-gray-500 hover:text-gray-700'"
                 class="flex items-center gap-2 pb-3 px-1 text-sm transition-colors">
                 <i class="fas fa-flask"></i>
                 Rekap Hasil Inspeksi IKL Air
@@ -206,14 +206,6 @@
                                             class="btn-secondary btn-sm text-red-600" title="Tolak Laporan">
                                             <i class="fas fa-times"></i>
                                         </button>
-                                        @endif
-
-                                        {{-- Tombol Form IKL (jika sudah dijadwalkan) --}}
-                                        @if($laporan->status_laporan === 'dijadwalkan' && $laporan->jadwal)
-                                        <a href="{{ route('inspeksi.form', $laporan->jadwal->id_jadwal) }}"
-                                            class="btn-secondary btn-sm text-green-600" title="Isi Form IKL">
-                                            <i class="fas fa-clipboard-check"></i>
-                                        </a>
                                         @endif
                                     </div>
                                 </td>
