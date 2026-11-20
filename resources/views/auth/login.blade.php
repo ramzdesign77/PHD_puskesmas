@@ -51,7 +51,7 @@
                 Pengawasan Kualitas Air &amp; Sanitasi Lingkungan
               </h1>
               <p class="text-base text-white/85 leading-relaxed font-normal">
-                Sistem integrasi inspeksi kesehatan lingkungan terpadu, uji reservoir berkala, dan pemantauan mikrobiologis air bersih wilayah kerja Puskesmas.
+                Sistem integrasi inspeksi kesehatan lingkungan terpadu, uji reservoir berkala, dan pemantauan mikrobiologis air bersih wilayah kerja Puskesmas Sumbersari.
               </p>
               <div class="pt-2">
                 <div class="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-left">
@@ -66,8 +66,8 @@
 
             <!-- Bottom Footer Metadata -->
             <div class="relative z-10 pt-6 border-t border-white/15 flex items-center justify-between text-white/70 text-xs tracking-wide">
-              <span>Kluster 4 Pencegahan &amp; Penyehatan Lingkungan</span>
-              <span>v4.2 Enterprise</span>
+              <span>SDGS 6 Sanitasi Air Bersih</span>
+              <span>Kelompok 5</span>
             </div>
           </aside>
 
@@ -133,7 +133,7 @@
                            type="text"
                            value="{{ old('username') }}" />
                   </div>
-                  <p class="text-xs text-stone-400">Akun seed: admin / admin123 atau petugas1 / petugas123.</p>
+                  <p class="text-xs text-stone-400">Pastikan kesesuaian username dan password sebelum melanjutkan.</p>
                 </div>
 
                 <!-- Password Field -->

@@ -110,10 +110,17 @@
         {{-- User Info Bottom --}}
         <div x-show="sidebarOpen" class="mt-auto border-t border-gray-100 p-4">
             <div class="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-                <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md">
-                    <span class="text-sm font-bold text-white">
-                        {{ strtoupper(substr(session('user_name', 'U'), 0, 1)) }}
-                    </span>
+                <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md">
+                    @if(session('role') === 'admin')
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                            <circle cx="12" cy="7.5" r="3.25"></circle>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 20c.45-3.35 3.05-5.5 6.5-5.5s6.05 2.15 6.5 5.5M10 15l2 2 2-2"></path>
+                        </svg>
+                    @else
+                        <span class="text-sm font-bold">
+                            {{ strtoupper(substr(session('user_name', 'U'), 0, 1)) }}
+                        </span>
+                    @endif
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-gray-800">{{ session('user_name', 'User') }}</p>

@@ -34,11 +34,11 @@
                     Jadwal Inspeksi
                 </a>
             </div>
-            <div class="mt-6 flex items-center gap-1.5" aria-label="Slide 1 dari 3">
+            {{-- <div class="mt-6 flex items-center gap-1.5" aria-label="Slide 1 dari 3">
                 <span class="h-1.5 w-7 rounded-full bg-white"></span>
                 <span class="h-1.5 w-3 rounded-full bg-white/50"></span>
                 <span class="h-1.5 w-3 rounded-full bg-white/50"></span>
-            </div>
+            </div> --}}
         </div>
 
         <img
