@@ -18,11 +18,11 @@
     <form method="GET" action="{{ route('users.index') }}" class="card flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
         <div class="relative flex-1">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true"></i>
-            <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama, ID petugas, atau username..." class="filter-search-input form-input w-full pr-4 text-sm" aria-label="Cari akun petugas">
+            <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama, ID, atau username..." class="filter-search-input form-input w-full pr-4 text-sm" aria-label="Cari akun petugas">
         </div>
-        <select name="role" class="form-input lg:w-40"><option value="">Semua jenis akun</option><option value="petugas" @selected(in_array(request('role'), ['petugas', 'sanitarian'], true))>Petugas</option><option value="admin" @selected(request('role') === 'admin')>Admin</option></select>
-        <select name="status" class="form-input lg:w-40"><option value="">Semua status</option><option value="active" @selected(request('status') === 'active')>Aktif</option><option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option></select>
-        <select name="per_page" class="form-input lg:w-32"><option value="10" @selected(request('per_page', '10') === '10')>10 data</option><option value="25" @selected(request('per_page') === '25')>25 data</option><option value="50" @selected(request('per_page') === '50')>50 data</option></select>
+        <select name="role" class="form-input lg:w-45"><option value="">Semua jenis akun</option><option value="petugas" @selected(in_array(request('role'), ['petugas', 'sanitarian'], true))>Petugas</option><option value="admin" @selected(request('role') === 'admin')>Admin</option></select>
+        <select name="status" class="form-input lg:w-35"><option value="">Semua status</option><option value="active" @selected(request('status') === 'active')>Aktif</option><option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option></select>
+        <select name="per_page" class="form-input lg:w-20"><option value="10" @selected(request('per_page', '10') === '10')>10 data</option><option value="25" @selected(request('per_page') === '25')>25 data</option><option value="50" @selected(request('per_page') === '50')>50 data</option></select>
         <button class="btn-primary justify-center" type="submit"><i class="fas fa-filter"></i> Terapkan</button>
         @if(request()->hasAny(['q', 'role', 'status', 'per_page']))
             <a href="{{ route('users.index') }}" class="btn-secondary justify-center">Reset</a>
