@@ -113,24 +113,138 @@
     {{-- ════════════════════════════════════════════════════════════ --}}
     <div class="card overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-                <h3 class="font-bold text-gray-800">Daftar Jadwal Kunjungan</h3>
-                <p class="text-xs text-gray-400 mt-0.5">
-                    {{ $schedules->total() }} jadwal terdaftar
-                </p>
-            </div>
             {{-- Filter --}}
-            <form method="GET" action="{{ route('schedules.index') }}" class="flex gap-2 flex-wrap">
-                <select name="status_kunjungan" onchange="this.form.submit()"
-                    class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                    <option value="">Semua Status</option>
-                    <option value="terjadwal" {{ request('status_kunjungan') === 'terjadwal' ? 'selected' : '' }}>Terjadwal</option>
-                    <option value="selesai"   {{ request('status_kunjungan') === 'selesai'   ? 'selected' : '' }}>Selesai</option>
-                    <option value="batal"     {{ request('status_kunjungan') === 'batal'     ? 'selected' : '' }}>Batal</option>
-                </select>
-                <input type="date" name="tanggal" value="{{ request('tanggal') }}" onchange="this.form.submit()"
-                    class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300">
-            </form>
+            @php
+                $hasAdvancedSched = collect(['id_desa', 'jenis', 'date_from', 'date_to'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+                $hasAnySched = collect(['q', 'status_kunjungan', 'status', 'id_operator', 'range', 'tanggal', 'id_desa', 'jenis', 'date_from', 'date_to'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+            @endphp
+           <form method="GET" action="{{ route('schedules.index') }}" id="filter-form-sched" class="w-full block">
+    <div class="w-full bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3 sm:p-4 mb-5">
+        <div class="w-full flex flex-wrap lg:flex-nowrap gap-3 items-center">
+            {{-- Search: flex-1 agar melar penuh mengisi ruang kosong --}}
+            <div class="relative flex-1 min-w-[220px] w-full">
+                <input type="text" name="q" value="{{ request('q') }}"
+                    placeholder="Cari kode tiket, pelapor, petugas..."
+                    class="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i class="fas fa-search text-xs"></i>
+                </span>
+                @if(request('q'))
+                    <button type="button" onclick="clearFilterField('q', 'filter-form-sched')"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                @endif
+            </div>
+
+            {{-- Status --}}
+            <select name="status_kunjungan" class="shrink-0 text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                <option value="">Semua Status</option>
+                <option value="terjadwal" {{ (request('status_kunjungan') ?? request('status')) === 'terjadwal' ? 'selected' : '' }}>Terjadwal</option>
+                <option value="selesai"   {{ (request('status_kunjungan') ?? request('status')) === 'selesai'   ? 'selected' : '' }}>Selesai</option>
+                <option value="batal"     {{ (request('status_kunjungan') ?? request('status')) === 'batal'     ? 'selected' : '' }}>Batal</option>
+            </select>
+
+            @if($isAdmin)
+            {{-- Petugas --}}
+            <select name="id_operator" class="shrink-0 text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                <option value="">Semua Petugas</option>
+                @foreach($officers as $officer)
+                    <option value="{{ $officer->id_user }}" {{ request('id_operator') == $officer->id_user ? 'selected' : '' }}>{{ $officer->nama_lengkap }}</option>
+                @endforeach
+            </select>
+            @endif
+
+            {{-- Quick period --}}
+            <select name="range" class="shrink-0 text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                <option value="">Semua Tanggal</option>
+                <option value="today"      {{ request('range') === 'today'      ? 'selected' : '' }}>Hari Ini</option>
+                <option value="this_week"  {{ request('range') === 'this_week'  ? 'selected' : '' }}>Minggu Ini</option>
+                <option value="this_month" {{ request('range') === 'this_month' ? 'selected' : '' }}>Bulan Ini</option>
+            </select>
+
+            {{-- Toggle Filter Lanjutan --}}
+            <button type="button" onclick="toggleAdvancedFilter('sched')"
+                class="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">
+                <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
+                @if($hasAdvancedSched)<span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>@endif
+            </button>
+
+            <button type="submit" class="shrink-0 text-sm font-semibold px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition">
+                Terapkan
+            </button>
+
+            @if($hasAnySched)
+                <a href="{{ route('schedules.index') }}" class="shrink-0 text-xs text-slate-500 hover:text-red-600 font-medium px-2 transition">Reset</a>
+            @endif
+        </div>
+
+        {{-- Filter Lanjutan --}}
+        <div id="advanced-panel-sched" class="{{ $hasAdvancedSched ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                    <label class="text-xs font-medium text-slate-600 mb-1 block">Desa</label>
+                    <select name="id_desa" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                        <option value="">Semua Desa</option>
+                        @foreach($desaList as $desa)
+                            <option value="{{ $desa->id_desa }}" {{ request('id_desa') == $desa->id_desa ? 'selected' : '' }}>{{ $desa->nama_desa }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-slate-600 mb-1 block">Jenis Kunjungan</label>
+                    <select name="jenis" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                        <option value="">Semua Jenis</option>
+                        <option value="ikl_laporan_warga" {{ request('jenis') === 'ikl_laporan_warga' ? 'selected' : '' }}>IKL Laporan Warga</option>
+                        <option value="ikl_rutin_rt"      {{ request('jenis') === 'ikl_rutin_rt'      ? 'selected' : '' }}>IKL Rutin RT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-slate-600 mb-1 block">Dari Tanggal</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}"
+                        class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-slate-600 mb-1 block">Sampai Tanggal</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}"
+                        class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+            {{-- Active Filter Chips --}}
+            @if($hasAnySched)
+            <div class="flex flex-wrap items-center gap-2 mb-4 text-xs">
+                <span class="text-slate-500 font-medium">Filter aktif:</span>
+                @if(request('q'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+                        Cari: "{{ request('q') }}"
+                        <a href="{{ request()->fullUrlWithQuery(['q' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('status_kunjungan') ?? request('status'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Status: {{ ucfirst(request('status_kunjungan') ?? request('status')) }}
+                        <a href="{{ request()->fullUrlWithQuery(['status_kunjungan' => null, 'status' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('range'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Periode: {{ ['today'=>'Hari Ini','this_week'=>'Minggu Ini','this_month'=>'Bulan Ini'][request('range')] ?? request('range') }}
+                        <a href="{{ request()->fullUrlWithQuery(['range' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('date_from') || request('date_to'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Tgl: {{ request('date_from') ?? '...' }} – {{ request('date_to') ?? '...' }}
+                        <a href="{{ request()->fullUrlWithQuery(['date_from' => null, 'date_to' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                <span class="ml-auto text-slate-400">{{ $schedules->total() }} jadwal ditemukan</span>
+            </div>
+            @endif
         </div>
 
         <div class="overflow-x-auto">
@@ -316,8 +430,9 @@
         </div>
 
         @if($schedules->hasPages())
-        <div class="px-6 py-4 border-t border-gray-100">
-            {{ $schedules->links() }}
+        <div class="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <span class="text-xs font-medium text-slate-500">{{ $schedules->firstItem() ?? 0 }}–{{ $schedules->lastItem() ?? 0 }} dari {{ $schedules->total() }} jadwal</span>
+            @include('partials.pagination-circles', ['paginator' => $schedules])
         </div>
         @endif
     </div>
@@ -424,6 +539,16 @@
 
 @section('scripts')
 <script>
+function toggleAdvancedFilter(id) {
+    const panel = document.getElementById('advanced-panel-' + id);
+    if (panel) { panel.classList.toggle('hidden'); }
+}
+function clearFilterField(name, formId) {
+    const form = document.getElementById(formId);
+    const input = form ? form.querySelector('[name="' + name + '"]') : document.querySelector('[name="' + name + '"]');
+    if (input) { input.value = ''; input.form ? input.form.submit() : form.submit(); }
+}
+
 function showModal(id) {
     const el = document.getElementById(id);
     el.classList.remove('hidden');

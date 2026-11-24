@@ -71,20 +71,132 @@
         {{-- TAB 1: LAPORAN MASUK & PENJADWALAN  --}}
         {{-- ════════════════════════════════════ --}}
         <div x-show="tab === 'laporan'" x-transition.opacity>
+            {{-- Filter Toolbar Tab 1 --}}
+            @php
+                $hasAdvancedLap = collect(['date_from', 'date_to', 'kategori', 'sort'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+                $hasAnyLap = collect(['q', 'status', 'status_laporan', 'id_desa', 'date_from', 'date_to', 'kategori', 'sort'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+            @endphp
+            <form method="GET" action="{{ route('reports.index') }}" id="filter-form-laporan">
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3.5 sm:p-4 mb-5">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        {{-- Search --}}
+                        <div class="relative flex-1 min-w-48">
+                            <input type="text" name="q" value="{{ request('q') }}"
+                                placeholder="Cari kode tiket, pelapor, No WA, deskripsi..."
+                                class="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><i class="fas fa-search text-xs"></i></span>
+                            @if(request('q'))
+                                <button type="button" onclick="clearFilterField('q', 'filter-form-laporan')" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                            @endif
+                        </div>
+                        {{-- Status --}}
+                        <select name="status" class="text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                            <option value="">Semua Status</option>
+                            @foreach(['menunggu' => 'Menunggu', 'dibaca' => 'Dibaca', 'dijadwalkan' => 'Dijadwalkan', 'selesai' => 'Selesai', 'ditolak' => 'Ditolak'] as $statusValue => $statusLabel)
+                                <option value="{{ $statusValue }}" {{ (request('status') ?? request('status_laporan')) === $statusValue ? 'selected' : '' }}>{{ $statusLabel }}</option>
+                            @endforeach
+                        </select>
+                        {{-- Desa --}}
+                        <select name="id_desa" class="text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                            <option value="">Semua Desa</option>
+                            @foreach($desaList as $desa)
+                                <option value="{{ $desa->id_desa }}" {{ request('id_desa') == $desa->id_desa ? 'selected' : '' }}>{{ $desa->nama_desa }}</option>
+                            @endforeach
+                        </select>
+                        {{-- Toggle Filter Lanjutan --}}
+                        <button type="button" onclick="toggleAdvancedFilter('laporan')"
+                            class="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">
+                            <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
+                            @if($hasAdvancedLap)<span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>@endif
+                        </button>
+                        <button type="submit" class="text-sm font-semibold px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition">Terapkan</button>
+                        @if($hasAnyLap)
+                            <a href="{{ route('reports.index') }}" class="text-xs text-slate-500 hover:text-red-600 font-medium px-2 transition">Reset</a>
+                        @endif
+                    </div>
+
+                    {{-- Filter Lanjutan --}}
+                    <div id="advanced-panel-laporan" class="{{ $hasAdvancedLap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Kategori Laporan</label>
+                                <select name="kategori" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                                    <option value="">Semua Kategori</option>
+                                    <option value="air_sumur_keruh_berbau" {{ request('kategori') === 'air_sumur_keruh_berbau' ? 'selected' : '' }}>Air Sumur Keruh / Berbau</option>
+                                    <option value="sarang_nyamuk_dbd"      {{ request('kategori') === 'sarang_nyamuk_dbd'      ? 'selected' : '' }}>Sarang Nyamuk / DBD</option>
+                                    <option value="jamban_limbah_stbm"     {{ request('kategori') === 'jamban_limbah_stbm'     ? 'selected' : '' }}>Jamban & Limbah (STBM)</option>
+                                    <option value="tumpukan_sampah"        {{ request('kategori') === 'tumpukan_sampah'        ? 'selected' : '' }}>Tumpukan Sampah</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Urutkan</label>
+                                <select name="sort" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                                    <option value="">Terbaru (default)</option>
+                                    <option value="terlama" {{ request('sort') === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Dari Tanggal Lapor</label>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                    class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Sampai Tanggal Lapor</label>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                    class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {{-- Active Filter Chips --}}
+            @if($hasAnyLap)
+            <div class="flex flex-wrap items-center gap-2 mb-4 text-xs">
+                <span class="text-slate-500 font-medium">Filter aktif:</span>
+                @if(request('q'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+                        Cari: "{{ request('q') }}"
+                        <a href="{{ request()->fullUrlWithQuery(['q' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('status') || request('status_laporan'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Status: {{ ucfirst(request('status', request('status_laporan'))) }}
+                        <a href="{{ request()->fullUrlWithQuery(['status' => null, 'status_laporan' => null, 'page_aktif' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('id_desa'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Desa: {{ $desaList->firstWhere('id_desa', request('id_desa'))?->nama_desa ?? request('id_desa') }}
+                        <a href="{{ request()->fullUrlWithQuery(['id_desa' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('kategori'))
+                    @php $kategoriLabels = ['air_sumur_keruh_berbau'=>'Air Sumur Keruh / Berbau','sarang_nyamuk_dbd'=>'Sarang Nyamuk / DBD','jamban_limbah_stbm'=>'Jamban & Limbah (STBM)','tumpukan_sampah'=>'Tumpukan Sampah']; @endphp
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Kategori: {{ $kategoriLabels[request('kategori')] ?? request('kategori') }}
+                        <a href="{{ request()->fullUrlWithQuery(['kategori' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('date_from') || request('date_to'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Periode: {{ request('date_from') ?? '...' }} – {{ request('date_to') ?? '...' }}
+                        <a href="{{ request()->fullUrlWithQuery(['date_from' => null, 'date_to' => null]) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                <span class="ml-auto text-slate-400">Menampilkan {{ $laporanAktif->count() }} dari {{ $laporanAktif->total() }} laporan</span>
+            </div>
+            @endif
+
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-gray-800">Laporan Masuk</h3>
                         <p class="text-xs text-gray-400 mt-0.5">Laporan berstatus menunggu verifikasi dan dijadwalkan</p>
                     </div>
-                    <form method="GET" action="{{ route('reports.index') }}" class="flex gap-2 flex-wrap">
-                        <select name="status_laporan" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300">
-                            <option value="">Semua Status</option>
-                            <option value="menunggu"    {{ request('status_laporan') === 'menunggu'    ? 'selected' : '' }}>Menunggu</option>
-                            <option value="dijadwalkan" {{ request('status_laporan') === 'dijadwalkan' ? 'selected' : '' }}>Dijadwalkan</option>
-                            <option value="dibaca"      {{ request('status_laporan') === 'dibaca'      ? 'selected' : '' }}>Dibaca</option>
-                        </select>
-                    </form>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -228,8 +340,9 @@
                 </div>
 
                 @if($laporanAktif->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100">
-                    {{ $laporanAktif->appends(['page_rekap' => request('page_rekap')])->links() }}
+                <div class="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <span class="text-xs font-medium text-slate-500">{{ $laporanAktif->firstItem() ?? 0 }}–{{ $laporanAktif->lastItem() ?? 0 }} dari {{ $laporanAktif->total() }} laporan</span>
+                    @include('partials.pagination-circles', ['paginator' => $laporanAktif])
                 </div>
                 @endif
             </div>
@@ -240,40 +353,130 @@
         {{-- ════════════════════════════════════ --}}
         <div x-show="tab === 'rekap'" x-transition.opacity x-cloak>
 
-            {{-- Filter & Ekspor --}}
-            <div class="card p-4 mb-4">
-                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-wrap gap-3 items-end">
-                    <input type="hidden" name="tab" value="rekap">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Dari Tanggal</label>
-                        <input type="date" name="dari_tanggal" value="{{ request('dari_tanggal') }}"
-                            class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Sampai Tanggal</label>
-                        <input type="date" name="sampai_tanggal" value="{{ request('sampai_tanggal') }}"
-                            class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Kategori Risiko</label>
-                        <select name="kategori_risiko" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300">
-                            <option value="">Semua</option>
-                            <option value="aman"          {{ request('kategori_risiko') === 'aman' ? 'selected' : '' }}>✅ Aman</option>
-                            <option value="risiko_sedang" {{ request('kategori_risiko') === 'risiko_sedang' ? 'selected' : '' }}>⚠️ Risiko Sedang</option>
-                            <option value="risiko_tinggi" {{ request('kategori_risiko') === 'risiko_tinggi' ? 'selected' : '' }}>🔴 Risiko Tinggi</option>
+            {{-- Filter Toolbar Tab 2 --}}
+            @php
+                $hasAdvancedRekap = collect(['date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+                $hasAnyRekap = collect(['q', 'risiko', 'kategori_risiko', 'date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa', 'id_petugas'])
+                    ->contains(fn ($filter) => filled(request($filter)));
+            @endphp
+            <form method="GET" action="{{ route('reports.index') }}" id="filter-form-rekap">
+                <input type="hidden" name="tab" value="rekap">
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3.5 sm:p-4 mb-5">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        {{-- Search --}}
+                        <div class="relative flex-1 min-w-48">
+                            <input type="text" name="q" value="{{ request('q') }}"
+                                placeholder="Cari kode tiket, pelapor, rekomendasi..."
+                                class="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><i class="fas fa-search text-xs"></i></span>
+                            @if(request('q'))
+                                <button type="button" onclick="clearFilterField('q', 'filter-form-rekap')" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+                            @endif
+                        </div>
+                        {{-- Kategori Risiko --}}
+                        <select name="risiko" class="text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none">
+                            <option value="">Semua Risiko</option>
+                            <option value="aman" {{ (request('risiko') ?? request('kategori_risiko')) === 'aman' ? 'selected' : '' }}>Aman / Rendah</option>
+                            <option value="risiko_sedang" {{ (request('risiko') ?? request('kategori_risiko')) === 'risiko_sedang' ? 'selected' : '' }}>Risiko Sedang</option>
+                            <option value="risiko_tinggi" {{ (request('risiko') ?? request('kategori_risiko')) === 'risiko_tinggi' ? 'selected' : '' }}>Risiko Tinggi</option>
+                            <option value="risiko_amat_tinggi" {{ (request('risiko') ?? request('kategori_risiko')) === 'risiko_amat_tinggi' ? 'selected' : '' }}>Risiko Amat Tinggi</option>
                         </select>
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn-primary btn-sm">
-                            <i class="fas fa-search"></i> Filter
+                        {{-- Toggle Filter Lanjutan --}}
+                        <button type="button" onclick="toggleAdvancedFilter('rekap')"
+                            class="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition">
+                            <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
+                            @if($hasAdvancedRekap)<span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>@endif
                         </button>
-                        <a href="{{ route('reports.index') }}?tab=rekap" class="btn-secondary btn-sm">Reset</a>
-                        <a href="{{ route('reports.export', request()->query()) }}" class="btn-secondary btn-sm text-green-600" title="Ekspor CSV">
-                            <i class="fas fa-file-csv"></i> Ekspor
+                        <button type="submit" class="text-sm font-semibold px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition">Terapkan</button>
+                        <a href="{{ route('reports.export', request()->query()) }}" class="text-sm font-semibold px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition" title="Ekspor CSV">
+                            <i class="fas fa-file-csv mr-1"></i> Ekspor
                         </a>
+                        @if($hasAnyRekap)
+                            <a href="{{ route('reports.index') }}?tab=rekap" class="text-xs text-slate-500 hover:text-red-600 font-medium px-2 transition">Reset</a>
+                        @endif
                     </div>
-                </form>
+
+                    {{-- Filter Lanjutan --}}
+                    <div id="advanced-panel-rekap" class="{{ $hasAdvancedRekap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Desa</label>
+                                <select name="id_desa" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                                    <option value="">Semua Desa</option>
+                                    @foreach($desaList as $desa)
+                                        <option value="{{ $desa->id_desa }}" {{ request('id_desa') == $desa->id_desa ? 'selected' : '' }}>{{ $desa->nama_desa }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Kategori IKL</label>
+                                <select name="kategori_ikl" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                                    <option value="">Semua Instrumen</option>
+                                    <option value="sumur_gali" {{ request('kategori_ikl') === 'sumur_gali' ? 'selected' : '' }}>Sumur Gali</option>
+                                    <option value="sumur_bor" {{ request('kategori_ikl') === 'sumur_bor' ? 'selected' : '' }}>Sumur Bor</option>
+                                    <option value="sarang_nyamuk_dbd"      {{ request('kategori_ikl') === 'sarang_nyamuk_dbd'      ? 'selected' : '' }}>Sarang Nyamuk / DBD</option>
+                                    <option value="jamban_limbah_stbm"     {{ request('kategori_ikl') === 'jamban_limbah_stbm'     ? 'selected' : '' }}>Jamban & Limbah</option>
+                                    <option value="tumpukan_sampah"        {{ request('kategori_ikl') === 'tumpukan_sampah'        ? 'selected' : '' }}>Tumpukan Sampah</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Dari Tanggal IKL</label>
+                                <input type="date" name="date_from" value="{{ request('date_from', request('dari_tanggal')) }}"
+                                    class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Sampai Tanggal IKL</label>
+                                <input type="date" name="date_to" value="{{ request('date_to', request('sampai_tanggal')) }}"
+                                    class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600 mb-1 block">Intervensi Fisik</label>
+                                <select name="intervensi" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none">
+                                    <option value="">Semua</option>
+                                    <option value="ada" {{ request('intervensi') === 'ada' ? 'selected' : '' }}>Ada Intervensi</option>
+                                    <option value="tidak" {{ request('intervensi') === 'tidak' ? 'selected' : '' }}>Tanpa Intervensi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {{-- Active Filter Chips --}}
+            @if($hasAnyRekap)
+            <div class="flex flex-wrap items-center gap-2 mb-4 text-xs">
+                <span class="text-slate-500 font-medium">Filter aktif:</span>
+                @if(request('q'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+                        Cari: "{{ request('q') }}"
+                        <a href="{{ request()->fullUrlWithQuery(['q' => null, 'tab' => 'rekap']) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('risiko') ?? request('kategori_risiko'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Risiko: {{ ucwords(str_replace('_', ' ', request('risiko') ?? request('kategori_risiko'))) }}
+                        <a href="{{ request()->fullUrlWithQuery(['risiko' => null, 'kategori_risiko' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('date_from') || request('date_to') || request('dari_tanggal') || request('sampai_tanggal'))
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-medium">
+                        Periode: {{ request('date_from', request('dari_tanggal')) ?? '...' }} – {{ request('date_to', request('sampai_tanggal')) ?? '...' }}
+                        <a href="{{ request()->fullUrlWithQuery(['date_from' => null, 'date_to' => null, 'dari_tanggal' => null, 'sampai_tanggal' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" class="hover:text-red-600 ml-0.5">×</a>
+                    </span>
+                @endif
+                @if(request('id_desa'))
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Desa: {{ $desaList->firstWhere('id_desa', request('id_desa'))?->nama_desa ?? request('id_desa') }} <a href="{{ request()->fullUrlWithQuery(['id_desa' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter desa">×</a></span>
+                @endif
+                @if(request('kategori_ikl'))
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Instrumen: {{ ucwords(str_replace('_', ' ', request('kategori_ikl'))) }} <a href="{{ request()->fullUrlWithQuery(['kategori_ikl' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter instrumen">×</a></span>
+                @endif
+                @if(request('intervensi'))
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Intervensi: {{ request('intervensi') === 'ada' ? 'Ada' : 'Tidak ada' }} <a href="{{ request()->fullUrlWithQuery(['intervensi' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter intervensi">×</a></span>
+                @endif
+                <span class="ml-auto text-slate-400">Menampilkan {{ $rekapIkl->count() }} dari {{ $rekapIkl->total() }} data</span>
             </div>
+            @endif
 
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -380,8 +583,9 @@
                 </div>
 
                 @if($rekapIkl->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100">
-                    {{ $rekapIkl->appends(['page_aktif' => request('page_aktif')])->links() }}
+                <div class="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <span class="text-xs font-medium text-slate-500">{{ $rekapIkl->firstItem() ?? 0 }}–{{ $rekapIkl->lastItem() ?? 0 }} dari {{ $rekapIkl->total() }} inspeksi</span>
+                    @include('partials.pagination-circles', ['paginator' => $rekapIkl])
                 </div>
                 @endif
             </div>

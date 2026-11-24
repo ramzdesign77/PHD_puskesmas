@@ -54,7 +54,7 @@
                 </article>
             @endforeach
         </div>
-        <div>{{ $articles->links() }}</div>
+        @include('partials.pagination-circles', ['paginator' => $articles])
     @else
         <div class="bg-white rounded-2xl border border-dashed border-gray-200 text-center py-16">
             <i class="fas fa-book-open text-4xl text-gray-200"></i>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Desa;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
 use App\Models\User;
@@ -31,16 +32,22 @@ class ReportController extends Controller
         $role = session('role');
 
         // ── Tab 1: Laporan aktif (menunggu & dijadwalkan) ──────────────────
+        $statusFilter = $request->filled('status') ? $request->status : $request->status_laporan;
         $queryAktif = LaporanWarga::with(['desa', 'jadwal.operator'])
-            ->whereIn('status_laporan', ['menunggu', 'dibaca', 'diterima', 'dijadwalkan'])
-            ->orderBy('id_laporan', 'desc');
-
-        if ($request->filled('id_desa')) {
-            $queryAktif->where('id_desa', $request->id_desa);
-        }
-        if ($request->filled('status_laporan')) {
-            $queryAktif->where('status_laporan', $request->status_laporan);
-        }
+            ->when($statusFilter, fn ($q) => $q->where('status_laporan', $statusFilter),
+                fn ($q) => $q->whereIn('status_laporan', ['menunggu', 'dibaca', 'diterima', 'dijadwalkan']))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('kode_tiket', 'like', "%{$request->q}%")
+                ->orWhere('nama_pelapor', 'like', "%{$request->q}%")
+                ->orWhere('no_wa', 'like', "%{$request->q}%")
+                ->orWhere('deskripsi', 'like', "%{$request->q}%")))
+            ->when($request->filled('id_desa'), fn ($q) => $q->where('id_desa', $request->id_desa))
+            ->when($request->filled('kategori'), fn ($q) => $q->where('kategori_laporan', $request->kategori))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->get('sort') === 'terlama',
+                fn ($q) => $q->reorder('id_laporan', 'asc'),
+                fn ($q) => $q->orderBy('id_laporan', 'desc'));
 
         $laporanAktif = $queryAktif->paginate(15, ['*'], 'page_aktif')
             ->withQueryString();
@@ -58,11 +65,14 @@ class ReportController extends Controller
             ->orderBy('nama_lengkap')
             ->get(['id_user', 'nama_lengkap', 'wilayah_kerja']);
 
+        $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
+
         return view('reports.index', compact(
             'laporanAktif',
             'rekapIkl',
             'summary',
             'sanitarians',
+            'desaList',
             'role'
         ));
     }
@@ -284,17 +294,41 @@ class ReportController extends Controller
             ->orderBy('ji.tanggal_kunjungan', 'desc');
 
         // Filter opsional dari request
-        if ($request->filled('kategori_risiko')) {
-            $query->where('ikl.kategori_risiko', $request->kategori_risiko);
+        $riskFilter = $request->filled('risiko') ? $request->risiko : $request->kategori_risiko;
+        if ($riskFilter) {
+            $query->where('ikl.kategori_risiko', $riskFilter);
         }
         if ($request->filled('id_petugas')) {
             $query->where('u.id_user', $request->id_petugas);
         }
-        if ($request->filled('dari_tanggal')) {
-            $query->whereDate('ji.tanggal_kunjungan', '>=', $request->dari_tanggal);
+        $dateFrom = $request->filled('date_from') ? $request->date_from : $request->dari_tanggal;
+        $dateTo = $request->filled('date_to') ? $request->date_to : $request->sampai_tanggal;
+        if ($dateFrom) {
+            $query->whereDate('ikl.tanggal_inspeksi', '>=', $dateFrom);
         }
-        if ($request->filled('sampai_tanggal')) {
-            $query->whereDate('ji.tanggal_kunjungan', '<=', $request->sampai_tanggal);
+        if ($dateTo) {
+            $query->whereDate('ikl.tanggal_inspeksi', '<=', $dateTo);
+        }
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(fn ($sub) => $sub
+                ->where('lw.kode_tiket', 'like', "%{$q}%")
+                ->orWhere('lw.nama_pelapor', 'like', "%{$q}%")
+                ->orWhere('ikl.rekomendasi_sanitarian', 'like', "%{$q}%")
+                ->orWhere('ikl.intervensi_fisik', 'like', "%{$q}%"));
+        }
+        if ($request->filled('id_desa')) {
+            $query->where('lw.id_desa', $request->id_desa);
+        }
+        if ($request->filled('kategori_ikl')) {
+            $query->where('ikl.kategori_ikl', $request->kategori_ikl);
+        }
+        if ($request->filled('intervensi')) {
+            if ($request->intervensi === 'ada') {
+                $query->whereNotNull('ikl.intervensi_fisik')->where('ikl.intervensi_fisik', '!=', '');
+            } elseif ($request->intervensi === 'tidak') {
+                $query->where(fn ($s) => $s->whereNull('ikl.intervensi_fisik')->orWhere('ikl.intervensi_fisik', ''));
+            }
         }
 
         return $query;

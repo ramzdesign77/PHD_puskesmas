@@ -170,6 +170,62 @@ class DashboardControllerTest extends TestCase
             ));
     }
 
+    public function test_dashboard_agenda_paginates_five_schedules_and_preserves_filters(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-24 10:00:00'));
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('petugas');
+        $village = Desa::create(['nama_desa' => 'Desa Agenda Pagination']);
+        $visits = [];
+
+        for ($number = 1; $number <= 6; $number++) {
+            $report = $this->createReport(
+                $village,
+                sprintf('IKL-DASH-PAGE-%02d', $number),
+                'menunggu',
+                'air_masalah',
+                '2026-11-20'
+            );
+            $visits[] = $this->createSchedule($report, $operator, null, 'terjadwal');
+        }
+
+        $firstPage = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('dashboard.admin', [
+                'period' => 'all',
+                'id_desa' => $village->id_desa,
+            ]));
+
+        $firstPage->assertSee('aria-label="Pagination"', false)
+            ->assertSee('aria-label="Halaman 2"', false)
+            ->assertViewHas('todaySchedules', function ($schedules) use ($village, $visits): bool {
+                parse_str((string) parse_url($schedules->url(2), PHP_URL_QUERY), $query);
+
+                return $schedules->perPage() === 5
+                    && $schedules->total() === 6
+                    && $schedules->count() === 5
+                    && $schedules->first()->id_jadwal === $visits[0]->id_jadwal
+                    && ($query['page_agenda'] ?? null) === '2'
+                    && ($query['period'] ?? null) === 'all'
+                    && ($query['id_desa'] ?? null) === (string) $village->id_desa;
+            });
+
+        $secondPage = $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('dashboard.admin', [
+                'period' => 'all',
+                'id_desa' => $village->id_desa,
+                'page_agenda' => 2,
+            ]));
+
+        $secondPage->assertSee('aria-current="page"', false)
+            ->assertViewHas('todaySchedules', fn ($schedules): bool => (
+                $schedules->total() === 6
+                && $schedules->count() === 1
+                && $schedules->first()->id_jadwal === $visits[5]->id_jadwal
+            ));
+    }
+
     public function test_dashboard_rejects_invalid_period_and_village_filters(): void
     {
         $admin = $this->createUser('admin');

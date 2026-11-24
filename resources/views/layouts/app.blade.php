@@ -20,13 +20,13 @@
 </head>
 <body class="h-full" x-data="{ sidebarOpen: true, mobileMenuOpen: false }">
 
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen w-screen min-w-[100vw] overflow-hidden">
 
     {{-- ═══════════════════════════════════════════ --}}
     {{--  SIDEBAR                                    --}}
     {{-- ═══════════════════════════════════════════ --}}
     {{-- Desktop Sidebar --}}
-    <aside class="water-sidebar hidden md:flex flex-col bg-white shadow-lg transition-all duration-300 z-30"
+    <aside class="water-sidebar hidden shrink-0 md:flex flex-col bg-white shadow-lg transition-all duration-300 z-30"
            :class="sidebarOpen ? 'w-64' : 'w-20'">
 
         {{-- Logo --}}
@@ -200,7 +200,7 @@
     {{-- ═══════════════════════════════════════════ --}}
     {{--  MAIN CONTENT AREA                          --}}
     {{-- ═══════════════════════════════════════════ --}}
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
         {{-- TOP NAVBAR --}}
         <header class="navbar-glass sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3">
@@ -302,7 +302,7 @@
         @endif
 
         {{-- Page Content --}}
-        <main class="flex-1 overflow-y-auto p-4 md:p-6 fade-in">
+        <main class="w-full min-w-0 flex-1 overflow-y-auto p-4 md:p-6 fade-in">
             @yield('content')
         </main>
 

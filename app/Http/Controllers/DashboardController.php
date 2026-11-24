@@ -205,7 +205,8 @@ class DashboardController extends Controller
             ->with(['operator', 'laporan.desa', 'paketAlat'])
             ->orderBy('jam_mulai')
             ->orderBy('id_jadwal')
-            ->get();
+            ->paginate(5, ['*'], 'page_agenda')
+            ->withQueryString();
 
         $pendingReportsParameters = ['status_laporan' => 'menunggu'];
         if ($idDesa !== null) {

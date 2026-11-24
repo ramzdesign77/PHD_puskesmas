@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInspeksiIklRequest;
+use App\Models\Desa;
 use App\Models\InspeksiIkl;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
-use App\Models\Petugas;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,13 +29,39 @@ class InspeksiIklController extends Controller
             ])
             ->whereHas('inspeksiIkl');
 
-        if ($request->filled('kategori_risiko')) {
-            $query->whereHas('inspeksiIkl', fn ($q) => $q->where('kategori_risiko', $request->kategori_risiko));
-        }
+        $query->when($request->filled('q'), fn ($q) => $q->where(fn ($sub) => $sub
+            ->whereHas('laporan', fn ($l) => $l
+                ->where('kode_tiket', 'like', "%{$request->q}%")
+                ->orWhere('nama_pelapor', 'like', "%{$request->q}%"))
+            ->orWhereHas('inspeksiIkl', fn ($i) => $i
+                ->where('rekomendasi_sanitarian', 'like', "%{$request->q}%")
+                ->orWhere('intervensi_fisik', 'like', "%{$request->q}%"))));
 
-        if ($request->filled('id_operator')) {
-            $query->where('id_operator', $request->id_operator);
-        }
+        // Mendukung param lama (kategori_risiko) dan baru (risiko)
+        $risikoFilter = $request->filled('kategori_risiko') ? $request->kategori_risiko : $request->risiko;
+        $query->when($risikoFilter, fn ($q) => $q->whereHas('inspeksiIkl', fn ($i) => $i->where('kategori_risiko', $risikoFilter)));
+
+        $query->when($request->filled('id_operator'), fn ($q) => $q->where('id_operator', $request->id_operator));
+
+        $query->when($request->filled('id_desa'),
+            fn ($q) => $q->whereHas('laporan', fn ($l) => $l->where('id_desa', $request->id_desa)));
+
+        $query->when($request->filled('kategori_ikl'),
+            fn ($q) => $q->whereHas('inspeksiIkl', fn ($i) => $i->where('kategori_ikl', $request->kategori_ikl)));
+
+        $query->when($request->filled('date_from'),
+            fn ($q) => $q->whereHas('inspeksiIkl', fn ($i) => $i->whereDate('tanggal_inspeksi', '>=', $request->date_from)));
+
+        $query->when($request->filled('date_to'),
+            fn ($q) => $q->whereHas('inspeksiIkl', fn ($i) => $i->whereDate('tanggal_inspeksi', '<=', $request->date_to)));
+
+        $query->when($request->filled('intervensi'), function ($q) use ($request) {
+            if ($request->intervensi === 'ada') {
+                $q->whereHas('inspeksiIkl', fn ($i) => $i->whereNotNull('intervensi_fisik')->where('intervensi_fisik', '!=', ''));
+            } elseif ($request->intervensi === 'tidak') {
+                $q->whereHas('inspeksiIkl', fn ($i) => $i->where(fn ($s) => $s->whereNull('intervensi_fisik')->orWhere('intervensi_fisik', '')));
+            }
+        });
 
         $jadwalList = $query->orderBy('tanggal_kunjungan', 'desc')->paginate(15)->withQueryString();
 
@@ -46,9 +73,14 @@ class InspeksiIklController extends Controller
             ROUND(AVG(total_skor_ya), 1) as rata_rata_skor
         ")->first();
 
-        $semuaPetugas = Petugas::where('is_active', 1)->orderBy('nama_petugas')->get();
+        $semuaPetugas = User::where('is_active', true)
+            ->sanitarian()
+            ->orderBy('nama_lengkap')
+            ->get(['id_user', 'nama_lengkap']);
 
-        return view('admin.inspeksi-ikl.index', compact('jadwalList', 'rekapStatistik', 'semuaPetugas'));
+        $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
+
+        return view('admin.inspeksi-ikl.index', compact('jadwalList', 'rekapStatistik', 'semuaPetugas', 'desaList'));
     }
 
     /**

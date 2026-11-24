@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Desa;
 use App\Models\JadwalInspeksi;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -27,12 +28,44 @@ class ScheduleController extends Controller
             $query->where('id_operator', session('user_id'));
         }
 
-        if ($request->filled('status_kunjungan')) {
-            $query->where('status_kunjungan', $request->status_kunjungan);
-        }
-        if ($request->filled('tanggal')) {
-            $query->whereDate('tanggal_kunjungan', $request->tanggal);
-        }
+        // Search
+        $query->when($request->filled('q'), fn ($q) => $q->where(fn ($sub) => $sub
+            ->whereHas('laporan', fn ($l) => $l
+                ->where('kode_tiket', 'like', "%{$request->q}%")
+                ->orWhere('nama_pelapor', 'like', "%{$request->q}%"))
+            ->orWhereHas('operator', fn ($u) => $u->where('nama_lengkap', 'like', "%{$request->q}%"))
+            ->orWhere('catatan', 'like', "%{$request->q}%")));
+
+        // Status — mendukung param lama (status_kunjungan) dan baru (status)
+        $statusFilter = $request->filled('status_kunjungan') ? $request->status_kunjungan : $request->status;
+        $query->when($statusFilter, fn ($q) => $q->where('status_kunjungan', $statusFilter));
+
+        // Petugas
+        $query->when($request->filled('id_operator'), fn ($q) => $q->where('id_operator', $request->id_operator));
+
+        // Quick period
+        $query->when($request->filled('range'), function ($q) use ($request) {
+            match ($request->range) {
+                'today' => $q->whereDate('tanggal_kunjungan', today()),
+                'this_week' => $q->whereBetween('tanggal_kunjungan', [now()->startOfWeek(), now()->endOfWeek()]),
+                'this_month' => $q->whereMonth('tanggal_kunjungan', now()->month)->whereYear('tanggal_kunjungan', now()->year),
+                default => null,
+            };
+        });
+
+        // Filter tanggal tunggal lama (backward compat)
+        $query->when($request->filled('tanggal') && ! $request->filled('date_from'),
+            fn ($q) => $q->whereDate('tanggal_kunjungan', $request->tanggal));
+
+        // Date range baru
+        $query->when($request->filled('date_from'), fn ($q) => $q->whereDate('tanggal_kunjungan', '>=', $request->date_from));
+        $query->when($request->filled('date_to'), fn ($q) => $q->whereDate('tanggal_kunjungan', '<=', $request->date_to));
+
+        // Desa (via relasi laporan)
+        $query->when($request->filled('id_desa'), fn ($q) => $q->whereHas('laporan', fn ($l) => $l->where('id_desa', $request->id_desa)));
+
+        // Jenis kunjungan
+        $query->when($request->filled('jenis'), fn ($q) => $q->where('jenis_kunjungan', $request->jenis));
 
         $schedules = $query->paginate(20)->withQueryString();
 
@@ -41,6 +74,8 @@ class ScheduleController extends Controller
             ->orderBy('nama_lengkap')
             ->get(['id_user', 'nama_lengkap', 'wilayah_kerja']);
 
+        $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
+
         $summary = [
             'terjadwal' => JadwalInspeksi::where('status_kunjungan', 'terjadwal')->count(),
             'selesai' => JadwalInspeksi::where('status_kunjungan', 'selesai')->count(),
@@ -48,7 +83,7 @@ class ScheduleController extends Controller
             'total' => JadwalInspeksi::count(),
         ];
 
-        return view('schedules.index', compact('schedules', 'officers', 'role', 'summary'));
+        return view('schedules.index', compact('schedules', 'officers', 'desaList', 'role', 'summary'));
     }
 
     public function store(Request $request): RedirectResponse

@@ -108,7 +108,9 @@
             </table>
         </div>
         @if($wargas->hasPages())
-            <div class="border-t border-gray-100 px-6 py-4">{{ $wargas->links() }}</div>
+            <div class="border-t border-gray-100 px-6 py-4">
+                @include('partials.pagination-circles', ['paginator' => $wargas])
+            </div>
         @endif
     </div>
 </div>

@@ -327,6 +327,11 @@
                     </div>
                 @endforelse
             </div>
+            @if($todaySchedules->hasPages())
+                <div class="mt-4 border-t border-slate-100 pt-4">
+                    @include('partials.pagination-circles', ['paginator' => $todaySchedules])
+                </div>
+            @endif
         </article>
     </section>
 </div>

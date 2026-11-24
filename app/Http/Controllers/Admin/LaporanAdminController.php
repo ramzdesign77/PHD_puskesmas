@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Desa;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
 use App\Models\PaketAlat;
@@ -16,15 +17,28 @@ class LaporanAdminController extends Controller
      */
     public function index(Request $request)
     {
-        $query = LaporanWarga::query()->with('desa');
+        $query = LaporanWarga::query()->with('desa')
+            ->when($request->filled('q'), fn ($query) => $query->where(fn ($search) => $search
+                ->where('kode_tiket', 'like', "%{$request->q}%")
+                ->orWhere('nama_pelapor', 'like', "%{$request->q}%")
+                ->orWhere('no_wa', 'like', "%{$request->q}%")
+                ->orWhere('deskripsi', 'like', "%{$request->q}%")))
+            ->when($request->filled('status') || $request->filled('status_laporan'), fn ($query) => $query->where(
+                'status_laporan',
+                $request->filled('status') ? $request->status : $request->status_laporan
+            ))
+            ->when($request->filled('kategori'), fn ($query) => $query->where('kategori_laporan', $request->kategori))
+            ->when($request->filled('id_desa'), fn ($query) => $query->where('id_desa', $request->id_desa))
+            ->when($request->filled('date_from'), fn ($query) => $query->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn ($query) => $query->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->get('sort') === 'terlama',
+                fn ($query) => $query->reorder('id_laporan', 'asc'),
+                fn ($query) => $query->orderBy('id_laporan', 'desc'));
 
-        if ($request->filled('status_laporan')) {
-            $query->where('status_laporan', $request->status_laporan);
-        }
+        $laporan = $query->paginate(10)->withQueryString();
+        $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
 
-        $laporan = $query->orderBy('id_laporan', 'desc')->paginate(10);
-
-        return view('admin.laporan.index', compact('laporan'));
+        return view('admin.laporan.index', compact('laporan', 'desaList'));
     }
 
     /**

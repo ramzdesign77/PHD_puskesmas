@@ -76,7 +76,9 @@
                     @endforeach
                 </tbody>
             </table>
-            <div class="border-t border-gray-100 px-6 py-4">{{ $users->links() }}</div>
+            <div class="border-t border-gray-100 px-6 py-4">
+                @include('partials.pagination-circles', ['paginator' => $users])
+            </div>
         </div>
     </div>
 

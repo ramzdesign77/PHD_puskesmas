@@ -104,7 +104,7 @@
         <!-- Paginasi -->
         @if($articles->hasPages())
             <div class="border-t border-gray-100 px-6 py-4 bg-gray-50/30">
-                {{ $articles->links() }}
+                @include('partials.pagination-circles', ['paginator' => $articles])
             </div>
         @endif
     </div>
