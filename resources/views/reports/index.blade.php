@@ -526,7 +526,20 @@
             </div>
             <div id="detail_foto_container" class="hidden">
                 <p class="text-xs text-gray-400 font-medium mb-2">Foto Bukti</p>
-                <img id="detail_foto" src="" alt="Foto Bukti" class="rounded-xl max-h-48 object-cover border border-gray-200">
+                <button id="detail_foto_trigger" type="button" data-image-viewer-trigger
+                    class="relative group cursor-pointer overflow-hidden rounded-xl block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label="Lihat foto bukti">
+                    <img id="detail_foto" src="" alt="Foto Bukti" class="rounded-xl max-h-48 object-cover border border-gray-200">
+                    <span class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <span class="rounded-full bg-white/20 p-3 backdrop-blur-sm">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12s-3.5 6.75-9.75 6.75S2.25 12 2.25 12Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                        <span class="text-xs font-semibold">Lihat Foto</span>
+                    </span>
+                </button>
             </div>
         </div>
 
@@ -535,7 +548,10 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('modals')
+    @include('partials.image-viewer')
 @endsection
 
 @section('scripts')
@@ -595,8 +611,12 @@ function openDetailModal(laporan) {
     statusEl.className = 'inline-block mt-0.5 text-xs font-semibold px-2 py-1 rounded-full border ' + s.cls;
 
     const fotoContainer = document.getElementById('detail_foto_container');
+    const fotoTrigger = document.getElementById('detail_foto_trigger');
     if (laporan.foto_bukti) {
-        document.getElementById('detail_foto').src = '/storage/' + laporan.foto_bukti;
+        const fotoUrl = @json(asset('storage')) + '/' + laporan.foto_bukti;
+        document.getElementById('detail_foto').src = fotoUrl;
+        fotoTrigger.dataset.imageUrl = fotoUrl;
+        fotoTrigger.dataset.imageCaption = 'Foto bukti laporan ' + (laporan.kode_tiket || '');
         fotoContainer.classList.remove('hidden');
     } else {
         fotoContainer.classList.add('hidden');
