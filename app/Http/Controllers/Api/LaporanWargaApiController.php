@@ -7,6 +7,7 @@ use App\Models\Desa;
 use App\Models\LaporanWarga;
 use App\Models\MobileAccessToken;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -264,11 +265,29 @@ class LaporanWargaApiController extends Controller
      */
     public function track(string $kodeTiket): JsonResponse
     {
-        $laporan = LaporanWarga::with([
-            'desa:id_desa,nama_desa',
-            'jadwal.operator:id_user,nama_lengkap',
-            'jadwal.inspeksiIkl',
-        ])
+        $laporan = LaporanWarga::query()
+            ->select([
+                'id_laporan',
+                'id_user',
+                'kode_tiket',
+                'nama_pelapor',
+                'no_wa',
+                'id_desa',
+                'rt',
+                'rw',
+                'kategori_laporan',
+                'deskripsi',
+                'alamat_detail',
+                'status_laporan',
+                'alasan_penolakan',
+                'created_at',
+            ])
+            ->with([
+                'desa:id_desa,nama_desa',
+                'jadwal',
+                'jadwal.operator:id,id_user,nama_lengkap,name',
+                'jadwal.inspeksiIkl',
+            ])
             ->where('kode_tiket', $kodeTiket)
             ->first();
 
@@ -328,37 +347,50 @@ class LaporanWargaApiController extends Controller
         $validated = $request->validate([
             'tickets' => ['nullable', 'array'],
             'tickets.*' => ['string', 'max:100'],
+            'limit' => ['nullable', 'integer'],
         ]);
 
         $user = $this->resolveAuthenticatedMobileUser($request);
+        $limit = max(1, min((int) $request->input('limit', 15), 30));
         $localTickets = collect($validated['tickets'] ?? [])
             ->filter(fn (mixed $ticket): bool => is_string($ticket) && trim($ticket) !== '')
             ->map(fn (string $ticket): string => trim($ticket))
             ->unique()
+            ->take(15)
             ->values();
 
-        $query = LaporanWarga::query()->with([
-            'desa:id_desa,nama_desa',
-            'jadwalInspeksi.operator:id_user,nama_lengkap',
-            'jadwalInspeksi.inspeksiIkl',
-        ]);
+        $laporanList = collect();
 
-        if ($user !== null && $localTickets->isNotEmpty()) {
-            $query->where(function ($builder) use ($user, $localTickets): void {
-                $builder->where('id_user', $user->getKey())
-                    ->orWhereIn('kode_tiket', $localTickets->all());
-            });
-        } elseif ($user !== null) {
-            $query->where('id_user', $user->getKey());
-        } elseif ($localTickets->isNotEmpty()) {
-            $query->whereIn('kode_tiket', $localTickets->all());
-        } else {
-            $query->whereRaw('1 = 0');
+        if ($localTickets->isNotEmpty()) {
+            $laporanList = $this->historyQuery()
+                ->whereIn('kode_tiket', $localTickets->all())
+                ->orderByDesc('created_at')
+                ->limit($limit)
+                ->get();
         }
 
-        $laporanList = $query
-            ->orderByDesc('created_at')
-            ->get();
+        if ($user !== null && $laporanList->count() < $limit) {
+            $localIds = $laporanList
+                ->pluck('id_laporan')
+                ->filter()
+                ->all();
+
+            $accountReports = $this->historyQuery()
+                ->where('id_user', $user->getKey())
+                ->when(
+                    $localIds !== [],
+                    fn ($query) => $query->whereNotIn('id_laporan', $localIds),
+                )
+                ->orderByDesc('created_at')
+                ->limit($limit - $laporanList->count())
+                ->get();
+
+            $laporanList = $laporanList
+                ->concat($accountReports)
+                ->unique('id_laporan')
+                ->take($limit)
+                ->values();
+        }
 
         return response()->json([
             'success' => true,
@@ -398,6 +430,33 @@ class LaporanWargaApiController extends Controller
                 ];
             })->values(),
         ]);
+    }
+
+    private function historyQuery(): Builder
+    {
+        return LaporanWarga::query()
+            ->select([
+                'id_laporan',
+                'id_user',
+                'kode_tiket',
+                'nama_pelapor',
+                'no_wa',
+                'id_desa',
+                'rt',
+                'rw',
+                'kategori_laporan',
+                'deskripsi',
+                'alamat_detail',
+                'status_laporan',
+                'alasan_penolakan',
+                'created_at',
+            ])
+            ->with([
+                'desa:id_desa,nama_desa',
+                'jadwalInspeksi',
+                'jadwalInspeksi.operator:id,id_user,nama_lengkap,name',
+                'jadwalInspeksi.inspeksiIkl',
+            ]);
     }
 
     private function statusStep(?string $statusLaporan): string

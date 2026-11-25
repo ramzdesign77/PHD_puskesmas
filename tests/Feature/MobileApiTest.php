@@ -219,6 +219,57 @@ class MobileApiTest extends TestCase
             ->assertJsonPath('data.0.kode_tiket', 'IKL-HISTORY-LOCAL');
     }
 
+    public function test_report_history_is_limited_to_newest_reports(): void
+    {
+        $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
+        $user = User::query()->create([
+            'nama_lengkap' => 'Warga Riwayat Terbatas',
+            'username' => 'warga-riwayat-terbatas',
+            'email' => 'warga-riwayat-terbatas@example.test',
+            'password' => 'secret123',
+            'role' => 'warga',
+            'is_active' => true,
+        ]);
+        $plainToken = 'warga-history-limit-token-'.$user->id_user;
+        MobileAccessToken::query()->create([
+            'id_user' => $user->id_user,
+            'name' => 'flutter-mobile',
+            'token_hash' => hash('sha256', $plainToken),
+        ]);
+
+        for ($index = 1; $index <= 20; $index++) {
+            LaporanWarga::query()->forceCreate([
+                'kode_tiket' => 'IKL-LIMIT-'.$index,
+                'id_user' => $user->id_user,
+                'nama_pelapor' => 'Warga Limit',
+                'id_desa' => $village->id_desa,
+                'rt' => '01',
+                'rw' => '02',
+                'kategori_laporan' => 'tumpukan_sampah',
+                'deskripsi' => 'Laporan urutan '.$index,
+                'status_laporan' => 'menunggu',
+                'created_at' => now()->subMinutes(21 - $index),
+                'updated_at' => now()->subMinutes(21 - $index),
+            ]);
+        }
+
+        $this->withToken($plainToken)
+            ->getJson('/api/v1/laporan/history')
+            ->assertOk()
+            ->assertJsonCount(15, 'data')
+            ->assertJsonPath('data.0.kode_tiket', 'IKL-LIMIT-20');
+
+        $this->withToken($plainToken)
+            ->getJson('/api/v1/laporan/history?limit=3')
+            ->assertOk()
+            ->assertJsonCount(3, 'data');
+
+        $this->withToken($plainToken)
+            ->getJson('/api/v1/laporan/history?limit=100')
+            ->assertOk()
+            ->assertJsonCount(20, 'data');
+    }
+
     public function test_mobile_report_can_be_submitted_and_tracked_by_ticket(): void
     {
         $village = Desa::query()->forceCreate(['nama_desa' => 'Sumbersari']);
