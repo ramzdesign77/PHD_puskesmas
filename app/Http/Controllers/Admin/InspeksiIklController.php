@@ -21,6 +21,10 @@ class InspeksiIklController extends Controller
      */
     public function index(Request $request): View
     {
+        $allowedPerPage = [20, 50, 80, 100];
+        $requestedPerPage = (int) $request->query('per_page', 20);
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 20;
+
         $query = JadwalInspeksi::query()
             ->with([
                 'laporan.desa',
@@ -63,7 +67,7 @@ class InspeksiIklController extends Controller
             }
         });
 
-        $jadwalList = $query->orderBy('tanggal_kunjungan', 'desc')->paginate(15)->withQueryString();
+        $jadwalList = $query->orderBy('tanggal_kunjungan', 'desc')->paginate($perPage)->withQueryString();
 
         $rekapStatistik = InspeksiIkl::selectRaw("
             COUNT(*) as total_inspeksi,

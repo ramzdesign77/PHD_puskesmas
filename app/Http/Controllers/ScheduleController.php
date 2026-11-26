@@ -20,6 +20,9 @@ class ScheduleController extends Controller
     public function index(Request $request): View
     {
         $role = session('role');
+        $allowedPerPage = [20, 50, 80, 100];
+        $requestedPerPage = (int) $request->query('per_page', 20);
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 20;
 
         $query = JadwalInspeksi::with(['laporan.desa', 'operator', 'inspeksiIkl'])
             ->orderBy('tanggal_kunjungan', 'asc');
@@ -67,7 +70,7 @@ class ScheduleController extends Controller
         // Jenis kunjungan
         $query->when($request->filled('jenis'), fn ($q) => $q->where('jenis_kunjungan', $request->jenis));
 
-        $schedules = $query->paginate(20)->withQueryString();
+        $schedules = $query->paginate($perPage)->withQueryString();
 
         $officers = User::where('is_active', true)
             ->sanitarian()

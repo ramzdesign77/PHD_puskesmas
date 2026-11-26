@@ -30,6 +30,9 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $role = session('role');
+        $allowedPerPage = [20, 50, 80, 100];
+        $requestedPerPage = (int) $request->query('per_page', 20);
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 20;
 
         // ── Tab 1: Laporan aktif (menunggu & dijadwalkan) ──────────────────
         $statusFilter = $request->filled('status') ? $request->status : $request->status_laporan;
@@ -49,11 +52,11 @@ class ReportController extends Controller
                 fn ($q) => $q->reorder('id_laporan', 'asc'),
                 fn ($q) => $q->orderBy('id_laporan', 'desc'));
 
-        $laporanAktif = $queryAktif->paginate(15, ['*'], 'page_aktif')
+        $laporanAktif = $queryAktif->paginate($perPage, ['*'], 'page_aktif')
             ->withQueryString();
 
         // ── Tab 2: Rekap hasil inspeksi IKL (selesai) – JOIN 4 tabel ──────
-        $rekapIkl = $this->queryRekapIkl($request)->paginate(15, ['*'], 'page_rekap')
+        $rekapIkl = $this->queryRekapIkl($request)->paginate($perPage, ['*'], 'page_rekap')
             ->withQueryString();
 
         // ── Summary cards ─────────────────────────────────────────────────

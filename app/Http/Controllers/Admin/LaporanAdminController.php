@@ -17,6 +17,10 @@ class LaporanAdminController extends Controller
      */
     public function index(Request $request)
     {
+        $allowedPerPage = [20, 50, 80, 100];
+        $requestedPerPage = (int) $request->query('per_page', 20);
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 20;
+
         $query = LaporanWarga::query()->with('desa')
             ->when($request->filled('q'), fn ($query) => $query->where(fn ($search) => $search
                 ->where('kode_tiket', 'like', "%{$request->q}%")
@@ -35,7 +39,7 @@ class LaporanAdminController extends Controller
                 fn ($query) => $query->reorder('id_laporan', 'asc'),
                 fn ($query) => $query->orderBy('id_laporan', 'desc'));
 
-        $laporan = $query->paginate(10)->withQueryString();
+        $laporan = $query->paginate($perPage)->withQueryString();
         $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
 
         return view('admin.laporan.index', compact('laporan', 'desaList'));

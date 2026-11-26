@@ -109,6 +109,28 @@ class ScheduleControllerTest extends TestCase
         ]);
     }
 
+    public function test_schedule_index_uses_an_allowed_page_size_and_defaults_invalid_values(): void
+    {
+        $admin = $this->createUser('admin');
+        $operator = $this->createUser('petugas');
+
+        for ($index = 0; $index < 25; $index++) {
+            $this->createSchedule($operator, 'terjadwal');
+        }
+
+        $this->actingAs($admin)
+            ->withSession(['role' => 'admin'])
+            ->get(route('schedules.index', ['per_page' => 50]))
+            ->assertOk()
+            ->assertSee('Menampilkan 1–25 dari 25 data')
+            ->assertSee('value="50" selected', false);
+
+        $this->get(route('schedules.index', ['per_page' => 5]))
+            ->assertOk()
+            ->assertSee('Menampilkan 1–20 dari 25 data')
+            ->assertSee('value="20" selected', false);
+    }
+
     private function createUser(string $role): User
     {
         return User::create([
