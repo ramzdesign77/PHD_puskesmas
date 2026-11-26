@@ -55,7 +55,6 @@ class OfficerApiController extends Controller
             ->with([
                 'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,latitude,longitude,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
                 'laporan.desa:id_desa,nama_desa,latitude,longitude',
-                'paketAlat:id_paket,nama_paket',
                 'operator:id_user,nama_lengkap,username',
                 'inspeksiIkl',
             ])
@@ -72,7 +71,6 @@ class OfficerApiController extends Controller
                 'id_jadwal',
                 'id_laporan',
                 'id_operator',
-                'id_paket',
                 'jenis_kunjungan',
                 'tanggal_kunjungan',
                 'jam_mulai',
@@ -202,7 +200,6 @@ class OfficerApiController extends Controller
                 ->with([
                     'laporan:id_laporan,kode_tiket,nama_pelapor,no_wa,id_desa,rt,rw,alamat_detail,patokan_alamat,latitude,longitude,kategori_laporan,deskripsi,foto_bukti,status_laporan,created_at',
                     'laporan.desa:id_desa,nama_desa,latitude,longitude',
-                    'paketAlat:id_paket,nama_paket',
                     'operator:id_user,nama_lengkap,username',
                     'inspeksiIkl',
                 ])
@@ -224,7 +221,6 @@ class OfficerApiController extends Controller
                     'id_jadwal',
                     'id_laporan',
                     'id_operator',
-                    'id_paket',
                     'jenis_kunjungan',
                     'tanggal_kunjungan',
                     'jam_mulai',
@@ -642,7 +638,7 @@ class OfficerApiController extends Controller
      */
     private function scheduleTask(JadwalInspeksi $schedule): array
     {
-        $schedule->loadMissing(['laporan.desa', 'paketAlat', 'operator', 'inspeksiIkl']);
+        $schedule->loadMissing(['laporan.desa', 'operator', 'inspeksiIkl']);
         $tanggalKunjungan = $schedule->getAttribute('tanggal_kunjungan');
         $tanggalKunjungan = $tanggalKunjungan instanceof \DateTimeInterface
             ? $tanggalKunjungan->format('Y-m-d')
@@ -656,7 +652,6 @@ class OfficerApiController extends Controller
             'id_jadwal' => $schedule->id_jadwal,
             'id_laporan' => $schedule->id_laporan,
             'id_operator' => $schedule->id_operator,
-            'id_paket' => $schedule->id_paket,
             'jenis_kunjungan' => $schedule->jenis_kunjungan,
             'tanggal_kunjungan' => $tanggalKunjungan,
             'waktu_kunjungan' => $schedule->jam_mulai ?: $schedule->waktu_kunjungan,
@@ -685,7 +680,6 @@ class OfficerApiController extends Controller
             'status_laporan' => $schedule->laporan?->status_laporan,
             'foto_bukti' => $schedule->laporan?->foto_bukti,
             'foto_bukti_url' => $this->fotoBuktiUrl($schedule->laporan?->foto_bukti),
-            'paket_alat' => $schedule->paketAlat?->nama_paket,
             'nama_operator' => $schedule->operator?->nama_lengkap ?: $schedule->operator?->name,
             'inspeksi' => $inspection === null ? null : [
                 'id_inspeksi' => $inspection->id_inspeksi,
@@ -735,7 +729,7 @@ class OfficerApiController extends Controller
                     ->orWhere('nama_pelapor', 'like', "%{$search}%")
                     ->orWhere('deskripsi', 'like', "%{$search}%")
                     ->orWhereHas('desa', fn (Builder $desaQuery) => $desaQuery->where('nama_desa', 'like', "%{$search}%"));
-            })->orWhereHas('paketAlat', fn (Builder $packageQuery) => $packageQuery->where('nama_paket', 'like', "%{$search}%"));
+            });
         });
     }
 }

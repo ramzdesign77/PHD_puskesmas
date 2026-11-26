@@ -96,7 +96,6 @@ class InspeksiIklController extends Controller
             'laporan.desa',
             'petugas',
             'inspeksiIkl',
-            'paketAlat',
         ])->findOrFail($id_jadwal);
 
         abort_if(is_null($jadwal->inspeksiIkl), 404, 'Hasil inspeksi belum tersedia.');

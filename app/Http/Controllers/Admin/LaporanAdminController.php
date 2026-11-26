@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Desa;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
-use App\Models\PaketAlat;
 use App\Models\Petugas;
 use Illuminate\Http\Request;
 
@@ -51,7 +50,7 @@ class LaporanAdminController extends Controller
      */
     public function show($id_laporan)
     {
-        $laporan = LaporanWarga::with(['desa', 'jadwal.petugas', 'jadwal.paketAlat'])
+        $laporan = LaporanWarga::with(['desa', 'jadwal.petugas'])
             ->findOrFail($id_laporan);
 
         if ($laporan->status_laporan === 'menunggu') {
@@ -61,12 +60,7 @@ class LaporanAdminController extends Controller
 
         $petugas = Petugas::where('is_active', 1)->orderBy('nama_petugas')->get();
 
-        $paketAlat = PaketAlat::where('kategori_laporan', $laporan->kategori_laporan)
-            ->orWhere('kategori_laporan', 'Lainnya')
-            ->orderBy('nama_paket')
-            ->get();
-
-        return view('admin.laporan.show', compact('laporan', 'petugas', 'paketAlat'));
+        return view('admin.laporan.show', compact('laporan', 'petugas'));
     }
 
     /**
@@ -89,13 +83,12 @@ class LaporanAdminController extends Controller
 
     /**
      * ACTION: terima laporan + buat jadwal kunjungan sekaligus
-     * (pilih petugas & paket alat tinggal klik dari dropdown)
+     * (pilih petugas, tanggal, dan jenis kunjungan)
      */
     public function terima(Request $request, $id_laporan)
     {
         $validated = $request->validate([
             'id_petugas' => 'required|exists:app_petugas,id_petugas',
-            'id_paket' => 'required|exists:ref_paket_alat,id_paket',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jenis_kunjungan' => 'required|string',
         ]);
@@ -108,7 +101,6 @@ class LaporanAdminController extends Controller
         JadwalInspeksi::create([
             'id_laporan' => $laporan->id_laporan,
             'id_operator' => $validated['id_petugas'],
-            'id_paket' => $validated['id_paket'],
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
             'jenis_kunjungan' => $validated['jenis_kunjungan'],
             'status_kunjungan' => 'terjadwal',

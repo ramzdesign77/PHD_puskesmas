@@ -202,7 +202,7 @@ class DashboardController extends Controller
             ->get();
 
         $todaySchedules = (clone $todayScheduleQuery)
-            ->with(['operator', 'laporan.desa', 'paketAlat'])
+            ->with(['operator', 'laporan.desa'])
             ->orderBy('jam_mulai')
             ->orderBy('id_jadwal')
             ->paginate(5, ['*'], 'page_agenda')

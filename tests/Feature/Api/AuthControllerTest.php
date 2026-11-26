@@ -435,7 +435,7 @@ class AuthControllerTest extends TestCase
 
         $this->withToken('photo-token')->getJson('/api/v1/profile')
             ->assertOk()
-            ->assertJsonPath('data.user.foto_url', 'http://example.test/storage/'.$path)
+            ->assertJsonPath('data.user.foto_url', Storage::disk('public')->url($path))
             ->assertJsonMissingPath('data.user.password');
         $this->postJson('/api/v1/login', [
             'login' => $user->email,

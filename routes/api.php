@@ -46,6 +46,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         ->name('laporan.track');
     Route::get('/laporan/history', [LaporanWargaApiController::class, 'myReports'])
         ->name('laporan.history');
+    Route::post('/laporan', [LaporanWargaApiController::class, 'store'])
+        ->name('laporan.store');
 });
 
 $registerOfficerRoutes = static function (string $prefix, string $name): void {

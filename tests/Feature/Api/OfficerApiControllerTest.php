@@ -7,7 +7,6 @@ use App\Models\InspeksiIkl;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
 use App\Models\MobileAccessToken;
-use App\Models\PaketAlat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -48,14 +47,6 @@ class OfficerApiControllerTest extends TestCase
         $pendingReport = $this->createReport($village, 'IKL-NEW-001', 'menunggu');
         $scheduledReport = $this->createReport($village, 'IKL-SCHEDULED-001', 'dijadwalkan');
         $schedule = $this->createSchedule($officer, $scheduledReport, 'terjadwal', now()->toDateString());
-        $package = PaketAlat::query()->create([
-            'nama_paket' => 'Paket Inspeksi Air',
-            'kategori_laporan' => 'air_masalah',
-            'deskripsi_alat' => 'Alat inspeksi air.',
-        ]);
-        DB::table('trx_jadwal_inspeksi')
-            ->where('id_jadwal', $schedule->id_jadwal)
-            ->update(['id_paket' => $package->id_paket]);
         $this->createSchedule($officer, null, 'selesai', now()->toDateString());
 
         $this->withToken($token)
@@ -84,7 +75,6 @@ class OfficerApiControllerTest extends TestCase
                 'id_jadwal' => $schedule->id_jadwal,
                 'nama_pelapor' => 'Resident '.$scheduledReport->kode_tiket,
                 'nama_desa' => 'Sumbersari',
-                'paket_alat' => 'Paket Inspeksi Air',
             ]);
     }
 

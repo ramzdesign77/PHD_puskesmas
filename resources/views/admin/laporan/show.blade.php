@@ -263,12 +263,6 @@
                                 {{ $laporan->jadwal->petugas->nama_petugas ?? $laporan->jadwal->operator->nama_lengkap ?? '-' }}
                             </span>
                         </div>
-                        <div class="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100/80">
-                            <span class="text-slate-400 block font-medium mb-1">Paket Alat</span>
-                            <span class="font-bold text-slate-800 text-sm">
-                                {{ $laporan->jadwal->paketAlat->nama_paket ?? '-' }}
-                            </span>
-                        </div>
                     </div>
                 </div>
             @endif
@@ -326,18 +320,6 @@
                                     </select>
                                 </div>
 
-                                {{-- Paket Alat --}}
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                                        Paket Alat Inspeksi <span class="text-rose-500">*</span>
-                                    </label>
-                                    <select name="id_paket" class="form-input w-full text-sm rounded-xl border-slate-200 focus:border-ocean-500 focus:ring-ocean-500" required>
-                                        <option value="" disabled selected>-- Pilih Paket Alat --</option>
-                                        @foreach($paketAlat as $paket)
-                                            <option value="{{ $paket->id_paket }}">{{ $paket->nama_paket }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
 
                                 {{-- Tanggal & Jenis Kunjungan (2 Kolom Sejajar) --}}
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

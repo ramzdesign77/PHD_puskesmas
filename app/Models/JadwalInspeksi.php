@@ -18,7 +18,6 @@ class JadwalInspeksi extends Model
     protected $fillable = [
         'id_laporan',
         'id_operator',
-        'id_paket',
         'tanggal_kunjungan',
         'jam_mulai',
         'jenis_kunjungan',
@@ -55,14 +54,6 @@ class JadwalInspeksi extends Model
     public function petugas(): BelongsTo
     {
         return $this->operator();
-    }
-
-    /**
-     * Paket alat inspeksi (nullable).
-     */
-    public function paketAlat(): BelongsTo
-    {
-        return $this->belongsTo(PaketAlat::class, 'id_paket', 'id_paket');
     }
 
     /**

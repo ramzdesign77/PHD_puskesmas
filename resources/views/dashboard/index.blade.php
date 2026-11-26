@@ -311,10 +311,6 @@
                                 <i class="fas fa-clock text-sky-600" aria-hidden="true"></i>
                                 {{ $schedule->jam_mulai ? \Illuminate\Support\Carbon::parse($schedule->jam_mulai)->format('H:i') : 'Waktu belum ditentukan' }}
                             </span>
-                            <span class="inline-flex min-w-0 items-center gap-1.5">
-                                <i class="fas fa-toolbox text-violet-600" aria-hidden="true"></i>
-                                <span class="truncate">{{ $schedule->paketAlat?->nama_paket ?? 'Paket alat belum dipilih' }}</span>
-                            </span>
                         </div>
                     </div>
                 @empty

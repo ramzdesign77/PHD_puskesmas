@@ -6,7 +6,6 @@ use App\Models\Desa;
 use App\Models\InspeksiIkl;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
-use App\Models\PaketAlat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -130,14 +129,9 @@ class DashboardControllerTest extends TestCase
         $pendingReport = $this->createReport($village, 'IKL-DASH-AGENDA-01', 'menunggu', 'air_masalah', '2026-11-10');
         $completedReport = $this->createReport($village, 'IKL-DASH-AGENDA-02', 'selesai', 'air_masalah', '2026-11-11');
         $otherReport = $this->createReport($otherVillage, 'IKL-DASH-AGENDA-03', 'menunggu', 'air_masalah', '2026-11-12');
-        $toolKit = PaketAlat::create([
-            'nama_paket' => 'Paket Uji Air',
-            'kategori_laporan' => 'air_masalah',
-        ]);
-
-        $scheduledVisit = $this->createSchedule($pendingReport, $operator, $toolKit, 'terjadwal');
-        $completedVisit = $this->createSchedule($completedReport, $operator, null, 'selesai');
-        $otherVisit = $this->createSchedule($otherReport, $operator, null, 'terjadwal');
+        $scheduledVisit = $this->createSchedule($pendingReport, $operator, 'terjadwal');
+        $completedVisit = $this->createSchedule($completedReport, $operator, 'selesai');
+        $otherVisit = $this->createSchedule($otherReport, $operator, 'terjadwal');
 
         $this->createInspection($scheduledVisit, 'aman', 'Distribusi Kaporit');
         $this->createInspection($completedVisit, 'risiko_tinggi', '');
@@ -152,7 +146,6 @@ class DashboardControllerTest extends TestCase
 
         $response->assertOk()
             ->assertSeeText('Desa Agenda')
-            ->assertSeeText('Paket Uji Air')
             ->assertViewHas('dashboardMetrics', [
                 'pendingReports' => 1,
                 'todaySchedules' => 2,
@@ -186,7 +179,7 @@ class DashboardControllerTest extends TestCase
                 'air_masalah',
                 '2026-11-20'
             );
-            $visits[] = $this->createSchedule($report, $operator, null, 'terjadwal');
+            $visits[] = $this->createSchedule($report, $operator, 'terjadwal');
         }
 
         $firstPage = $this->actingAs($admin)
@@ -281,13 +274,11 @@ class DashboardControllerTest extends TestCase
     private function createSchedule(
         LaporanWarga $report,
         User $operator,
-        ?PaketAlat $toolKit,
         string $status
     ): JadwalInspeksi {
         return JadwalInspeksi::create([
             'id_laporan' => $report->id_laporan,
             'id_operator' => $operator->id_user,
-            'id_paket' => $toolKit?->id_paket,
             'tanggal_kunjungan' => today()->toDateString(),
             'jam_mulai' => '09:30',
             'jenis_kunjungan' => 'ikl_laporan_warga',
