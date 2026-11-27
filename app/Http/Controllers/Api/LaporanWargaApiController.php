@@ -21,6 +21,15 @@ use Illuminate\Validation\ValidationException;
  */
 class LaporanWargaApiController extends Controller
 {
+    private const REPORT_STATUSES = [
+        'menunggu',
+        'dibaca',
+        'diterima',
+        'ditolak',
+        'dijadwalkan',
+        'selesai',
+    ];
+
     public function listDesa(): JsonResponse
     {
         return response()->json([
@@ -342,61 +351,49 @@ class LaporanWargaApiController extends Controller
      * GET /api/v1/laporan/history
      * GET /api/laporan/history
      *
-     * Mengembalikan laporan milik pengguna login dan laporan lokal yang kode tiketnya dikirim klien.
+     * Mengembalikan laporan milik pengguna yang sedang terautentikasi.
      */
     public function myReports(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'tickets' => ['nullable', 'array'],
-            'tickets.*' => ['string', 'max:100'],
-            'limit' => ['nullable', 'integer'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'limit' => ['sometimes', 'integer', 'min:1'],
+            'status' => ['sometimes', 'nullable', Rule::in(self::REPORT_STATUSES)],
+            'start_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+            'end_date' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
         ]);
 
-        $user = $this->resolveAuthenticatedMobileUser($request);
-        $limit = max(1, min((int) $request->input('limit', 15), 30));
-        $localTickets = collect($validated['tickets'] ?? [])
-            ->filter(fn (mixed $ticket): bool => is_string($ticket) && trim($ticket) !== '')
-            ->map(fn (string $ticket): string => trim($ticket))
-            ->unique()
-            ->take(15)
-            ->values();
-
-        $laporanList = collect();
-
-        if ($localTickets->isNotEmpty()) {
-            $laporanList = $this->historyQuery()
-                ->whereIn('kode_tiket', $localTickets->all())
-                ->orderByDesc('created_at')
-                ->limit($limit)
-                ->get();
+        $user = $request->user();
+        if (! $user instanceof User) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token tidak valid atau tidak tersedia.',
+            ], 401);
         }
 
-        if ($user !== null && $laporanList->count() < $limit) {
-            $localIds = $laporanList
-                ->pluck('id_laporan')
-                ->filter()
-                ->all();
-
-            $accountReports = $this->historyQuery()
-                ->where('id_user', $user->getKey())
-                ->when(
-                    $localIds !== [],
-                    fn ($query) => $query->whereNotIn('id_laporan', $localIds),
-                )
-                ->orderByDesc('created_at')
-                ->limit($limit - $laporanList->count())
-                ->get();
-
-            $laporanList = $laporanList
-                ->concat($accountReports)
-                ->unique('id_laporan')
-                ->take($limit)
-                ->values();
-        }
+        $paginator = $this->historyQuery()
+            ->where('id_user', $user->getKey())
+            ->when(
+                filled($validated['status'] ?? null),
+                fn (Builder $query): Builder => $query->where('status_laporan', $validated['status']),
+            )
+            ->when(
+                filled($validated['start_date'] ?? null),
+                fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $validated['start_date']),
+            )
+            ->when(
+                filled($validated['end_date'] ?? null),
+                fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $validated['end_date']),
+            )
+            ->orderByDesc('created_at')
+            ->orderByDesc('id_laporan')
+            ->paginate($validated['per_page'] ?? min((int) ($validated['limit'] ?? 10), 30))
+            ->withQueryString();
 
         return response()->json([
             'success' => true,
-            'data' => $laporanList->map(function (LaporanWarga $laporan): array {
+            'data' => $paginator->getCollection()->map(function (LaporanWarga $laporan): array {
                 $jadwal = $laporan->jadwalInspeksi;
                 $hasilIkl = $jadwal?->inspeksiIkl;
 
@@ -431,6 +428,14 @@ class LaporanWargaApiController extends Controller
                     'desa' => $laporan->desa?->nama_desa,
                 ];
             })->values(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'next_page_url' => $paginator->nextPageUrl(),
+                'has_more_pages' => $paginator->hasMorePages(),
+            ],
         ]);
     }
 

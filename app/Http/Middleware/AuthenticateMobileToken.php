@@ -21,9 +21,13 @@ class AuthenticateMobileToken
 
         $token = MobileAccessToken::query()
             ->where('token_hash', hash('sha256', $plainToken))
-            ->first(['id_user']);
+            ->first(['id_user', 'expires_at']);
 
-        $user = $token === null ? null : User::query()->find($token->id_user);
+        if ($token === null || ($token->expires_at !== null && $token->expires_at->isPast())) {
+            return $this->unauthenticatedResponse();
+        }
+
+        $user = User::query()->find($token->id_user);
 
         if ($user === null) {
             return $this->unauthenticatedResponse();

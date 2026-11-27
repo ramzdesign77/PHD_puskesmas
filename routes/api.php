@@ -45,6 +45,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('/laporan/track/{kode_tiket}', [LaporanWargaApiController::class, 'track'])
         ->name('laporan.track');
     Route::get('/laporan/history', [LaporanWargaApiController::class, 'myReports'])
+        ->middleware('auth.mobile')
         ->name('laporan.history');
     Route::post('/laporan', [LaporanWargaApiController::class, 'store'])
         ->name('laporan.store');
@@ -74,8 +75,10 @@ Route::prefix('laporan')->name('api.laporan.')->group(function () {
     // POST /api/laporan — kirim laporan baru dari Flutter
     Route::post('/', [LaporanWargaApiController::class, 'store'])->name('store');
 
-    // GET /api/laporan/history — riwayat laporan akun atau tiket lokal
-    Route::get('/history', [LaporanWargaApiController::class, 'myReports'])->name('history');
+    // GET /api/laporan/history — riwayat laporan akun yang terautentikasi
+    Route::get('/history', [LaporanWargaApiController::class, 'myReports'])
+        ->middleware('auth.mobile')
+        ->name('history');
 
     // GET /api/laporan/{kode_tiket} — cek status laporan by kode tiket
     Route::get('/{kode_tiket}', [LaporanWargaApiController::class, 'statusByTiket'])->name('status');
