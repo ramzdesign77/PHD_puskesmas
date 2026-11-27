@@ -92,7 +92,7 @@ class LaporanAdminController extends Controller
     public function terima(Request $request, $id_laporan)
     {
         $validated = $request->validate([
-            'id_petugas' => 'required|string|max:30|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jenis_kunjungan' => 'required|string',
         ]);
@@ -101,11 +101,11 @@ class LaporanAdminController extends Controller
         $petugas = User::query()
             ->sanitarian()
             ->where('is_active', true)
-            ->whereKey($validated['id_petugas'])
+            ->whereKey($validated['id_operator'])
             ->first();
 
         if ($petugas === null) {
-            return back()->withErrors(['id_petugas' => 'Pilih akun sanitarian yang aktif.'])->withInput();
+            return back()->withErrors(['id_operator' => 'Pilih akun sanitarian yang aktif.'])->withInput();
         }
 
         $laporan->status_laporan = 'diterima';

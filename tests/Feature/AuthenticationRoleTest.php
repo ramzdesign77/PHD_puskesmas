@@ -96,7 +96,7 @@ class AuthenticationRoleTest extends TestCase
         $this->assertTrue($user->hasRole('admin'));
         $this->assertTrue($user->hasRole('petugas'));
         $this->assertTrue($user->isAdmin());
-        $this->assertSame(1, preg_match('/\AAP1111AG\z/', $user->id_petugas));
+        $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $user->id_user);
 
         $this->post(route('logout'));
 
@@ -110,7 +110,7 @@ class AuthenticationRoleTest extends TestCase
         $this->get(route('users.index'))->assertOk();
     }
 
-    public function test_petugas_account_creation_generates_id_with_first_serial_and_name_initials(): void
+    public function test_petugas_account_creation_generates_custom_user_id(): void
     {
         $admin = $this->createUser('admin', 'admin@example.test');
 
@@ -118,7 +118,6 @@ class AuthenticationRoleTest extends TestCase
             ->withSession(['role' => 'admin'])
             ->post(route('users.store'), [
                 'nama_lengkap' => 'Muhammad Denny Ramadhan',
-                'id_petugas' => 'ID-MANUAL',
                 'username' => 'denny',
                 'password' => 'secret123',
                 'no_telepon' => '08123456789',
@@ -129,14 +128,10 @@ class AuthenticationRoleTest extends TestCase
         $response->assertRedirect(route('users.index'));
         $petugas = User::where('username', 'denny')->firstOrFail();
 
-        $this->assertSame('P1111MD', $petugas->id_petugas);
-        $this->assertDatabaseHas('app_users', [
-            'id_user' => $petugas->id_user,
-            'id_petugas' => $petugas->id_petugas,
-        ]);
+        $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $petugas->id_user);
     }
 
-    public function test_admin_only_account_creation_generates_id_with_admin_prefix(): void
+    public function test_admin_only_account_creation_generates_custom_user_id(): void
     {
         $admin = $this->createUser('admin', 'admin@example.test');
 
@@ -154,17 +149,16 @@ class AuthenticationRoleTest extends TestCase
         $response->assertRedirect(route('users.index'));
         $user = User::where('username', 'admin_baru')->firstOrFail();
 
-        $this->assertSame('A1111AB', $user->id_petugas);
+        $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $user->id_user);
     }
 
-    public function test_account_creation_moves_to_next_serial_series_after_nine_accounts(): void
+    public function test_account_creation_generates_unique_ids_for_many_accounts(): void
     {
         $admin = $this->createUser('admin', 'admin@example.test');
 
         foreach (range(1, 9) as $serial) {
             User::create([
                 'nama_lengkap' => 'Akun '.$serial,
-                'id_petugas' => 'P111'.$serial.'A',
                 'username' => 'akun-seri-'.$serial,
                 'password' => 'secret123',
                 'role' => 'petugas',
@@ -186,15 +180,15 @@ class AuthenticationRoleTest extends TestCase
         $response->assertRedirect(route('users.index'));
         $user = User::where('username', 'seri-kedua')->firstOrFail();
 
-        $this->assertSame('P2111MD', $user->id_petugas);
+        $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $user->id_user);
+        $this->assertSame(10, User::query()->where('role', 'petugas')->count());
     }
 
-    public function test_account_update_does_not_change_petugas_id_even_if_a_new_id_is_submitted(): void
+    public function test_account_update_does_not_change_user_id_even_if_a_new_id_is_submitted(): void
     {
         $admin = $this->createUser('admin', 'admin@example.test');
         $petugas = User::create([
             'nama_lengkap' => 'Petugas',
-            'id_petugas' => 'P1111P',
             'username' => 'petugas-target',
             'password' => 'secret123',
             'no_telepon' => '08123456789',
@@ -207,7 +201,7 @@ class AuthenticationRoleTest extends TestCase
             ->withSession(['role' => 'admin'])
             ->put(route('users.update', $petugas), [
                 'nama_lengkap' => 'Nama Diperbarui',
-                'id_petugas' => 'A999TAMBAHAN',
+                'id_user' => 'USR-XXX-FAKE1',
                 'username' => 'petugas-target',
                 'password' => '',
                 'no_telepon' => '08123456789',
@@ -221,9 +215,9 @@ class AuthenticationRoleTest extends TestCase
         $this->assertDatabaseHas('app_users', [
             'id_user' => $petugas->id_user,
             'nama_lengkap' => 'Nama Diperbarui',
-            'id_petugas' => 'P1111P',
             'wilayah_kerja' => 'Sumbersari',
         ]);
+        $this->assertSame($petugas->id_user, User::query()->whereKey($petugas->id_user)->value('id_user'));
     }
 
     private function createUser(string $role, string $email): User

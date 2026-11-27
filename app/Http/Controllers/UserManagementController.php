@@ -7,10 +7,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use RuntimeException;
 
 class UserManagementController extends Controller
 {
@@ -28,7 +26,7 @@ class UserManagementController extends Controller
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder->where('nama_lengkap', 'like', "%{$search}%")
-                    ->orWhere('id_petugas', 'like', "%{$search}%")
+                    ->orWhere('id_user', 'like', "%{$search}%")
                     ->orWhere('username', 'like', "%{$search}%");
             });
         }
@@ -169,9 +167,6 @@ class UserManagementController extends Controller
         $data['role'] = $roles->implode(',');
         unset($data['roles']);
         $data['wilayah_kerja'] = 'Sumbersari';
-        $idPrefix = ($roles->contains('admin') ? 'A' : '')
-            .($roles->intersect(['petugas', 'sanitarian'])->isNotEmpty() ? 'P' : '');
-        $data['id_petugas'] = $this->generatePetugasId($data['nama_lengkap'], $idPrefix);
         $data['is_active'] = true;
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('petugas', 'public');
@@ -183,41 +178,6 @@ class UserManagementController extends Controller
             : 'Akun petugas sanitasi berhasil dibuat.';
 
         return redirect()->route('users.index')->with('success', $successMessage);
-    }
-
-    private function generatePetugasId(string $fullName, string $prefix): string
-    {
-        $nameParts = preg_split('/[^\p{L}]+/u', trim($fullName), -1, PREG_SPLIT_NO_EMPTY);
-
-        if ($nameParts === false || $nameParts === []) {
-            throw new RuntimeException('Nama petugas tidak dapat digunakan untuk membentuk ID.');
-        }
-
-        $initials = collect(array_slice($nameParts, 0, 2))
-            ->map(fn (string $namePart): string => Str::upper(Str::substr($namePart, 0, 1)))
-            ->implode('');
-        if (Str::length($initials) === 1) {
-            $initials .= Str::upper(Str::substr($nameParts[0], 1, 1)) ?: $initials;
-        }
-        $usedNumbers = [];
-
-        foreach (User::withTrashed()->whereNotNull('id_petugas')->pluck('id_petugas') as $existingId) {
-            if (preg_match('/\A(?:AP|A|P)(\d{4})/u', $existingId, $matches) === 1) {
-                $usedNumbers[$matches[1]] = true;
-            }
-        }
-
-        for ($series = 1; $series <= 9; $series++) {
-            for ($serial = 1; $serial <= 9; $serial++) {
-                $number = (string) (($series * 1000) + 110 + $serial);
-
-                if (! isset($usedNumbers[$number])) {
-                    return $prefix.$number.$initials;
-                }
-            }
-        }
-
-        throw new RuntimeException('Semua nomor seri ID akun sudah digunakan.');
     }
 
     public function edit(User $user): View
@@ -306,10 +266,10 @@ class UserManagementController extends Controller
 
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Nama Lengkap', 'ID Petugas', 'Username', 'Email', 'No. HP', 'Peran', 'Wilayah Kerja', 'Status']);
+            fputcsv($handle, ['Nama Lengkap', 'ID Akun', 'Username', 'Email', 'No. HP', 'Peran', 'Wilayah Kerja', 'Status']);
             foreach ($users as $user) {
                 $roles = implode(' + ', array_map(fn ($role) => ucfirst($role), $user->roles()));
-                fputcsv($handle, [$user->nama_lengkap, $user->id_petugas, $user->username, $user->email, $user->no_telepon, $roles, $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
+                fputcsv($handle, [$user->nama_lengkap, $user->id_user, $user->username, $user->email, $user->no_telepon, $roles, $user->wilayah_kerja, $user->is_active ? 'Aktif' : 'Nonaktif']);
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);

@@ -71,7 +71,6 @@ class UserManagementControllerTest extends TestCase
         $user = User::factory()->create([
             'nama_lengkap' => 'Petugas Lama',
             'username' => 'petugas-lama',
-            'id_petugas' => 'P0001',
             'role' => 'petugas',
             'roles' => ['petugas'],
             'is_active' => true,

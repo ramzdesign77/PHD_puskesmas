@@ -62,7 +62,7 @@
                                 @endif
                                 <div class="min-w-0">
                                     <p class="font-semibold leading-6 text-gray-800">{{ $user->nama_lengkap }}</p>
-                                    <p class="text-xs leading-5 text-gray-400">{{ $user->hasRole('admin') ? 'ID Admin: ' : 'ID Petugas: ' }}{{ $user->id_petugas ?: 'Belum diisi' }}</p>
+                                    <p class="text-xs leading-5 text-gray-400">ID Akun: {{ $user->id_user }}</p>
                                     <p class="text-xs leading-5 text-gray-400">{{ $user->username }}</p>
                                 </div>
                             </div>

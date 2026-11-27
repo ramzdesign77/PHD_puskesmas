@@ -312,7 +312,7 @@
                                     <label class="block text-xs font-semibold text-slate-700 mb-1">
                                         Petugas Sanitarian <span class="text-rose-500">*</span>
                                     </label>
-                                    <select name="id_petugas" class="form-input w-full text-sm rounded-xl border-slate-200 focus:border-ocean-500 focus:ring-ocean-500" required>
+                                    <select name="id_operator" class="form-input w-full text-sm rounded-xl border-slate-200 focus:border-ocean-500 focus:ring-ocean-500" required>
                                         <option value="" disabled selected>-- Pilih Petugas --</option>
                                         @foreach($petugas as $p)
                                             <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ $p->jabatan ?: 'Sanitarian' }})</option>

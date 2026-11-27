@@ -363,7 +363,7 @@
             @php
                 $hasAdvancedRekap = collect(['date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa'])
                     ->contains(fn ($filter) => filled(request($filter)));
-                $hasAnyRekap = collect(['q', 'risiko', 'kategori_risiko', 'date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa', 'id_petugas'])
+                $hasAnyRekap = collect(['q', 'risiko', 'kategori_risiko', 'date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa', 'id_operator'])
                     ->contains(fn ($filter) => filled(request($filter)));
             @endphp
             <form method="GET" action="{{ route('reports.index') }}" id="filter-form-rekap" class="w-full">
@@ -405,10 +405,10 @@
                             <option value="risiko_tinggi" {{ (request('risiko') ?? request('kategori_risiko')) === 'risiko_tinggi' ? 'selected' : '' }}>Risiko Tinggi</option>
                             <option value="risiko_amat_tinggi" {{ (request('risiko') ?? request('kategori_risiko')) === 'risiko_amat_tinggi' ? 'selected' : '' }}>Risiko Amat Tinggi</option>
                         </select>
-                        <select name="id_petugas" class="w-full truncate rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20">
+                        <select name="id_operator" class="w-full truncate rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20">
                             <option value="">Semua Petugas</option>
                             @foreach($sanitarians as $sanitarian)
-                                <option value="{{ $sanitarian->id_user }}" {{ request('id_petugas') == $sanitarian->id_user ? 'selected' : '' }}>{{ $sanitarian->nama_lengkap }}</option>
+                                <option value="{{ $sanitarian->id_user }}" {{ request('id_operator') == $sanitarian->id_user ? 'selected' : '' }}>{{ $sanitarian->nama_lengkap }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -486,8 +486,8 @@
                 @if(request('intervensi'))
                     <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Intervensi: {{ request('intervensi') === 'ada' ? 'Ada' : 'Tidak ada' }} <a href="{{ request()->fullUrlWithQuery(['intervensi' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter intervensi">×</a></span>
                 @endif
-                @if(request('id_petugas'))
-                    <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Petugas: {{ $sanitarians->firstWhere('id_user', request('id_petugas'))?->nama_lengkap ?? request('id_petugas') }} <a href="{{ request()->fullUrlWithQuery(['id_petugas' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter petugas">×</a></span>
+                @if(request('id_operator'))
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-medium text-blue-700">Petugas: {{ $sanitarians->firstWhere('id_user', request('id_operator'))?->nama_lengkap ?? request('id_operator') }} <a href="{{ request()->fullUrlWithQuery(['id_operator' => null, 'page_rekap' => null, 'tab' => 'rekap']) }}" aria-label="Hapus filter petugas">×</a></span>
                 @endif
             @else
                 <span class="text-slate-400">Tidak ada filter aktif</span>

@@ -20,16 +20,16 @@
         </div>
         @if ($user)
             <div>
-                <p class="mb-1 text-sm font-semibold text-gray-700">ID Petugas</p>
+                <p class="mb-1 text-sm font-semibold text-gray-700">ID Akun</p>
                 <p class="rounded-lg border-2 border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600">
-                    {{ $user->id_petugas ?: 'Tidak tersedia' }}
+                    {{ $user->id_user }}
                 </p>
             </div>
         @else
             <div>
-                <p class="mb-1 text-sm font-semibold text-gray-700">ID Petugas</p>
+                <p class="mb-1 text-sm font-semibold text-gray-700">ID Akun</p>
                 <p class="rounded-lg border-2 border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                    Dibuat otomatis sesuai peran akun saat disimpan.
+                    Dibuat otomatis saat akun disimpan.
                 </p>
             </div>
         @endif

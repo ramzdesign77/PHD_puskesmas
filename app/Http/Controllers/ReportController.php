@@ -301,8 +301,8 @@ class ReportController extends Controller
         if ($riskFilter) {
             $query->where('ikl.kategori_risiko', $riskFilter);
         }
-        if ($request->filled('id_petugas')) {
-            $query->where('u.id_user', $request->id_petugas);
+        if ($request->filled('id_operator')) {
+            $query->where('u.id_user', $request->id_operator);
         }
         $dateFrom = $request->filled('date_from') ? $request->date_from : $request->dari_tanggal;
         $dateTo = $request->filled('date_to') ? $request->date_to : $request->sampai_tanggal;

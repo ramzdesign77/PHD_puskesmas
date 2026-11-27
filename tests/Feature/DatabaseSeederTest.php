@@ -21,6 +21,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertDatabaseCount('ref_desa', 5);
         $this->assertFalse(Schema::hasTable('app_petugas'));
         $this->assertDatabaseCount('app_users', 2);
+        $this->assertContains(Schema::getColumnType('sessions', 'user_id'), ['string', 'varchar']);
 
         foreach (['admin', 'petugas1'] as $username) {
             $user = DB::table('app_users')->where('username', $username)->first();
@@ -31,9 +32,9 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertDatabaseHas('app_users', [
             'username' => 'petugas1',
-            'id_petugas' => 'P1111PK',
             'jabatan' => 'Sanitarian',
         ]);
+        $this->assertFalse(Schema::hasColumn('app_users', 'id_petugas'));
     }
 
     public function test_user_seeder_can_be_run_directly_and_is_repeatable(): void

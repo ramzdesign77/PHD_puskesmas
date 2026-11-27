@@ -22,7 +22,6 @@ class UserSeeder extends Seeder
                 'email' => 'admin@klinik-sanitasi.local',
                 'password' => 'admin123',
                 'role' => 'admin',
-                'id_petugas' => null,
                 'jabatan' => null,
             ],
             [
@@ -32,7 +31,6 @@ class UserSeeder extends Seeder
                 'email' => 'petugas@klinik-sanitasi.local',
                 'password' => 'petugas123',
                 'role' => 'petugas',
-                'id_petugas' => 'P1111PK',
                 'jabatan' => 'Sanitarian',
             ],
         ];
@@ -40,7 +38,6 @@ class UserSeeder extends Seeder
         foreach ($accounts as $account) {
             DB::transaction(function () use ($account): void {
                 $attributes = [
-                    'id_petugas' => $account['id_petugas'],
                     'jabatan' => $account['jabatan'],
                     'nama_lengkap' => $account['nama_lengkap'],
                     'name' => $account['name'],
