@@ -19,6 +19,8 @@
     @php
         $hasReportFilters = collect(['q', 'status', 'status_laporan', 'kategori', 'id_desa', 'date_from', 'date_to', 'sort'])
             ->contains(fn ($filter) => filled(request($filter)));
+        $hasAdvancedReportFilters = collect(['kategori', 'date_from', 'date_to', 'sort'])
+            ->contains(fn ($filter) => filled(request($filter)));
         $selectedStatus = request('status', request('status_laporan'));
     @endphp
     <form method="GET" action="{{ route('admin.laporan.index') }}" class="mb-5 w-full">
@@ -35,12 +37,13 @@
                     @endif
                 </div>
                 <div class="flex shrink-0 flex-wrap items-center gap-2">
-                    <button type="button" onclick="document.getElementById('report-advanced-filters').classList.toggle('hidden')"
+                    <button type="button" data-toggle-advanced-filter="laporan-admin" data-advanced-open="{{ $hasAdvancedReportFilters ? 'true' : 'false' }}" aria-expanded="{{ $hasAdvancedReportFilters ? 'true' : 'false' }}"
                         class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
                         <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
-                        @if(collect(['kategori', 'date_from', 'date_to', 'sort'])->contains(fn ($filter) => filled(request($filter))))
-                            <span class="rounded-full bg-blue-100 px-1.5 text-blue-700">1</span>
+                        @if($hasAdvancedReportFilters)
+                            <span class="rounded-full bg-blue-100 px-1.5 text-blue-700">{{ collect(['kategori', 'date_from', 'date_to', 'sort'])->filter(fn ($filter) => filled(request($filter)))->count() }}</span>
                         @endif
+                        <i class="fas fa-chevron-down transition-transform duration-200" data-advanced-filter-icon aria-hidden="true"></i>
                     </button>
                     <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Terapkan</button>
                     @if($hasReportFilters)
@@ -62,13 +65,16 @@
                         <option value="{{ $desa->id_desa }}" {{ request('id_desa') == $desa->id_desa ? 'selected' : '' }}>{{ $desa->nama_desa }}</option>
                     @endforeach
                 </select>
-                <select name="sort" class="w-full truncate rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20">
-                    <option value="">Terbaru</option>
-                    <option value="terlama" {{ request('sort') === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                </select>
             </div>
-            <div id="report-advanced-filters" class="{{ collect(['kategori', 'date_from', 'date_to'])->contains(fn ($filter) => filled(request($filter))) ? '' : 'hidden' }} mt-3 border-t border-slate-100 pt-3">
+            <div id="report-advanced-filters" data-advanced-filter-panel="laporan-admin" class="{{ $hasAdvancedReportFilters ? '' : 'hidden' }} mt-3 border-t border-slate-100 pt-3">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-slate-600">Urutkan</label>
+                        <select name="sort" class="w-full truncate rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20">
+                            <option value="">Terbaru</option>
+                            <option value="terlama" {{ request('sort') === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                        </select>
+                    </div>
                     <div>
                     <label class="mb-1 block text-xs font-medium text-slate-600">Kategori</label>
                     <select name="kategori" class="w-full truncate rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20">
@@ -156,4 +162,46 @@
         @include('partials.pagination-circles', ['paginator' => $laporan, 'showPerPage' => true])
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+(() => {
+    const bindAdvancedFilterToggles = () => {
+        document.querySelectorAll('[data-toggle-advanced-filter]').forEach(button => {
+            if (button.dataset.advancedFilterBound === 'true') {
+                return;
+            }
+
+            const panelName = button.dataset.toggleAdvancedFilter;
+            const panel = document.querySelector(`[data-advanced-filter-panel="${panelName}"]`);
+            const icon = button.querySelector('[data-advanced-filter-icon]');
+
+            if (!panel) {
+                return;
+            }
+
+            const initialOpen = button.dataset.advancedOpen === 'true';
+            panel.classList.toggle('hidden', !initialOpen);
+            button.setAttribute('aria-expanded', String(initialOpen));
+            icon?.classList.toggle('rotate-180', initialOpen);
+
+            button.addEventListener('click', () => {
+                const isOpen = panel.classList.contains('hidden');
+                panel.classList.toggle('hidden', !isOpen);
+                button.setAttribute('aria-expanded', String(isOpen));
+                icon?.classList.toggle('rotate-180', isOpen);
+            });
+
+            button.dataset.advancedFilterBound = 'true';
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindAdvancedFilterToggles, { once: true });
+    } else {
+        bindAdvancedFilterToggles();
+    }
+})();
+</script>
 @endsection

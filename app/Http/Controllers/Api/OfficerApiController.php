@@ -351,6 +351,20 @@ class OfficerApiController extends Controller
     {
         $officer = $this->authorizeOfficer($request);
 
+        $fotoInspeksi = $request->file('foto_inspeksi');
+
+        if ($fotoInspeksi === null) {
+            foreach (['foto_bukti', 'foto_kunjungan', 'photo'] as $photoAlias) {
+                $fotoInspeksi = $request->file($photoAlias);
+
+                if ($fotoInspeksi !== null) {
+                    break;
+                }
+            }
+        }
+
+        $request->merge(['foto_inspeksi' => $fotoInspeksi]);
+
         $parameterAliases = [
             'p1_dinding_sumur_retak' => ['p1', 'p1_dinding_sumur_retak'],
             'p2_penutup_tidak_rapat' => ['p2', 'p2_lantai_sumur_retak', 'p2_penutup_tidak_rapat'],
@@ -396,7 +410,6 @@ class OfficerApiController extends Controller
             'intervensi_fisik' => ['nullable', 'string', 'max:150'],
             'catatan_intervensi' => ['nullable', 'string', 'max:10000'],
             'catatan_petugas' => ['nullable', 'string', 'max:10000'],
-            'foto_bukti' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_inspeksi' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
@@ -413,11 +426,7 @@ class OfficerApiController extends Controller
         $risk = InspeksiIkl::calculateRiskCategory($totalSkorYa, $validated['kategori_ikl'], $answers);
         $kategoriRisiko = $risk['code'];
         $detailIndikator = InspeksiIkl::buildIndicatorDetails($validated['kategori_ikl'], $answers);
-        $fotoBukti = $request->file('foto_bukti');
-        $fotoDisk = $fotoBukti !== null ? 'local' : 'public';
-        $fotoPath = $fotoBukti !== null
-            ? $fotoBukti->store('inspeksi-ikl', $fotoDisk)
-            : $request->file('foto_inspeksi')?->store('inspeksi-ikl', $fotoDisk);
+        $fotoPath = $fotoInspeksi?->store('inspeksi-ikl', 'public');
 
         try {
             $result = DB::transaction(function () use (
@@ -487,7 +496,7 @@ class OfficerApiController extends Controller
             });
         } catch (Throwable $exception) {
             if ($fotoPath !== null) {
-                Storage::disk($fotoDisk)->delete($fotoPath);
+                Storage::disk('public')->delete($fotoPath);
             }
 
             throw $exception;
@@ -513,6 +522,7 @@ class OfficerApiController extends Controller
                 'tanggal_inspeksi' => $result['inspection']->tanggal_inspeksi?->toDateString(),
                 'intervensi_fisik' => $result['inspection']->intervensi_fisik,
                 'foto_inspeksi' => $result['inspection']->foto_inspeksi,
+                'foto_inspeksi_url' => $result['inspection']->foto_inspeksi_url,
                 'status_kunjungan' => $result['schedule']->status_kunjungan,
                 'status_laporan' => $result['schedule']->laporan?->fresh()->status_laporan,
             ],
@@ -687,7 +697,10 @@ class OfficerApiController extends Controller
                 'total_skor_ya' => $inspection->total_skor_ya,
                 'detail_indikator' => $inspection->detail_indikator,
                 'tanggal_inspeksi' => $inspection->tanggal_inspeksi?->toDateString(),
+                'foto_inspeksi' => $inspection->foto_inspeksi,
+                'foto_inspeksi_url' => $inspection->foto_inspeksi_url,
             ],
+            'foto_inspeksi_url' => $inspection?->foto_inspeksi_url,
             'kategori_risiko' => $inspection?->kategori_risiko,
             'total_skor_ya' => $inspection?->total_skor_ya,
             '_sort_at' => $tanggalKunjungan.' '.(

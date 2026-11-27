@@ -330,7 +330,7 @@ class OfficerApiControllerTest extends TestCase
         string $riskCategory,
     ): void {
         $this->travelTo(now()->startOfDay());
-        Storage::fake('local');
+        Storage::fake('public');
         $officer = $this->createUser('petugas');
         $token = $this->createToken($officer);
         $village = Desa::query()->create(['nama_desa' => 'Tegal Gede']);
@@ -365,8 +365,24 @@ class OfficerApiControllerTest extends TestCase
         $this->assertSame($score, $inspection->total_skor_ya);
         $this->assertSame($riskCategory, $inspection->kategori_risiko);
         $this->assertSame('Pemberian Kaporit', $inspection->intervensi_fisik);
-        $this->assertNotNull($inspection->foto_bukti);
-        $this->assertTrue(Storage::disk('local')->exists($inspection->foto_bukti));
+        $this->assertNotNull($inspection->foto_inspeksi);
+        Storage::disk('public')->assertExists($inspection->foto_inspeksi);
+        $this->assertDatabaseHas('trx_inspeksi_ikl', [
+            'id_inspeksi' => $inspection->id_inspeksi,
+            'foto_inspeksi' => $inspection->foto_inspeksi,
+        ]);
+        $response->assertJsonPath('data.foto_inspeksi', $inspection->foto_inspeksi)
+            ->assertJsonPath('data.foto_inspeksi_url', $inspection->foto_inspeksi_url);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/officer/tasks?filter=selesai')
+            ->assertOk()
+            ->assertJsonPath('data.0.foto_inspeksi_url', $inspection->foto_inspeksi_url)
+            ->assertJsonPath('data.0.inspeksi.foto_inspeksi_url', $inspection->foto_inspeksi_url);
+
+        $this->getJson('/api/v1/laporan/track/'.$report->kode_tiket)
+            ->assertOk()
+            ->assertJsonPath('data.hasil_ikl.foto_inspeksi_url', $inspection->foto_inspeksi_url);
         $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'status_kunjungan' => 'selesai',

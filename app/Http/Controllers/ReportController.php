@@ -36,7 +36,7 @@ class ReportController extends Controller
 
         // ── Tab 1: Laporan aktif (menunggu & dijadwalkan) ──────────────────
         $statusFilter = $request->filled('status') ? $request->status : $request->status_laporan;
-        $queryAktif = LaporanWarga::with(['desa', 'jadwal.operator'])
+        $queryAktif = LaporanWarga::with(['desa', 'jadwal.operator', 'jadwal.inspeksiIkl'])
             ->when($statusFilter, fn ($q) => $q->where('status_laporan', $statusFilter),
                 fn ($q) => $q->whereIn('status_laporan', ['menunggu', 'dibaca', 'diterima', 'dijadwalkan']))
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($sub) => $sub

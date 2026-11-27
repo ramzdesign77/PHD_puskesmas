@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class InspeksiIkl extends Model
 {
@@ -191,6 +192,25 @@ class InspeksiIkl extends Model
     public function jadwal(): BelongsTo
     {
         return $this->belongsTo(JadwalInspeksi::class, 'id_jadwal', 'id_jadwal');
+    }
+
+    public function getFotoInspeksiUrlAttribute(): ?string
+    {
+        $path = $this->foto_inspeksi;
+
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $path = ltrim($path, '/');
+
+        return Storage::disk('public')->exists($path)
+            ? asset('storage/'.$path)
+            : null;
     }
 
     /**

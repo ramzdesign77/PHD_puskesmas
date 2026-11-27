@@ -330,6 +330,8 @@ class LaporanWargaApiController extends Controller
                     'rekomendasi_sanitarian' => $hasilIkl->rekomendasi_sanitarian,
                     'intervensi_fisik' => $hasilIkl->intervensi_fisik,
                     'tanggal_inspeksi' => $hasilIkl->tanggal_inspeksi?->toDateString(),
+                    'foto_inspeksi' => $hasilIkl->foto_inspeksi,
+                    'foto_inspeksi_url' => $hasilIkl->foto_inspeksi_url,
                 ] : null,
                 'desa' => $laporan->desa?->nama_desa,
             ],

@@ -50,7 +50,7 @@ class LaporanAdminController extends Controller
      */
     public function show($id_laporan)
     {
-        $laporan = LaporanWarga::with(['desa', 'jadwal.petugas'])
+        $laporan = LaporanWarga::with(['desa', 'jadwal.petugas', 'jadwal.inspeksiIkl'])
             ->findOrFail($id_laporan);
 
         if ($laporan->status_laporan === 'menunggu') {

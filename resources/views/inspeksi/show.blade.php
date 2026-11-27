@@ -157,5 +157,30 @@
             
         </div>
     </div>
+
+    <div class="card p-6">
+        <h3 class="font-bold text-gray-800 text-sm border-b border-gray-100 pb-3 mb-4 flex items-center gap-2">
+            <i class="fas fa-camera text-blue-600"></i> Foto Bukti Kunjungan Petugas
+        </h3>
+        @if($inspeksi->foto_inspeksi_url)
+            <button type="button" data-image-viewer-trigger
+                data-image-url="{{ $inspeksi->foto_inspeksi_url }}"
+                data-image-caption="Foto bukti kunjungan petugas {{ $inspeksi->jadwal->laporan?->kode_tiket ?? '' }}"
+                class="relative group block w-full cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Perbesar foto bukti kunjungan petugas">
+                <img src="{{ $inspeksi->foto_inspeksi_url }}" alt="Foto bukti kunjungan petugas"
+                    class="max-h-80 w-full rounded-xl object-cover transition-opacity group-hover:opacity-80">
+                <span class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <i class="fas fa-eye text-2xl" aria-hidden="true"></i>
+                </span>
+            </button>
+        @else
+            <p class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-400">Tidak ada foto bukti kunjungan yang dilampirkan.</p>
+        @endif
+    </div>
 </div>
+@endsection
+
+@section('modals')
+    @include('partials.image-viewer')
 @endsection

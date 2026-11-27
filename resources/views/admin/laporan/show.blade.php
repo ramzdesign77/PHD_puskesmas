@@ -264,6 +264,37 @@
                             </span>
                         </div>
                     </div>
+
+                    @if($laporan->status_laporan === 'selesai' && $laporan->jadwal->inspeksiIkl)
+                        @php($hasilIkl = $laporan->jadwal->inspeksiIkl)
+                        <div class="space-y-3 border-t border-emerald-100 pt-4">
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Ringkasan Hasil IKL</h4>
+                                <p class="mt-1 text-sm text-slate-700">Kategori risiko: <span class="font-semibold">{{ $hasilIkl->label_kategori_risiko }}</span></p>
+                                <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ $hasilIkl->rekomendasi_sanitarian }}</p>
+                            </div>
+                            <div class="space-y-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                                    <i class="fas fa-camera text-[11px]"></i> Foto Bukti Kunjungan Petugas
+                                </span>
+                                @if($hasilIkl->foto_inspeksi_url)
+                                    <button type="button" data-image-viewer-trigger
+                                        data-image-url="{{ $hasilIkl->foto_inspeksi_url }}"
+                                        data-image-caption="Foto bukti kunjungan petugas untuk {{ $laporan->kode_tiket }}"
+                                        class="relative group block w-full cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                        aria-label="Perbesar foto bukti kunjungan petugas">
+                                        <img src="{{ $hasilIkl->foto_inspeksi_url }}" alt="Foto bukti kunjungan petugas"
+                                            class="max-h-80 w-full rounded-xl object-cover transition-opacity group-hover:opacity-80">
+                                        <span class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                            <i class="fas fa-eye text-2xl" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                @else
+                                    <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs text-slate-400">Tidak ada foto bukti kunjungan yang dilampirkan.</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
 

@@ -94,10 +94,11 @@
                             @endif
                         </div>
                         <div class="flex shrink-0 flex-wrap items-center gap-2">
-                            <button type="button" onclick="toggleAdvancedFilter('laporan')"
+                            <button type="button" data-toggle-advanced-filter="laporan" data-advanced-open="{{ $hasAdvancedLap ? 'true' : 'false' }}" aria-expanded="{{ $hasAdvancedLap ? 'true' : 'false' }}"
                                 class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
                                 <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
                                 @if($hasAdvancedLap)<span class="rounded-full bg-blue-100 px-1.5 text-blue-700">{{ collect(['date_from', 'date_to', 'kategori', 'sort'])->filter(fn ($filter) => filled(request($filter)))->count() }}</span>@endif
+                                <i class="fas fa-chevron-down transition-transform duration-200" data-advanced-filter-icon aria-hidden="true"></i>
                             </button>
                             <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Terapkan</button>
                             @if($hasAnyLap)
@@ -122,7 +123,7 @@
                     </div>
 
                     {{-- Filter Lanjutan --}}
-                    <div id="advanced-panel-laporan" class="{{ $hasAdvancedLap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
+                    <div id="advanced-panel-laporan" data-advanced-filter-panel="laporan" class="{{ $hasAdvancedLap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label class="text-xs font-medium text-slate-600 mb-1 block">Kategori Laporan</label>
@@ -306,6 +307,7 @@
                                                 'status'        => $laporan->status_laporan,
                                                 'created_at'    => $laporan->created_at ? \Carbon\Carbon::parse($laporan->created_at)->format('d M Y') : '-',
                                                 'foto_bukti'    => $laporan->foto_bukti,
+                                                'foto_inspeksi_url' => $laporan->jadwal?->inspeksiIkl?->foto_inspeksi_url,
                                             ]) }})"
                                             class="btn-secondary btn-sm" title="Lihat Detail">
                                             <i class="fas fa-eye text-gray-500"></i>
@@ -382,10 +384,11 @@
                             @endif
                         </div>
                         <div class="flex shrink-0 flex-wrap items-center gap-2">
-                            <button type="button" onclick="toggleAdvancedFilter('rekap')"
+                            <button type="button" data-toggle-advanced-filter="rekap" data-advanced-open="{{ $hasAdvancedRekap ? 'true' : 'false' }}" aria-expanded="{{ $hasAdvancedRekap ? 'true' : 'false' }}"
                                 class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
                                 <i class="fas fa-sliders text-[11px]"></i> Filter Lanjutan
                                 @if($hasAdvancedRekap)<span class="rounded-full bg-blue-100 px-1.5 text-blue-700">{{ collect(['date_from', 'date_to', 'dari_tanggal', 'sampai_tanggal', 'kategori_ikl', 'intervensi', 'id_desa'])->filter(fn ($filter) => filled(request($filter)))->count() }}</span>@endif
+                                <i class="fas fa-chevron-down transition-transform duration-200" data-advanced-filter-icon aria-hidden="true"></i>
                             </button>
                             <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Terapkan</button>
                             <a href="{{ route('reports.export', request()->query()) }}" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700" title="Ekspor CSV">
@@ -414,7 +417,7 @@
                     </div>
 
                     {{-- Filter Lanjutan --}}
-                    <div id="advanced-panel-rekap" class="{{ $hasAdvancedRekap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
+                    <div id="advanced-panel-rekap" data-advanced-filter-panel="rekap" class="{{ $hasAdvancedRekap ? 'block' : 'hidden' }} mt-3 pt-3 border-t border-slate-100">
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label class="text-xs font-medium text-slate-600 mb-1 block">Desa</label>
@@ -762,6 +765,18 @@
                     </span>
                 </button>
             </div>
+            <div id="detail_foto_inspeksi_container" class="hidden border-t border-gray-100 pt-3">
+                <p class="text-xs text-gray-400 font-medium mb-2">Foto Bukti Kunjungan Petugas</p>
+                <button id="detail_foto_inspeksi_trigger" type="button" data-image-viewer-trigger
+                    class="relative group cursor-pointer overflow-hidden rounded-xl block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label="Lihat foto bukti kunjungan petugas">
+                    <img id="detail_foto_inspeksi" src="" alt="Foto Bukti Kunjungan Petugas" class="w-full rounded-xl max-h-48 object-cover border border-gray-200">
+                    <span class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <i class="fas fa-eye text-lg" aria-hidden="true"></i>
+                        <span class="text-xs font-semibold">Lihat Foto Kunjungan</span>
+                    </span>
+                </button>
+            </div>
         </div>
 
         <div class="flex justify-end mt-4">
@@ -843,6 +858,17 @@ function openDetailModal(laporan) {
         fotoContainer.classList.add('hidden');
     }
 
+    const visitPhotoContainer = document.getElementById('detail_foto_inspeksi_container');
+    const visitPhotoTrigger = document.getElementById('detail_foto_inspeksi_trigger');
+    if (laporan.foto_inspeksi_url) {
+        document.getElementById('detail_foto_inspeksi').src = laporan.foto_inspeksi_url;
+        visitPhotoTrigger.dataset.imageUrl = laporan.foto_inspeksi_url;
+        visitPhotoTrigger.dataset.imageCaption = 'Foto bukti kunjungan petugas ' + (laporan.kode_tiket || '');
+        visitPhotoContainer.classList.remove('hidden');
+    } else {
+        visitPhotoContainer.classList.add('hidden');
+    }
+
     showModal('detailModal');
 }
 function closeDetailModal() { hideModal('detailModal'); }
@@ -855,6 +881,44 @@ function closeDetailModal() { hideModal('detailModal'); }
 });
 
 window.setupScheduleCalendars();
+
+(() => {
+    const bindAdvancedFilterToggles = () => {
+        document.querySelectorAll('[data-toggle-advanced-filter]').forEach(button => {
+            if (button.dataset.advancedFilterBound === 'true') {
+                return;
+            }
+
+            const panelName = button.dataset.toggleAdvancedFilter;
+            const panel = document.querySelector(`[data-advanced-filter-panel="${panelName}"]`);
+            const icon = button.querySelector('[data-advanced-filter-icon]');
+
+            if (!panel) {
+                return;
+            }
+
+            const initialOpen = button.dataset.advancedOpen === 'true';
+            panel.classList.toggle('hidden', !initialOpen);
+            button.setAttribute('aria-expanded', String(initialOpen));
+            icon?.classList.toggle('rotate-180', initialOpen);
+
+            button.addEventListener('click', () => {
+                const isOpen = panel.classList.contains('hidden');
+                panel.classList.toggle('hidden', !isOpen);
+                button.setAttribute('aria-expanded', String(isOpen));
+                icon?.classList.toggle('rotate-180', isOpen);
+            });
+
+            button.dataset.advancedFilterBound = 'true';
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindAdvancedFilterToggles, { once: true });
+    } else {
+        bindAdvancedFilterToggles();
+    }
+})();
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') ['jadwalModal', 'tolakModal', 'detailModal'].forEach(hideModal);
