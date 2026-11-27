@@ -315,7 +315,7 @@
                                     <select name="id_petugas" class="form-input w-full text-sm rounded-xl border-slate-200 focus:border-ocean-500 focus:ring-ocean-500" required>
                                         <option value="" disabled selected>-- Pilih Petugas --</option>
                                         @foreach($petugas as $p)
-                                            <option value="{{ $p->id_petugas }}">{{ $p->nama_petugas }} ({{ $p->jabatan }})</option>
+                                            <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ $p->jabatan ?: 'Sanitarian' }})</option>
                                         @endforeach
                                     </select>
                                 </div>

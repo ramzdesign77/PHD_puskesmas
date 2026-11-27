@@ -49,8 +49,8 @@ class ReportController extends Controller
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->when($request->get('sort') === 'terlama',
-                fn ($q) => $q->reorder('id_laporan', 'asc'),
-                fn ($q) => $q->orderBy('id_laporan', 'desc'));
+                fn ($q) => $q->reorder('created_at', 'asc'),
+                fn ($q) => $q->orderBy('created_at', 'desc'));
 
         $laporanAktif = $queryAktif->paginate($perPage, ['*'], 'page_aktif')
             ->withQueryString();
@@ -84,10 +84,10 @@ class ReportController extends Controller
     // ACTION: Jadwalkan laporan (insert jadwal + ubah status)
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function jadwalkan(Request $request, int $idLaporan)
+    public function jadwalkan(Request $request, string $idLaporan)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
@@ -127,7 +127,7 @@ class ReportController extends Controller
     // ACTION: Tolak laporan
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function tolak(Request $request, int $idLaporan)
+    public function tolak(Request $request, string $idLaporan)
     {
         $validated = $request->validate([
             'alasan_penolakan' => 'required|string|min:5|max:500',
@@ -147,10 +147,10 @@ class ReportController extends Controller
     // ACTION: Reschedule / re-assign jadwal
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function reschedule(Request $request, int $idJadwal)
+    public function reschedule(Request $request, string $idJadwal)
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
         ]);
@@ -173,7 +173,7 @@ class ReportController extends Controller
         return back()->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, string $jamMulai, ?int $exceptId = null): bool
+    private function hasScheduleConflict(string $idOperator, string $tanggalKunjungan, string $jamMulai, ?string $exceptId = null): bool
     {
         return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $jamMulai, $exceptId)->exists();
     }
@@ -362,7 +362,7 @@ class ReportController extends Controller
         $validated = $request->validate([
             'kategori_laporan' => 'required|string',
             'deskripsi' => 'required|string|min:10',
-            'id_desa' => 'required|exists:ref_desa,id_desa',
+            'id_desa' => 'required|string|max:30|exists:ref_desa,id_desa',
         ]);
 
         LaporanWarga::create([

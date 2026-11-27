@@ -24,7 +24,7 @@ class InspeksiIklController extends Controller
      * Tampilkan form input hasil IKL untuk jadwal tertentu.
      * Hanya petugas yang ditugaskan yang bisa mengisi.
      */
-    public function form(int $idJadwal)
+    public function form(string $idJadwal)
     {
         $jadwal = JadwalInspeksi::with(['laporan.desa', 'operator'])
             ->where('status_kunjungan', 'terjadwal')
@@ -61,7 +61,7 @@ class InspeksiIklController extends Controller
      *   jadwal_inspeksi.status_kunjungan → 'selesai'
      *   laporan_warga.status_laporan     → 'selesai'  (jika berasal dari laporan warga)
      */
-    public function submit(Request $request, int $idJadwal): RedirectResponse
+    public function submit(Request $request, string $idJadwal): RedirectResponse
     {
         $jadwal = JadwalInspeksi::with('laporan')
             ->where('status_kunjungan', 'terjadwal')
@@ -151,7 +151,7 @@ class InspeksiIklController extends Controller
      *
      * Detail hasil inspeksi (untuk admin / kepala puskesmas).
      */
-    public function show(int $idInspeksi)
+    public function show(string $idInspeksi)
     {
         $inspeksi = InspeksiIkl::with([
             'jadwal.laporan.desa',

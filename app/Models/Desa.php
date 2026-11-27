@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 
 class Desa extends Model
 {
+    use HasCustomId;
+
     protected $table = 'ref_desa';
 
     protected $primaryKey = 'id_desa';

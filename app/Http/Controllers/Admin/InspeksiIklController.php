@@ -90,7 +90,7 @@ class InspeksiIklController extends Controller
     /**
      * Halaman detail hasil inspeksi satu jadwal.
      */
-    public function show(int $id_jadwal): View
+    public function show(string $id_jadwal): View
     {
         $jadwal = JadwalInspeksi::with([
             'laporan.desa',
@@ -113,7 +113,7 @@ class InspeksiIklController extends Controller
     /**
      * Form input hasil inspeksi IKL oleh petugas lapangan.
      */
-    public function create(int $id_jadwal): View
+    public function create(string $id_jadwal): View
     {
         $jadwal = JadwalInspeksi::with(['laporan.desa', 'petugas'])
             ->findOrFail($id_jadwal);

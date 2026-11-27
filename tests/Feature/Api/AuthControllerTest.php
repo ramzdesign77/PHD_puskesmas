@@ -136,6 +136,7 @@ class AuthControllerTest extends TestCase
         $token = 'known-mobile-token';
 
         DB::table('app_mobile_tokens')->insert([
+            'id_token' => 'TKN-TESTTOKEN',
             'id_user' => $user->id_user,
             'name' => 'flutter-mobile',
             'token_hash' => hash('sha256', $token),

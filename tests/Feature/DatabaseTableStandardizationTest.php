@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -12,6 +13,10 @@ class DatabaseTableStandardizationTest extends TestCase
 
     public function test_migration_renames_tables_and_rolls_them_back_without_renaming_logs(): void
     {
+        Schema::create('petugas', function (Blueprint $table): void {
+            $table->id('id_petugas');
+        });
+
         $migration = require base_path(
             'database/migrations/2026_10_27_000000_standardize_db_tables.php'
         );

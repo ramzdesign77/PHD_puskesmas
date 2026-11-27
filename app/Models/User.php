@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,14 +11,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
     private const SANITARIAN_ROLES = ['petugas', 'sanitarian', 'staf_backup_kluster4'];
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasCustomId, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'app_users';
 
@@ -29,6 +29,7 @@ class User extends Authenticatable
         'nama_lengkap',
         'name',
         'id_petugas',
+        'jabatan',
         'username',
         'email',
         'password',
@@ -91,21 +92,6 @@ class User extends Authenticatable
             }
         });
 
-        static::created(function (self $user): void {
-            $userId = $user->getKey();
-
-            if ($userId !== null) {
-                $updated = DB::table($user->getTable())
-                    ->where('id', $userId)
-                    ->whereNull('id_user')
-                    ->update(['id_user' => $userId]);
-
-                if ($updated > 0) {
-                    $user->setAttribute('id_user', $userId);
-                    $user->syncOriginalAttribute('id_user', $userId);
-                }
-            }
-        });
     }
 
     private function synchronizeNames(): void
@@ -138,14 +124,14 @@ class User extends Authenticatable
         return 'id_user';
     }
 
+    public function getAuthIdentifierName(): string
+    {
+        return 'id_user';
+    }
+
     public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');
-    }
-
-    public function petugasProfile(): BelongsTo
-    {
-        return $this->belongsTo(Petugas::class, 'id_petugas', 'id_petugas');
     }
 
     public function mobileTokens(): HasMany

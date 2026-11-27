@@ -92,7 +92,7 @@ class ScheduleController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jenis_kunjungan' => 'required|in:ikl_laporan_warga,ikl_rutin_rt',
@@ -117,10 +117,10 @@ class ScheduleController extends Controller
             ->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
-    public function assign(Request $request, int $id): RedirectResponse
+    public function assign(Request $request, string $id): RedirectResponse
     {
         $validated = $request->validate([
-            'id_operator' => 'required|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
         ]);
@@ -144,13 +144,13 @@ class ScheduleController extends Controller
             ->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    public function updateHistory(Request $request, int $id): RedirectResponse
+    public function updateHistory(Request $request, string $id): RedirectResponse
     {
         $jadwal = JadwalInspeksi::whereIn('status_kunjungan', ['selesai', 'batal'])
             ->findOrFail($id);
 
         $validated = $request->validate([
-            'id_operator' => 'required|exists:app_users,id_user',
+            'id_operator' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date',
             'jam_mulai' => 'required|date_format:H:i',
         ]);
@@ -161,7 +161,7 @@ class ScheduleController extends Controller
             ->with('success', 'Informasi riwayat jadwal berhasil diperbarui.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(string $id): RedirectResponse
     {
         $jadwal = JadwalInspeksi::with('inspeksiIkl')->findOrFail($id);
 
@@ -183,7 +183,7 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function batal(int $id): RedirectResponse
+    public function batal(string $id): RedirectResponse
     {
         $jadwal = JadwalInspeksi::with('laporan')
             ->where('status_kunjungan', 'terjadwal')
@@ -199,7 +199,7 @@ class ScheduleController extends Controller
             ->with('success', 'Jadwal kunjungan dibatalkan. Laporan dikembalikan ke antrean.');
     }
 
-    private function hasScheduleConflict(int|string $idOperator, string $tanggalKunjungan, ?string $jamMulai = null, ?int $exceptId = null): bool
+    private function hasScheduleConflict(string $idOperator, string $tanggalKunjungan, ?string $jamMulai = null, ?string $exceptId = null): bool
     {
         return JadwalInspeksi::forOperatorOnDate($idOperator, $tanggalKunjungan, $jamMulai, $exceptId)->exists();
     }

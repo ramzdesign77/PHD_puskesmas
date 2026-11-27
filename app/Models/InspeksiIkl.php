@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InspeksiIkl extends Model
 {
+    use HasCustomId;
+
     /** @var array<string, array<int, string>> */
     private const QUESTIONS_BY_CATEGORY = [
         'sumur_gali' => [

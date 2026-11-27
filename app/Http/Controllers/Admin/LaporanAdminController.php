@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Desa;
 use App\Models\JadwalInspeksi;
 use App\Models\LaporanWarga;
-use App\Models\Petugas;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class LaporanAdminController extends Controller
@@ -35,8 +35,8 @@ class LaporanAdminController extends Controller
             ->when($request->filled('date_from'), fn ($query) => $query->whereDate('created_at', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn ($query) => $query->whereDate('created_at', '<=', $request->date_to))
             ->when($request->get('sort') === 'terlama',
-                fn ($query) => $query->reorder('id_laporan', 'asc'),
-                fn ($query) => $query->orderBy('id_laporan', 'desc'));
+                fn ($query) => $query->reorder('created_at', 'asc'),
+                fn ($query) => $query->orderBy('created_at', 'desc'));
 
         $laporan = $query->paginate($perPage)->withQueryString();
         $desaList = Desa::orderBy('nama_desa')->get(['id_desa', 'nama_desa']);
@@ -58,7 +58,11 @@ class LaporanAdminController extends Controller
             $laporan->save();
         }
 
-        $petugas = Petugas::where('is_active', 1)->orderBy('nama_petugas')->get();
+        $petugas = User::query()
+            ->sanitarian()
+            ->where('is_active', true)
+            ->orderBy('nama_lengkap')
+            ->get(['id_user', 'nama_lengkap', 'jabatan']);
 
         return view('admin.laporan.show', compact('laporan', 'petugas'));
     }
@@ -88,19 +92,29 @@ class LaporanAdminController extends Controller
     public function terima(Request $request, $id_laporan)
     {
         $validated = $request->validate([
-            'id_petugas' => 'required|exists:app_petugas,id_petugas',
+            'id_petugas' => 'required|string|max:30|exists:app_users,id_user',
             'tanggal_kunjungan' => 'required|date|after_or_equal:today',
             'jenis_kunjungan' => 'required|string',
         ]);
 
         $laporan = LaporanWarga::findOrFail($id_laporan);
+        $petugas = User::query()
+            ->sanitarian()
+            ->where('is_active', true)
+            ->whereKey($validated['id_petugas'])
+            ->first();
+
+        if ($petugas === null) {
+            return back()->withErrors(['id_petugas' => 'Pilih akun sanitarian yang aktif.'])->withInput();
+        }
+
         $laporan->status_laporan = 'diterima';
         $laporan->alasan_penolakan = null;
         $laporan->save();
 
         JadwalInspeksi::create([
             'id_laporan' => $laporan->id_laporan,
-            'id_operator' => $validated['id_petugas'],
+            'id_operator' => $petugas->id_user,
             'tanggal_kunjungan' => $validated['tanggal_kunjungan'],
             'jenis_kunjungan' => $validated['jenis_kunjungan'],
             'status_kunjungan' => 'terjadwal',

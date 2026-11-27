@@ -189,15 +189,19 @@ class DashboardControllerTest extends TestCase
                 'id_desa' => $village->id_desa,
             ]));
 
+        $firstPageScheduleIds = [];
+        $visitIds = collect($visits)->pluck('id_jadwal')->all();
+
         $firstPage->assertSee('aria-label="Pagination"', false)
             ->assertSee('aria-label="Halaman 2"', false)
-            ->assertViewHas('todaySchedules', function ($schedules) use ($village, $visits): bool {
+            ->assertViewHas('todaySchedules', function ($schedules) use ($village, $visitIds, &$firstPageScheduleIds): bool {
                 parse_str((string) parse_url($schedules->url(2), PHP_URL_QUERY), $query);
+                $firstPageScheduleIds = $schedules->pluck('id_jadwal')->all();
 
                 return $schedules->perPage() === 5
                     && $schedules->total() === 6
                     && $schedules->count() === 5
-                    && $schedules->first()->id_jadwal === $visits[0]->id_jadwal
+                    && count(array_intersect($firstPageScheduleIds, $visitIds)) === 5
                     && ($query['page_agenda'] ?? null) === '2'
                     && ($query['period'] ?? null) === 'all'
                     && ($query['id_desa'] ?? null) === (string) $village->id_desa;
@@ -212,11 +216,12 @@ class DashboardControllerTest extends TestCase
             ]));
 
         $secondPage->assertSee('aria-current="page"', false)
-            ->assertViewHas('todaySchedules', fn ($schedules): bool => (
-                $schedules->total() === 6
+            ->assertViewHas('todaySchedules', function ($schedules) use ($visitIds, $firstPageScheduleIds): bool {
+                return $schedules->total() === 6
                 && $schedules->count() === 1
-                && $schedules->first()->id_jadwal === $visits[5]->id_jadwal
-            ));
+                && ! in_array($schedules->first()->id_jadwal, $firstPageScheduleIds, true)
+                && in_array($schedules->first()->id_jadwal, $visitIds, true);
+            });
     }
 
     public function test_dashboard_rejects_invalid_period_and_village_filters(): void

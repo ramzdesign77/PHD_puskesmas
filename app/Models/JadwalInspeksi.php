@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class JadwalInspeksi extends Model
 {
+    use HasCustomId;
+
     protected $table = 'trx_jadwal_inspeksi';
 
     protected $primaryKey = 'id_jadwal';
@@ -43,7 +46,7 @@ class JadwalInspeksi extends Model
     }
 
     /**
-     * Petugas sanitarian yang ditugaskan (FK ke app_users.id_user, bukan app_petugas).
+     * Petugas sanitarian yang ditugaskan (FK ke app_users.id_user).
      */
     public function operator(): BelongsTo
     {
@@ -81,7 +84,7 @@ class JadwalInspeksi extends Model
         int|string $idOperator,
         string $tanggalKunjungan,
         ?string $jam = null,
-        ?int $exceptId = null
+        ?string $exceptId = null
     ): Builder {
         $query->where('id_operator', $idOperator)
             ->whereDate('tanggal_kunjungan', $tanggalKunjungan)

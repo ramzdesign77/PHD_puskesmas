@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Desa;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class DesaSeeder extends Seeder
 {
@@ -18,14 +18,9 @@ class DesaSeeder extends Seeder
         ];
 
         foreach ($desa as $data) {
-            $data['updated_at'] = now();
-
-            DB::table('ref_desa')->updateOrInsert(
+            Desa::query()->updateOrCreate(
                 ['nama_desa' => $data['nama_desa']],
-                [
-                    'kode_pos' => $data['kode_pos'],
-                    'updated_at' => $data['updated_at'],
-                ],
+                ['kode_pos' => $data['kode_pos']],
             );
         }
     }

@@ -33,7 +33,7 @@ class InspectionController extends Controller
         }
 
         $validated = $request->validate([
-            'id_jadwal' => ['required', 'integer', 'min:1'],
+            'id_jadwal' => ['required', 'string', 'max:30', 'exists:trx_jadwal_inspeksi,id_jadwal'],
             'jenis_sarana_air' => ['required', 'in:sumur_bor,sumur_terlindung,pdam,mata_air,lainnya'],
             'jarak_sumber_pencemar' => ['required', 'integer', 'min:0', 'max:99999'],
             'kategori_ikl' => ['nullable', 'in:sumur_gali,sumur_bor,sarang_nyamuk_dbd,jamban_limbah_stbm,tumpukan_sampah'],
@@ -72,7 +72,7 @@ class InspectionController extends Controller
                 abort(404, 'Jadwal inspeksi tidak ditemukan.');
             }
 
-            if ((int) $jadwal->id_operator !== (int) $officer->id_user) {
+            if ($jadwal->id_operator !== $officer->id_user) {
                 abort(403, 'Jadwal ini tidak ditugaskan kepada akun Anda.');
             }
 

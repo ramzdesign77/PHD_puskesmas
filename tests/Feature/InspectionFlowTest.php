@@ -156,6 +156,7 @@ class InspectionFlowTest extends TestCase
         $report = $this->createReport();
         $this->createSchedule($officer, $report, 'batal');
         $latestSchedule = $this->createSchedule($officer, $report, 'selesai');
+        $latestSchedule->forceFill(['created_at' => now()->addSecond()])->save();
         $this->createInspection($latestSchedule, [
             'total_skor_ya' => 3,
             'kategori_risiko' => 'risiko_tinggi',

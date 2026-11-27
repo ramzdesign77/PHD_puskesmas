@@ -182,7 +182,7 @@ class CitizenManagementTest extends TestCase
         $response->assertRedirect(route('warga.index'))
             ->assertSessionHas('success');
         $this->assertTrue(Hash::check('password123', $warga->fresh()->password));
-        $this->assertDatabaseMissing('app_mobile_tokens', ['id' => $mobileToken->id]);
+        $this->assertDatabaseMissing('app_mobile_tokens', ['id_token' => $mobileToken->id_token]);
     }
 
     public function test_admin_cannot_delete_a_citizen_account_using_the_removed_endpoint(): void

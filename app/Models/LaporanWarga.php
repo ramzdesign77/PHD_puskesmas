@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LaporanWarga extends Model
 {
+    use HasCustomId;
+
     protected $table = 'trx_laporan_warga';
 
     protected $primaryKey = 'id_laporan';
@@ -55,7 +57,7 @@ class LaporanWarga extends Model
 
     public function pelapor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_user', 'id');
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
     /**
@@ -65,7 +67,7 @@ class LaporanWarga extends Model
     public function jadwal(): HasOne
     {
         return $this->hasOne(JadwalInspeksi::class, 'id_laporan', 'id_laporan')
-            ->latestOfMany('id_jadwal');
+            ->latestOfMany('created_at');
     }
 
     /**
@@ -74,11 +76,6 @@ class LaporanWarga extends Model
     public function jadwalInspeksi(): HasOne
     {
         return $this->jadwal();
-    }
-
-    public function notifikasiWa(): HasMany
-    {
-        return $this->hasMany(LogNotifikasiWa::class, 'id_laporan', 'id_laporan');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────────

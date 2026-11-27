@@ -256,7 +256,7 @@ class OfficerApiController extends Controller
         ]);
     }
 
-    public function verifyReport(Request $request, int $id_laporan): JsonResponse
+    public function verifyReport(Request $request, string $id_laporan): JsonResponse
     {
         $officer = $this->authorizeOfficer($request);
         $request->merge([
@@ -377,7 +377,8 @@ class OfficerApiController extends Controller
         $validated = $request->validate([
             'id_jadwal' => [
                 'required',
-                'integer',
+                'string',
+                'max:30',
                 Rule::exists('trx_jadwal_inspeksi', 'id_jadwal'),
             ],
             'jenis_sarana_air' => ['required', Rule::in(['sumur_bor', 'sumur_terlindung', 'pdam', 'mata_air', 'lainnya'])],
@@ -570,7 +571,7 @@ class OfficerApiController extends Controller
     private function operatorIds(User $user): array
     {
         return array_values(array_unique(array_filter(
-            [$user->id_user, $user->getAttribute('id')],
+            [$user->id_user],
             static fn (mixed $id): bool => $id !== null && $id !== '',
         )));
     }
@@ -580,13 +581,11 @@ class OfficerApiController extends Controller
      */
     private function officerData(User $user): array
     {
-        $user->loadMissing('petugasProfile');
-
         return [
             'id' => $user->id_user,
             'nama_lengkap' => $user->nama_lengkap ?: $user->name,
             'nip' => null,
-            'jabatan' => $user->petugasProfile?->jabatan ?: 'Petugas Kesling',
+            'jabatan' => $user->jabatan ?: 'Petugas Kesling',
             'role' => $user->role,
             'wilayah_kerja' => $user->wilayah_kerja,
         ];

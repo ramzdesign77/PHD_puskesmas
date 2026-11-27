@@ -58,7 +58,6 @@ $registerOfficerRoutes = static function (string $prefix, string $name): void {
             Route::get('/dashboard', [OfficerApiController::class, 'dashboard'])->name('dashboard');
             Route::get('/tasks', [OfficerApiController::class, 'tasks'])->name('tasks');
             Route::post('/reports/{id_laporan}/verify', [OfficerApiController::class, 'verifyReport'])
-                ->whereNumber('id_laporan')
                 ->name('reports.verify');
             Route::post('/inspections', [OfficerApiController::class, 'storeInspection'])->name('inspections.store');
             Route::get('/stbm-desa', [OfficerApiController::class, 'stbmDesa'])->name('stbm-desa');

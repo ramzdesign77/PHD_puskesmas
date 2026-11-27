@@ -17,7 +17,7 @@ class ReportStoreRequest extends FormRequest
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'nik' => ['nullable', 'string', 'max:16'],
             'nomor_telepon' => ['required', 'string', 'max:255'],
-            'village_id' => ['required', 'integer', 'exists:ref_desa,id_desa'],
+            'village_id' => ['required', 'string', 'max:30', 'exists:ref_desa,id_desa'],
             'rt' => ['required', 'string', 'max:255'],
             'rw' => ['required', 'string', 'max:255'],
             'kategori_laporan' => ['required', 'in:Masalah air,Jamban/Sanitasi,Lainnya'],

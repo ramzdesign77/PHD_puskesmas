@@ -17,7 +17,6 @@ class PrefixedTableStandardizationTest extends TestCase
         $tables = [
             'tm_desa' => 'ref_desa',
             'tm_edukasi' => 'ref_edukasi',
-            'tm_petugas' => 'app_petugas',
             'tm_users' => 'app_users',
             'tr_mobile_access_tokens' => 'app_mobile_tokens',
             'tr_laporan_warga' => 'trx_laporan_warga',
@@ -36,8 +35,7 @@ class PrefixedTableStandardizationTest extends TestCase
         }
 
         DB::table('tm_users')->insert([
-            'id' => 1,
-            'id_user' => 1,
+            'id_user' => 'USR-ADM-TEST1',
             'nama_lengkap' => 'Administrator',
             'username' => 'admin',
             'password' => 'hashed-password',
@@ -55,7 +53,7 @@ class PrefixedTableStandardizationTest extends TestCase
         }
 
         $this->assertDatabaseHas('app_users', [
-            'id_user' => 1,
+            'id_user' => 'USR-ADM-TEST1',
             'username' => 'admin',
         ]);
 
@@ -67,7 +65,7 @@ class PrefixedTableStandardizationTest extends TestCase
         }
 
         $this->assertDatabaseHas('tm_users', [
-            'id_user' => 1,
+            'id_user' => 'USR-ADM-TEST1',
             'username' => 'admin',
         ]);
     }

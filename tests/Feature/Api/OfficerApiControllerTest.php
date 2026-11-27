@@ -10,7 +10,6 @@ use App\Models\MobileAccessToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -483,17 +482,8 @@ class OfficerApiControllerTest extends TestCase
         $officer = $this->createUser('petugas', [
             'email' => 'mobile-officer@example.test',
             'username' => 'mobile-officer',
-            'id_petugas' => '1',
-            'wilayah_kerja' => 'Ajung',
-        ]);
-        DB::table('app_petugas')->insert([
-            'id_petugas' => 1,
-            'nama_petugas' => 'Petugas Profile',
             'jabatan' => 'Sanitarian',
-            'no_telepon' => '081234567801',
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'wilayah_kerja' => 'Ajung',
         ]);
 
         $this->postJson('/api/auth/login', [

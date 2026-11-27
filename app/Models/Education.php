@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,11 @@ use Illuminate\Support\Str;
 #[Fillable(['title', 'slug', 'category', 'excerpt', 'content', 'image', 'id_author', 'is_published'])]
 class Education extends Model
 {
+    use HasCustomId;
+
     protected $table = 'ref_edukasi';
+
+    protected $primaryKey = 'id_edukasi';
 
     public $timestamps = true;
 
@@ -51,6 +56,6 @@ class Education extends Model
 
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_author', 'id');
+        return $this->belongsTo(User::class, 'id_author', 'id_user');
     }
 }

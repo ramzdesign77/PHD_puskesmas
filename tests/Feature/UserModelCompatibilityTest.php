@@ -11,7 +11,7 @@ class UserModelCompatibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_new_user_records_keep_ids_and_names_synchronized(): void
+    public function test_new_user_records_use_a_custom_primary_key_and_synchronize_names(): void
     {
         $user = User::create([
             'nama_lengkap' => 'Administrator Test',
@@ -23,7 +23,8 @@ class UserModelCompatibilityTest extends TestCase
 
         $storedUser = DB::table('app_users')->where('username', 'administrator-test')->first();
 
-        $this->assertSame($storedUser->id, $storedUser->id_user);
+        $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $storedUser->id_user);
+        $this->assertSame('id_user', $user->getAuthIdentifierName());
         $this->assertSame('Administrator Test', $storedUser->name);
         $this->assertSame('Administrator Test', $storedUser->nama_lengkap);
         $this->assertSame('admin', $storedUser->role);

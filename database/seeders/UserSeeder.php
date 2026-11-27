@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,12 +14,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(PetugasSeeder::class);
-
-        $petugasId = DB::table('app_petugas')
-            ->where('no_telepon', '081234560001')
-            ->value('id_petugas');
-
         $accounts = [
             [
                 'nama_lengkap' => 'Administrator',
@@ -28,6 +23,7 @@ class UserSeeder extends Seeder
                 'password' => 'admin123',
                 'role' => 'admin',
                 'id_petugas' => null,
+                'jabatan' => null,
             ],
             [
                 'nama_lengkap' => 'Petugas Kesling',
@@ -36,20 +32,16 @@ class UserSeeder extends Seeder
                 'email' => 'petugas@klinik-sanitasi.local',
                 'password' => 'petugas123',
                 'role' => 'petugas',
-                'id_petugas' => $petugasId === null ? null : (string) $petugasId,
+                'id_petugas' => 'P1111PK',
+                'jabatan' => 'Sanitarian',
             ],
         ];
 
         foreach ($accounts as $account) {
             DB::transaction(function () use ($account): void {
-                $user = DB::table('app_users')
-                    ->where('username', $account['username'])
-                    ->first(['id']);
-
-                $timestamp = now();
                 $attributes = [
-                    'id_user' => $user?->id,
                     'id_petugas' => $account['id_petugas'],
+                    'jabatan' => $account['jabatan'],
                     'nama_lengkap' => $account['nama_lengkap'],
                     'name' => $account['name'],
                     'username' => $account['username'],
@@ -57,20 +49,13 @@ class UserSeeder extends Seeder
                     'password' => Hash::make($account['password']),
                     'role' => $account['role'],
                     'is_active' => true,
-                    'updated_at' => $timestamp,
+                    'updated_at' => now(),
                 ];
 
-                if ($user !== null) {
-                    DB::table('app_users')->where('id', $user->id)->update($attributes);
-
-                    return;
-                }
-
-                $attributes['id_user'] = null;
-                $attributes['created_at'] = $timestamp;
-                $id = DB::table('app_users')->insertGetId($attributes, 'id');
-
-                DB::table('app_users')->where('id', $id)->update(['id_user' => $id]);
+                User::query()->updateOrCreate(
+                    ['username' => $account['username']],
+                    $attributes,
+                );
             });
         }
     }

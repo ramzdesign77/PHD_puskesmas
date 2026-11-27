@@ -6,6 +6,7 @@ use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class DatabaseSeederTest extends TestCase
@@ -18,21 +19,20 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertDatabaseCount('ref_desa', 5);
-        $this->assertDatabaseCount('app_petugas', 5);
+        $this->assertFalse(Schema::hasTable('app_petugas'));
         $this->assertDatabaseCount('app_users', 2);
 
         foreach (['admin', 'petugas1'] as $username) {
             $user = DB::table('app_users')->where('username', $username)->first();
 
             $this->assertNotNull($user);
-            $this->assertSame((int) $user->id, (int) $user->id_user);
+            $this->assertMatchesRegularExpression('/^USR-[A-Z]{3}-[A-Z0-9]{5}$/', $user->id_user);
         }
 
         $this->assertDatabaseHas('app_users', [
             'username' => 'petugas1',
-            'id_petugas' => (string) DB::table('app_petugas')
-                ->where('no_telepon', '081234560001')
-                ->value('id_petugas'),
+            'id_petugas' => 'P1111PK',
+            'jabatan' => 'Sanitarian',
         ]);
     }
 

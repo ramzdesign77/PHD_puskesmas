@@ -64,7 +64,7 @@ class EducationController extends Controller
     }
 
     // Menampilkan form edit artikel
-    public function edit(int $id): View
+    public function edit(string $id): View
     {
         $this->ensureManagementAccess();
 
@@ -72,7 +72,7 @@ class EducationController extends Controller
     }
 
     // Memperbarui data artikel di database
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, string $id): RedirectResponse
     {
         $this->ensureManagementAccess();
 
@@ -100,7 +100,7 @@ class EducationController extends Controller
     }
 
     // Menghapus artikel dari database
-    public function destroy(int $id): RedirectResponse
+    public function destroy(string $id): RedirectResponse
     {
         $this->ensureManagementAccess();
 
@@ -116,7 +116,7 @@ class EducationController extends Controller
     }
 
     // Validasi input data artikel
-    private function validateArticle(Request $request, ?int $id = null): array
+    private function validateArticle(Request $request, ?string $id = null): array
     {
         return $request->validate([
             'title' => [

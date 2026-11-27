@@ -13,9 +13,9 @@ class EducationApiController extends Controller
         $articles = Education::query()
             ->latest()
             ->limit(50)
-            ->get(['id', 'title', 'slug', 'category', 'excerpt', 'content', 'image', 'created_at'])
+            ->get(['id_edukasi', 'title', 'slug', 'category', 'excerpt', 'content', 'image', 'created_at'])
             ->map(fn (Education $article): array => [
-                'id' => $article->id,
+                'id' => $article->id_edukasi,
                 'title' => $article->title,
                 'slug' => $article->slug,
                 'category' => $article->category,

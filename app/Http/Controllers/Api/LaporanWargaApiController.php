@@ -54,7 +54,7 @@ class LaporanWargaApiController extends Controller
                     'string',
                     'max:20',
                 ],
-                'id_desa' => 'required|integer|exists:ref_desa,id_desa',
+                'id_desa' => 'required|string|max:30|exists:ref_desa,id_desa',
                 'rt' => 'required|string|max:10',
                 'rw' => 'required|string|max:10',
                 'kategori_laporan' => [
@@ -110,7 +110,7 @@ class LaporanWargaApiController extends Controller
 
             $laporan = LaporanWarga::create([
                 'kode_tiket' => LaporanWarga::generateKodeTiket(),
-                'id_user' => $user?->getAttribute('id') ?? $user?->getAttribute('id_user'),
+                'id_user' => $user?->id_user,
                 'nama_pelapor' => $namaPelapor,
                 'nik_pelapor' => $validated['nik_pelapor'] ?? null,
                 'no_wa' => $noWa,
@@ -285,7 +285,7 @@ class LaporanWargaApiController extends Controller
             ->with([
                 'desa:id_desa,nama_desa',
                 'jadwal',
-                'jadwal.operator:id,id_user,nama_lengkap,name',
+                'jadwal.operator:id_user,nama_lengkap,name',
                 'jadwal.inspeksiIkl',
             ])
             ->where('kode_tiket', $kodeTiket)
@@ -454,7 +454,7 @@ class LaporanWargaApiController extends Controller
             ->with([
                 'desa:id_desa,nama_desa',
                 'jadwalInspeksi',
-                'jadwalInspeksi.operator:id,id_user,nama_lengkap,name',
+                'jadwalInspeksi.operator:id_user,nama_lengkap,name',
                 'jadwalInspeksi.inspeksiIkl',
             ]);
     }

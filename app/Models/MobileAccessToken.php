@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MobileAccessToken extends Model
 {
+    use HasCustomId;
+
     protected $table = 'app_mobile_tokens';
+
+    protected $primaryKey = 'id_token';
 
     public $timestamps = true;
 

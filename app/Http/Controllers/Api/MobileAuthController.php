@@ -74,7 +74,6 @@ class MobileAuthController extends Controller
     private function issueToken(User $user, string $message, int $status): JsonResponse
     {
         $plainToken = Str::random(80);
-        $user->loadMissing('petugasProfile');
         $isOfficer = $user->isSanitarian() || $user->hasRole('officer');
 
         MobileAccessToken::query()->create([
@@ -95,7 +94,7 @@ class MobileAuthController extends Controller
                 'no_telepon' => $user->no_telepon,
                 'role' => $user->role,
                 'jabatan' => $isOfficer
-                    ? ($user->petugasProfile?->jabatan ?: 'Petugas Kesling')
+                    ? ($user->jabatan ?: 'Petugas Kesling')
                     : null,
                 'nip' => null,
                 'wilayah_kerja' => $user->wilayah_kerja,

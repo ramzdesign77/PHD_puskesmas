@@ -42,6 +42,7 @@ class ScheduleWorkflowTest extends TestCase
             'jenis_kunjungan' => 'ikl_laporan_warga',
             'status_kunjungan' => 'terjadwal',
         ]);
+        $replacementSchedule->forceFill(['created_at' => now()->addSecond()])->save();
 
         $this->assertSame($replacementSchedule->id_jadwal, $report->fresh()->jadwal->id_jadwal);
     }

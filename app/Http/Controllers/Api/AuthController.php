@@ -66,7 +66,7 @@ class AuthController extends Controller
             'nik' => ['required', 'digits:16'],
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string', 'max:500'],
-            'id_desa' => ['required', 'integer', 'exists:ref_desa,id_desa'],
+            'id_desa' => ['required', 'string', 'max:30', 'exists:ref_desa,id_desa'],
         ]);
 
         return DB::transaction(function () use ($validated): JsonResponse {
@@ -139,7 +139,7 @@ class AuthController extends Controller
                 Rule::unique('app_users', 'email')->ignore($user->id_user, 'id_user'),
             ],
             'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'id_desa' => ['sometimes', 'required', 'integer', 'exists:ref_desa,id_desa'],
+            'id_desa' => ['sometimes', 'required', 'string', 'max:30', 'exists:ref_desa,id_desa'],
             'rt' => ['sometimes', 'required', 'string', 'max:10'],
             'rw' => ['sometimes', 'required', 'string', 'max:10'],
             'alamat_detail' => ['sometimes', 'required', 'string', 'max:255'],

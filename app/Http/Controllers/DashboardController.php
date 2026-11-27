@@ -18,11 +18,11 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'period' => ['sometimes', 'string', 'in:this_month,last_3_months,this_year,all'],
-            'id_desa' => ['sometimes', 'nullable', 'integer', 'exists:ref_desa,id_desa'],
+            'id_desa' => ['sometimes', 'nullable', 'string', 'max:30', 'exists:ref_desa,id_desa'],
         ]);
 
         $period = $validated['period'] ?? 'this_month';
-        $idDesa = isset($validated['id_desa']) ? (int) $validated['id_desa'] : null;
+        $idDesa = $validated['id_desa'] ?? null;
         $now = now();
         $periodStart = match ($period) {
             'this_month' => $now->copy()->startOfMonth(),
@@ -197,13 +197,14 @@ class DashboardController extends Controller
             LaporanWarga::with('desa')->whereIn('status_laporan', ['menunggu', 'dikirim'])
         )
             ->latest('created_at')
-            ->latest('id_laporan')
             ->limit(5)
             ->get();
 
         $todaySchedules = (clone $todayScheduleQuery)
             ->with(['operator', 'laporan.desa'])
+            ->orderBy('tanggal_kunjungan')
             ->orderBy('jam_mulai')
+            ->orderBy('created_at')
             ->orderBy('id_jadwal')
             ->paginate(5, ['*'], 'page_agenda')
             ->withQueryString();
