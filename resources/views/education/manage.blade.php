@@ -73,13 +73,13 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Tombol Edit -->
-                                    <a href="{{ route('education.edit', $article->id) }}" title="Edit artikel" class="group flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm">
+                                    <a href="{{ route('education.edit', $article->id_edukasi) }}" title="Edit artikel" class="group flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm">
                                         <i class="fas fa-pen text-xs"></i>
                                         <span class="text-xs font-semibold">Edit</span>
                                     </a>
 
                                     <!-- Tombol Hapus -->
-                                    <form method="POST" action="{{ route('education.destroy', $article->id) }}" onsubmit="return confirm('Hapus artikel ini?')">
+                                    <form method="POST" action="{{ route('education.destroy', $article->id_edukasi) }}" onsubmit="return confirm('Hapus artikel ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus artikel" class="group flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">

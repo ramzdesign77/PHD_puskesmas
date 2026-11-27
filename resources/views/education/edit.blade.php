@@ -15,7 +15,7 @@
     </div>
 
     <!-- Form Edit Artikel -->
-    <form method="POST" action="{{ route('education.update', $article->id) }}" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-sm p-6 md:p-8 space-y-6">
+    <form method="POST" action="{{ route('education.update', $article->id_edukasi) }}" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-sm p-6 md:p-8 space-y-6">
         @csrf
         @method('PUT')
 
