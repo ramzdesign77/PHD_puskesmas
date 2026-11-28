@@ -58,4 +58,21 @@ class Education extends Model
     {
         return $this->belongsTo(User::class, 'id_author', 'id_user');
     }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        $path = $this->image;
+
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $cleanPath = preg_replace('~^(?:(?:public/)?storage/)+~', '', ltrim($path, '/'));
+
+        return asset('storage/'.ltrim($cleanPath ?? $path, '/'));
+    }
 }

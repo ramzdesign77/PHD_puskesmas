@@ -128,6 +128,23 @@ class User extends Authenticatable
         return 'id_user';
     }
 
+    public function getFotoUrlAttribute(): ?string
+    {
+        $path = $this->foto;
+
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $cleanPath = preg_replace('~^(?:(?:public/)?storage/)+~', '', ltrim($path, '/'));
+
+        return asset('storage/'.ltrim($cleanPath ?? $path, '/'));
+    }
+
     public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class, 'id_desa', 'id_desa');

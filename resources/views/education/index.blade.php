@@ -38,7 +38,7 @@
             @foreach($articles as $article)
                 <article x-show="(category === 'Semua' || category === @js($article->category)) && (@js(strtolower($article->title)).includes(search.toLowerCase()))" class="card overflow-hidden group">
                     @if($article->image)
-                        <img src="{{ Storage::url($article->image) }}" alt="{{ $article->title }}" class="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="h-44 w-full object-cover group-hover:scale-105 transition-transform duration-500">
                     @else
                         <div class="h-44 medical-gradient flex items-center justify-center"><i class="fas fa-leaf text-white/40 text-7xl"></i></div>
                     @endif

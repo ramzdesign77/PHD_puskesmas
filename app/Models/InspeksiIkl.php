@@ -206,10 +206,10 @@ class InspeksiIkl extends Model
             return $path;
         }
 
-        $path = ltrim($path, '/');
+        $path = preg_replace('~^(?:(?:public/)?storage/)+~', '', ltrim($path, '/')) ?? $path;
 
         return Storage::disk('public')->exists($path)
-            ? asset('storage/'.$path)
+            ? asset('storage/'.ltrim($path, '/'))
             : null;
     }
 

@@ -56,7 +56,7 @@
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-4">
                                 @if($user->foto)
-                                    <img src="{{ asset('storage/' . $user->foto) }}" alt="Foto {{ $user->nama_lengkap }}" class="h-10 w-10 shrink-0 rounded-xl object-cover">
+                                    <img src="{{ $user->foto_url }}" alt="Foto {{ $user->nama_lengkap }}" class="h-10 w-10 shrink-0 rounded-xl object-cover">
                                 @else
                                     <div class="medical-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">{{ strtoupper(substr($user->nama_lengkap, 0, 1)) }}</div>
                                 @endif

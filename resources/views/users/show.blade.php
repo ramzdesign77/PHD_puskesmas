@@ -8,7 +8,7 @@
 <div class="card max-w-3xl p-6 fade-in">
     <div class="mb-6 flex items-center gap-4 border-b border-gray-100 pb-5">
         @if($user->foto)
-            <img src="{{ asset('storage/' . $user->foto) }}" alt="Foto {{ $user->nama_lengkap }}" class="h-16 w-16 rounded-2xl object-cover">
+            <img src="{{ $user->foto_url }}" alt="Foto {{ $user->nama_lengkap }}" class="h-16 w-16 rounded-2xl object-cover">
         @else
             <div class="medical-gradient flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-bold text-white">{{ strtoupper(substr($user->nama_lengkap, 0, 1)) }}</div>
         @endif

@@ -20,7 +20,7 @@ class InspectionFlowTest extends TestCase
     public function test_officer_submission_calculates_risk_and_stores_private_mobile_details(): void
     {
         $this->travelTo(now()->startOfDay());
-        Storage::fake('local');
+        Storage::fake('public');
         $officer = $this->createOfficer();
         $token = $this->createToken($officer);
         $report = $this->createReport();
@@ -56,7 +56,7 @@ class InspectionFlowTest extends TestCase
         $this->assertSame('risiko_sedang', $inspection->kategori_risiko);
         $this->assertSame('Catatan untuk tim internal.', $inspection->catatan_intervensi);
         $this->assertSame('Catatan pribadi petugas.', $inspection->catatan_petugas);
-        Storage::disk('local')->assertExists($inspection->foto_bukti);
+        Storage::disk('public')->assertExists($inspection->foto_inspeksi);
         $this->assertDatabaseHas('trx_jadwal_inspeksi', [
             'id_jadwal' => $schedule->id_jadwal,
             'status_kunjungan' => 'selesai',
@@ -73,7 +73,7 @@ class InspectionFlowTest extends TestCase
     public function test_inspection_requires_every_checklist_answer_and_rejects_future_dates(): void
     {
         $this->travelTo(now()->startOfDay());
-        Storage::fake('local');
+        Storage::fake('public');
         $officer = $this->createOfficer();
         $token = $this->createToken($officer);
         $schedule = $this->createSchedule($officer, null, 'terjadwal');
@@ -99,7 +99,7 @@ class InspectionFlowTest extends TestCase
         $this->withToken($token)
             ->post('/api/v1/officer/inspections', $payload, ['Accept' => 'application/json'])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('foto_bukti');
+            ->assertJsonValidationErrors('foto_inspeksi');
 
         $this->assertDatabaseCount('trx_inspeksi_ikl', 0);
     }

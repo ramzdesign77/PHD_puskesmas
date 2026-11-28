@@ -37,7 +37,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     @if($article->image)
-                                        <img src="{{ Storage::url($article->image) }}" alt="{{ $article->title }}" class="h-10 w-10 rounded-xl object-cover shadow-sm">
+                                        <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="h-10 w-10 rounded-xl object-cover shadow-sm">
                                     @else
                                         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-medical-red">
                                             <i class="fas fa-leaf text-sm"></i>

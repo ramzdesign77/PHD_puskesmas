@@ -180,11 +180,7 @@
                     </span>
 
                     @if(!empty($laporan->foto_bukti))
-                        @php
-                            $fotoUrl = \Illuminate\Support\Str::startsWith($laporan->foto_bukti, ['http://', 'https://'])
-                                ? $laporan->foto_bukti
-                                : asset('storage/' . $laporan->foto_bukti);
-                        @endphp
+                        @php($fotoUrl = $laporan->foto_bukti_url)
                         <div class="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-xs"
                              data-image-viewer-trigger
                              data-image-url="{{ $fotoUrl }}"

@@ -306,7 +306,7 @@
                                                 'deskripsi'     => $laporan->deskripsi,
                                                 'status'        => $laporan->status_laporan,
                                                 'created_at'    => $laporan->created_at ? \Carbon\Carbon::parse($laporan->created_at)->format('d M Y') : '-',
-                                                'foto_bukti'    => $laporan->foto_bukti,
+                                                'foto_bukti_url' => $laporan->foto_bukti_url,
                                                 'foto_inspeksi_url' => $laporan->jadwal?->inspeksiIkl?->foto_inspeksi_url,
                                             ]) }})"
                                             class="btn-secondary btn-sm" title="Lihat Detail">
@@ -848,8 +848,8 @@ function openDetailModal(laporan) {
 
     const fotoContainer = document.getElementById('detail_foto_container');
     const fotoTrigger = document.getElementById('detail_foto_trigger');
-    if (laporan.foto_bukti) {
-        const fotoUrl = @json(asset('storage')) + '/' + laporan.foto_bukti;
+    if (laporan.foto_bukti_url) {
+        const fotoUrl = laporan.foto_bukti_url;
         document.getElementById('detail_foto').src = fotoUrl;
         fotoTrigger.dataset.imageUrl = fotoUrl;
         fotoTrigger.dataset.imageCaption = 'Foto bukti laporan ' + (laporan.kode_tiket || '');

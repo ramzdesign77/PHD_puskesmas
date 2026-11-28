@@ -9,7 +9,7 @@
     <a href="{{ route('education.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-medical-red hover:text-medical-dark mb-6"><i class="fas fa-arrow-left"></i> Kembali ke edukasi</a>
     <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
         @if($article->image)
-            <img src="{{ Storage::url($article->image) }}" alt="{{ $article->title }}" class="w-full max-h-96 object-cover">
+            <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="w-full max-h-96 object-cover">
         @else
             <div class="h-56 md:h-72 medical-gradient flex items-center justify-center"><i class="fas fa-leaf text-white/35 text-8xl"></i></div>
         @endif

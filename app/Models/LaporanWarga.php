@@ -60,6 +60,23 @@ class LaporanWarga extends Model
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
+    public function getFotoBuktiUrlAttribute(): ?string
+    {
+        $path = $this->foto_bukti;
+
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $cleanPath = preg_replace('~^(?:(?:public/)?storage/)+~', '', ltrim($path, '/'));
+
+        return asset('storage/'.ltrim($cleanPath ?? $path, '/'));
+    }
+
     /**
      * Satu laporan memiliki satu jadwal inspeksi.
      * Gunakan hasOne karena satu laporan hanya memiliki satu jadwal aktif.
