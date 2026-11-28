@@ -1,0 +1,34 @@
+name: Deploy Ottersan ke Hosting Kampus
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode terbaru
+        uses: actions/checkout@v4
+
+      - name: Build Tailwind CSS & JS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci && npm run build
+
+      - name: Upload perubahan ke FTP Kampus
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.vscode/**
+            **/.env
+            **/storage/logs/**

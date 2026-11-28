@@ -8,9 +8,21 @@ use RuntimeException;
 
 trait HasCustomId
 {
-    public $incrementing = false;
+    public function initializeHasCustomId(): void
+    {
+        $this->incrementing = false;
+        $this->keyType = 'string';
+    }
 
-    protected $keyType = 'string';
+    public function getIncrementing(): bool
+    {
+        return false;
+    }
+
+    public function getKeyType(): string
+    {
+        return 'string';
+    }
 
     protected static function bootHasCustomId(): void
     {

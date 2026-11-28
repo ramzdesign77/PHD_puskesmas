@@ -90,4 +90,10 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{id_jadwal}', [AdminInspeksiIklController::class, 'show'])->name('show');
         });
     });
+
+});
+
+Route::get('/buat-storage-link', function () {
+    \Illuminate\Support\Facades\Artisan::call('storage:link');
+    return 'Storage link berhasil dibuat!';
 });
