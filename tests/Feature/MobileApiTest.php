@@ -185,6 +185,34 @@ class MobileApiTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_legacy_logout_requires_a_valid_token_and_revokes_only_that_token(): void
+    {
+        $warga = $this->createAuthenticatedWarga('warga-legacy-logout');
+        $otherToken = 'mobile-history-other-token';
+
+        MobileAccessToken::query()->create([
+            'id_user' => $warga['user']->getKey(),
+            'name' => 'flutter-mobile',
+            'token_hash' => hash('sha256', $otherToken),
+        ]);
+
+        $this->postJson('/api/auth/logout')
+            ->assertUnauthorized()
+            ->assertJsonPath('success', false);
+
+        $this->withToken($warga['token'])
+            ->postJson('/api/auth/logout')
+            ->assertOk()
+            ->assertJsonPath('message', 'Logout berhasil.');
+
+        $this->assertDatabaseMissing('app_mobile_tokens', [
+            'token_hash' => hash('sha256', $warga['token']),
+        ]);
+        $this->assertDatabaseHas('app_mobile_tokens', [
+            'token_hash' => hash('sha256', $otherToken),
+        ]);
+    }
+
     public function test_report_history_rejects_an_expired_mobile_token(): void
     {
         $warga = $this->createAuthenticatedWarga('warga-history-expired');
@@ -301,9 +329,8 @@ class MobileApiTest extends TestCase
 
         $this->withToken($warga['token'])
             ->getJson('/api/v1/laporan/history?limit=100')
-            ->assertOk()
-            ->assertJsonCount(5, 'data')
-            ->assertJsonPath('pagination.per_page', 30);
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['limit']);
     }
 
     public function test_report_history_filters_by_date_range_and_status_together(): void
@@ -371,9 +398,16 @@ class MobileApiTest extends TestCase
             ->assertJsonValidationErrors(['status']);
 
         $this->withToken($warga['token'])
-            ->getJson('/api/v1/laporan/history?per_page=51')
+            ->getJson('/api/v1/laporan/history?per_page=11')
             ->assertUnprocessable()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Data tidak valid.')
             ->assertJsonValidationErrors(['per_page']);
+
+        $this->withToken($warga['token'])
+            ->getJson('/api/v1/laporan/history?limit=11')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['limit']);
     }
 
     public function test_report_history_returns_an_empty_page_with_pagination_metadata(): void

@@ -355,14 +355,22 @@ class LaporanWargaApiController extends Controller
      */
     public function myReports(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'page' => ['sometimes', 'integer', 'min:1'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
-            'limit' => ['sometimes', 'integer', 'min:1'],
-            'status' => ['sometimes', 'nullable', Rule::in(self::REPORT_STATUSES)],
-            'start_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
-            'end_date' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'page' => ['sometimes', 'integer', 'min:1'],
+                'per_page' => ['sometimes', 'integer', 'min:1', 'max:10'],
+                'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
+                'status' => ['sometimes', 'nullable', Rule::in(self::REPORT_STATUSES)],
+                'start_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+                'end_date' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+            ]);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid.',
+                'errors' => $exception->errors(),
+            ], 422);
+        }
 
         $user = $request->user();
         if (! $user instanceof User) {
@@ -388,7 +396,7 @@ class LaporanWargaApiController extends Controller
             )
             ->orderByDesc('created_at')
             ->orderByDesc('id_laporan')
-            ->paginate($validated['per_page'] ?? min((int) ($validated['limit'] ?? 10), 30))
+            ->paginate((int) ($validated['per_page'] ?? $validated['limit'] ?? 10))
             ->withQueryString();
 
         return response()->json([

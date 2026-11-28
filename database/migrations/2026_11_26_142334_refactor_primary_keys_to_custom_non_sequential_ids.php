@@ -143,7 +143,11 @@ return new class extends Migration
             }
 
             foreach (DB::table($table)->whereNotNull($column)->pluck($column) as $value) {
-                if (! isset($maps[$parentMap][(string) $value])) {
+                $stringValue = (string) $value;
+                $alreadyCustomId = $parentMap === 'app_users_by_id_user'
+                    && str_starts_with($stringValue, 'USR-');
+
+                if (! $alreadyCustomId && ! isset($maps[$parentMap][$stringValue])) {
                     throw new RuntimeException("Cannot convert {$table}.{$column}; value {$value} has no matching parent record.");
                 }
             }
@@ -268,10 +272,6 @@ return new class extends Migration
             $this->changePrimaryKey($tableName, $primaryKey);
         }
 
-        Schema::table('app_users', function (Blueprint $table): void {
-            $table->string('id_user', 30)->nullable()->change();
-        });
-
         foreach ($maps as $tableName => $mapping) {
             if ($tableName === 'app_users_by_id_user') {
                 continue;
@@ -327,6 +327,10 @@ return new class extends Migration
 
     private function changeUserPrimaryKey(): void
     {
+        if (! Schema::hasColumn('app_users', 'id')) {
+            return;
+        }
+
         if (DB::getDriverName() === 'sqlite') {
             Schema::table('app_users', function (Blueprint $table): void {
                 $table->renameColumn('id', 'legacy_user_id');
@@ -385,6 +389,10 @@ return new class extends Migration
             ['trx_jadwal_inspeksi', 'id_operator', 'app_users', 'id_user', 'set null'],
             ['trx_inspeksi_ikl', 'id_jadwal', 'trx_jadwal_inspeksi', 'id_jadwal', 'cascade'],
         ] as [$tableName, $column, $parentTable, $parentColumn, $onDelete]) {
+            if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, $column)) {
+                continue;
+            }
+
             Schema::table($tableName, function (Blueprint $table) use ($column, $parentTable, $parentColumn, $onDelete): void {
                 $foreign = $table->foreign($column)
                     ->references($parentColumn)

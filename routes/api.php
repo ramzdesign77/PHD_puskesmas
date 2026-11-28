@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Storage;
 Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('/register', [MobileAuthController::class, 'register'])->name('register');
     Route::post('/login', [MobileAuthController::class, 'login'])->name('login');
-    Route::post('/logout', [MobileAuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [MobileAuthController::class, 'logout'])
+        ->middleware('auth.mobile')
+        ->name('logout');
 });
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {

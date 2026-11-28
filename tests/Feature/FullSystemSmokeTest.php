@@ -67,7 +67,14 @@ class FullSystemSmokeTest extends TestCase
     {
         $this->travelTo(now()->startOfDay());
         $village = Desa::query()->create(['nama_desa' => 'Sumbersari']);
-        $submission = $this->postJson('/api/v1/laporan', [
+        $warga = $this->createUser('warga', 'smoke-history-warga');
+        $login = $this->postJson('/api/v1/login', [
+            'login' => $warga->username,
+            'password' => 'secret123',
+        ])->assertOk();
+        $wargaToken = $login->json('data.token');
+
+        $submission = $this->withToken($wargaToken)->postJson('/api/v1/laporan', [
             'nama_pelapor' => 'Warga Smoke',
             'no_wa' => '081234567890',
             'id_desa' => $village->id_desa,
@@ -78,12 +85,11 @@ class FullSystemSmokeTest extends TestCase
         ])->assertCreated()->assertJsonStructure(['kode_tiket']);
         $ticket = $submission->json('kode_tiket');
 
-        $tickets = [$ticket];
         foreach (range(1, 16) as $index) {
             $localTicket = 'SMOKE-HISTORY-'.$index;
-            $tickets[] = $localTicket;
             LaporanWarga::query()->create([
                 'kode_tiket' => $localTicket,
+                'id_user' => $warga->id_user,
                 'nama_pelapor' => 'Warga Smoke',
                 'id_desa' => $village->id_desa,
                 'rt' => '01',
@@ -93,8 +99,12 @@ class FullSystemSmokeTest extends TestCase
                 'status_laporan' => 'menunggu',
             ]);
         }
-        $this->getJson('/api/v1/laporan/history?limit=15&'.http_build_query(['tickets' => $tickets]))
-            ->assertOk()->assertJsonCount(15, 'data');
+        $this->withToken($wargaToken)
+            ->getJson('/api/v1/laporan/history?limit=10')
+            ->assertOk()
+            ->assertJsonCount(10, 'data')
+            ->assertJsonPath('pagination.per_page', 10)
+            ->assertJsonPath('pagination.total', 17);
 
         $admin = $this->createUser('admin', 'smoke-admin');
         $officer = $this->createUser('petugas', 'smoke-officer');
