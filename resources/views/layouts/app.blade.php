@@ -218,11 +218,6 @@
 
             {{-- Right: Notifications + Role Badge + Logout --}}
             <div class="flex items-center gap-2 md:gap-4">
-                {{-- Notification Bell --}}
-                <button class="relative p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
-                    <i class="fas fa-bell text-lg"></i>
-                    <span class="notification-dot"></span>
-                </button>
 
                 {{-- Role Badge --}}
                 <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl
