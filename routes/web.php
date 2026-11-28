@@ -10,6 +10,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
 
@@ -93,7 +94,10 @@ Route::middleware('auth')->group(function (): void {
 
 });
 
-Route::get('/buat-storage-link', function () {
-    \Illuminate\Support\Facades\Artisan::call('storage:link');
-    return 'Storage link berhasil dibuat!';
-});
+    Route::get('/storage/{path}', function (string $path) {
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($path);
+    })->where('path', '.*');
